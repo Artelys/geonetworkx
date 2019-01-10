@@ -1,0 +1,9 @@
+# Python precompiled files
+*.pyc
+
+# IDEA project file
+*.iml
+*.idea/
+
+# Results files
+geonetworkx/tests/datasets/results/
