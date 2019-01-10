@@ -3,6 +3,8 @@ import numpy as np
 import networkx as nx
 from shapely.geometry import Point, LineString
 from geopy.distance import vincenty
+from geonetworkx.geometry_operations import coordinates_almost_equal, insert_point_in_line
+from typing import Iterable
 
 
 def compute_vincenty(p1, p2):
@@ -68,6 +70,9 @@ def get_new_node_unique_name(graph: nx.Graph, name: str):
             unique_name = "%s_%d" % (str(name), ct)
         return unique_name
 
+def euclidian_distance_coordinates(c1: Iterable, c2: Iterable) -> float:
+    """Return the euclidian distance between the two sets of coordinates."""
+    return math.sqrt(sum(((i - j) ** 2 for i, j in zip(c1, c2))))
 
 def euclidian_distance(p1: Point, p2: Point) -> float:
     """
@@ -76,8 +81,7 @@ def euclidian_distance(p1: Point, p2: Point) -> float:
     :param p2: The second shapely Point
     :return: The euclidian distance
     """
-    return math.sqrt( ((p1.x - p2.x) ** 2) + ((p1.y - p2.y) ** 2))
-
+    return euclidian_distance_coordinates((p1.x, p1.y), (p2.x, p2.y))
 
 def fill_edges_missing_geometry_attributes(graph: "GeoGraph"):
     """
@@ -104,3 +108,43 @@ def fill_length_attribute(graph: "GeoGraph", attribute_name="length"):
     edges_geometry = nx.get_edge_attributes(graph, graph.edges_geometry_key)
     for e in edges_geometry:
         graph.edges[e][attribute_name] = measure_line_distance(edges_geometry[e])
+
+
+def join_lines_extremity_to_nodes_coordinates(graph: "GeoGraph"):
+    """
+    Modify the edges geometry attribute so that lines extremities match with nodes coordinates.
+    :param graph: A geograph to modify
+    """
+    edges_geometry = nx.get_edge_attributes(graph, graph.edges_geometry_key)
+    for e in edges_geometry:
+        line = edges_geometry[e]
+        to_replace = False
+        first_node_coords = graph.get_node_coordinates(e[0])
+        if not coordinates_almost_equal(line.coords[0], first_node_coords):
+            line = insert_point_in_line(line, first_node_coords, 0)
+            to_replace = True
+        second_node_coords = graph.get_node_coordinates(e[1])
+        if not coordinates_almost_equal(line.coords[-1], second_node_coords):
+            line = insert_point_in_line(line, first_node_coords, len(line.coords))
+            to_replace = True
+        if to_replace:
+            graph.edges[e][graph.edges_geometry_key] = line
+
+
+def order_well_lines(graph: "GeoGraph"):
+    """
+    Try to order well each geometry attribute of edges so that the first coordinates of the line string are the
+    coordinates of the first vertex of the edge. The closest node rule is applied.
+    :param graph: Graph on which to apply the ordering step. Modification is inplace.
+    :return: None
+    """
+    line_strings = nx.get_edge_attributes(graph, graph.edges_geometry_key)
+    for e in line_strings:
+        uxy = graph.get_node_coordinates(e[0])
+        vxy = graph.get_node_coordinates(e[1])
+        line = line_strings[e]
+        first_vertex = line.coords[0]
+        u_distance = euclidian_distance_coordinates(uxy, first_vertex)
+        v_distance = euclidian_distance_coordinates(vxy, first_vertex)
+        if u_distance > v_distance:
+            graph.edges[e][graph.edges_geometry_key] = LineString(reversed(line.coords))

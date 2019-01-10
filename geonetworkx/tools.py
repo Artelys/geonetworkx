@@ -145,7 +145,7 @@ def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
         merged_graph = base_graph
     else:
         merged_graph = spatial_points_merge(base_graph, nodes_gdf, inplace=inplace, merge_direction=merge_direction)
-    nx.compose(merged_graph, other_graph)
+    merged_graph = nx.compose(merged_graph, other_graph)
     if not inplace:
         return merged_graph
 

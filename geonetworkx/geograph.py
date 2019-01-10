@@ -1,5 +1,6 @@
 """Base class for geographic graphs"""
 import networkx as nx
+from shapely.geometry import Point
 
 class GeoGraph(nx.Graph):
     EDGES_GEOMETRY_DEFAULT_KEY = "geometry"
@@ -36,6 +37,9 @@ class GeoGraph(nx.Graph):
     def get_node_coordinates(self, node_name):
         node_data = self.nodes[node_name]
         return [node_data[self.x_key], node_data[self.y_key]]
+
+    def get_node_as_point(self, node_name):
+        return Point(self.get_node_coordinates(node_name))
 
     def get_spatial_keys(self):
         return {'x_key': self.x_key,

@@ -325,3 +325,25 @@ def split_line(line, distance):
         if pd > distance:
             cp = line.interpolate(distance)
             return [LineString(coords[:i] + [(cp.x, cp.y)]), LineString([(cp.x, cp.y)] + coords[i:])]
+
+def coordinates_almost_equal(c1: Iterable, c2: Iterable, tolerance=1e-8) -> bool:
+    """Return true if the two given set of coordinates are almost equals within a given tolerance"""
+    for i, j in zip(c1, c2):
+        if abs(i - j) > tolerance:
+            return False
+    return True
+
+def almost_equally_located(p1: Point, p2: Point, tolerance=1e-8) -> bool:
+    """Return True if the two given point are equally located within a given tolerance"""
+    return coordinates_almost_equal([p1.x, p1.y], [p2.x, p2.y], tolerance)
+
+def insert_point_in_line(line: LineString, point_coords: list, position: int):
+    """Insert a new point in a line given its coordinates"""
+    new_line_coordinates = line.coords[0:position]
+    new_line_coordinates.append((point_coords[0], point_coords[1]))
+    new_line_coordinates.extend(line.coords[position:])
+    return LineString(new_line_coordinates)
+
+def plot_line(line):
+    import matplotlib.pyplot as plt
+    plt.plot([p[0] for p in line.coords], [p[1] for p in line.coords])
