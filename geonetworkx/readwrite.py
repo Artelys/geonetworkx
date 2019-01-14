@@ -54,7 +54,8 @@ def graph_nodes_to_gdf(graph: GeoGraph) -> gpd.GeoDataFrame:
     gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
     if 'crs' in graph.graph:
         gdf_nodes.crs = graph.graph['crs']
-    gdf_nodes.gdf_name = '{}_nodes'.format(graph.graph['name'])
+    if 'name' in graph.graph:
+        gdf_nodes.gdf_name = '{}_nodes'.format(graph.graph['name'])
     return gdf_nodes
 
 
@@ -82,7 +83,8 @@ def graph_edges_to_gdf(graph: nx.Graph) -> gpd.GeoDataFrame:
     gdf_edges = gpd.GeoDataFrame(edges)
     if 'crs' in graph.graph:
         gdf_edges.crs = graph.graph['crs']
-    gdf_edges.gdf_name = '{}_edges'.format(graph.graph['name'])
+    if 'name' in graph.graph:
+        gdf_edges.gdf_name = '{}_edges'.format(graph.graph['name'])
     return gdf_edges
 
 def parse_bool_columns_as_int(gdf: gpd.GeoDataFrame):

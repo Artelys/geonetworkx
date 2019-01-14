@@ -10,7 +10,7 @@ import geopandas as gpd
 from shapely.geometry import Point, LineString
 from geonetworkx.geograph import GeoGraph
 import geonetworkx.settings as settings
-from geonetworkx.geometry_operations import get_closest_line_from_points, split_line
+from geonetworkx.geometry_operations import get_closest_line_from_points, split_line, coordinates_almost_equal
 from geonetworkx.utils import get_new_node_unique_name, euclidian_distance
 from geonetworkx.readwrite import graph_nodes_to_gdf
 from collections import defaultdict
@@ -21,7 +21,8 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
     Merge given points as node with a spatial merge.
     :param graph: A GeoGraph or derived class describing a spatial graph.
     :param points_gdf: A list of point describing new nodes to add. Points are projected on the closest edge of the
-    graph and an intersection node is added if necessary.
+    graph and an intersection node is added if necessary. If two nodes a given point and a node have the same name, with
+    equal coordinates, then the node is considered as already in the graph.
     :param inplace: If True, do operation inplace and return None.
     :param merge_direction: For directed graphs:
          * `both`: 2 edges are added: graph -> new node and new node -> graph
@@ -29,7 +30,8 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
          * `out`: 1 edge is added: graph -> new_node
     :return: None if inplace, new graph otherwise.
     """
-	# TODO: add functionality: if node name already in graph, test for same point, and if same point do nothing (to see 1.1 step)
+    if not any(graph.edges_geometry_key in graph.edges[e] for e in graph.edges):
+        raise ValueError("The given graph has no edge geometry, at least one edge geometry is required a merge operation")
     if not inplace:
         graph = graph.copy()
     # 1. Find closest edge for each point
@@ -41,7 +43,13 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
     # Add node, intersection node and edge (node, intersection node)
     for p, p_index, point in zip(range(len(points_gdf)), points_gdf.index, points_gdf[settings.GPD_GEOMETRY_KEY]):
         # 1.1 Add given node
-        node_name = get_new_node_unique_name(graph, p_index)
+        if p_index in graph.nodes:
+            if coordinates_almost_equal([point.x, point.y], graph.get_node_coordinates(p_index)):
+                continue
+            else:
+                node_name = get_new_node_unique_name(graph, p_index)
+        else:
+            node_name = p_index
         node_info = {c: points_gdf.at[p_index, c] for c in points_gdf.columns}
         node_info[graph.x_key] = point.x
         node_info[graph.y_key] = point.y

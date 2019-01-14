@@ -38,6 +38,9 @@ class GeoGraph(nx.Graph):
         node_data = self.nodes[node_name]
         return [node_data[self.x_key], node_data[self.y_key]]
 
+    def get_nodes_coordinates(self):
+        return {n: self.get_node_coordinates(n) for n in self.nodes}
+
     def get_node_as_point(self, node_name):
         return Point(self.get_node_coordinates(node_name))
 
@@ -45,6 +48,13 @@ class GeoGraph(nx.Graph):
         return {'x_key': self.x_key,
                 'y_key': self.y_key,
                 'edges_geometry_key': self.edges_geometry_key}
+
+    def set_nodes_coordinates(self, coordinates: dict):
+        for n, coords in coordinates.items():
+            node_data = self.nodes[n]
+            node_data[self.x_key] = coords[0]
+            node_data[self.y_key] = coords[1]
+
 
     def copy(self, as_view=False):
         graph = nx.Graph.copy(self, as_view)
