@@ -113,36 +113,29 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
                 graph.add_edge(sorted_intersection_nodes[i], sorted_intersection_nodes[i + 1], **edge_data)
     if not inplace:
         return graph
-    return None
 
 
 def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
-                        inplace=True, merge_direction="both",
-                        unmerged_nodes = [], merging_nodes = []):
+                        inplace=True, merge_direction="both", node_filter=None):
     """
     Operates spatial merge between two graphs. Spatial edge projection is used on merging nodes.
     :param base_graph: Base graph on which the merge operation is done.
     :param other_graph: Input graph to merge. Modified graph if operation is done inplace.
     :param inplace: If True, do operation inplace and return None.
     :param merge_direction: See `spatial_points_merge`
-    :param unmerged_nodes: List of unmerged nodes among `other_graph` nodes.
-    :param merging_nodes: List of merging nodes among `other_graph` nodes.
+    :param node_filter: Lambda returning if a given node (from the `other_graph` graph) has to be merged.
     :return: A new graph with the same type as `base_graph` if not inplace.
     """
-    #TODO : lambda x : (not unmerged_nodes or x not in unmerged_nodes) and (not merging_nodes or x in merging_nodes)
 	#TODO : warn in doc that the two graphs have to be distinct, otherwise behaviour is undefined
     if base_graph.is_directed() != other_graph.is_directed():
         raise ValueError("Merging a directed graph and an undirected graph is ambiguous")
     if base_graph.is_multigraph() != other_graph.is_multigraph():
         raise ValueError("Merging a multigraph and a graph is ambiguous")
-    if len(unmerged_nodes) > 0 and len(merging_nodes) > 0:
-        raise ValueError("Cannot provide `unmerged_nodes` and `merging_nodes`")
-    if len(merging_nodes) > 0:
-        other_graph_view = nx.subgraph(other_graph, merging_nodes)
-        nodes_gdf = graph_nodes_to_gdf(other_graph_view)
+    if node_filter is not None:
+        other_graph_view = nx.graphviews.subgraph_view(other_graph, node_filter)
     else:
-        nodes_gdf = graph_nodes_to_gdf(other_graph)
-        nodes_gdf.drop(index=unmerged_nodes, inplace=True)
+        other_graph_view = other_graph
+    nodes_gdf = graph_nodes_to_gdf(other_graph_view)
     if inplace:
         spatial_points_merge(base_graph, nodes_gdf, inplace=inplace, merge_direction=merge_direction)
         merged_graph = base_graph
