@@ -29,6 +29,7 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
          * `out`: 1 edge is added: graph -> new_node
     :return: None if inplace, new graph otherwise.
     """
+	# TODO: add functionality: if node name already in graph, test for same point, and if same point do nothing (to see 1.1 step)
     if not inplace:
         graph = graph.copy()
     # 1. Find closest edge for each point
@@ -128,6 +129,8 @@ def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
     :param merging_nodes: List of merging nodes among `other_graph` nodes.
     :return: A new graph with the same type as `base_graph` if not inplace.
     """
+    #TODO : lambda x : (not unmerged_nodes or x not in unmerged_nodes) and (not merging_nodes or x in merging_nodes)
+	#TODO : warn in doc that the two graphs have to be distinct, otherwise behaviour is undefined
     if base_graph.is_directed() != other_graph.is_directed():
         raise ValueError("Merging a directed graph and an undirected graph is ambiguous")
     if base_graph.is_multigraph() != other_graph.is_multigraph():

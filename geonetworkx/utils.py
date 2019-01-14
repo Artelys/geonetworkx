@@ -125,7 +125,7 @@ def join_lines_extremity_to_nodes_coordinates(graph: "GeoGraph"):
             to_replace = True
         second_node_coords = graph.get_node_coordinates(e[1])
         if not coordinates_almost_equal(line.coords[-1], second_node_coords):
-            line = insert_point_in_line(line, first_node_coords, len(line.coords))
+            line = insert_point_in_line(line, second_node_coords, len(line.coords))
             to_replace = True
         if to_replace:
             graph.edges[e][graph.edges_geometry_key] = line
@@ -143,8 +143,20 @@ def order_well_lines(graph: "GeoGraph"):
         uxy = graph.get_node_coordinates(e[0])
         vxy = graph.get_node_coordinates(e[1])
         line = line_strings[e]
-        first_vertex = line.coords[0]
-        u_distance = euclidian_distance_coordinates(uxy, first_vertex)
-        v_distance = euclidian_distance_coordinates(vxy, first_vertex)
-        if u_distance > v_distance:
+        first_extremity = line.coords[0]
+        last_extremity = line.coords[-1]
+        u_e1 = euclidian_distance_coordinates(uxy, first_extremity)
+        v_e1 = euclidian_distance_coordinates(vxy, first_extremity)
+        u_e2 = euclidian_distance_coordinates(uxy, last_extremity)
+        v_e2 = euclidian_distance_coordinates(vxy, last_extremity)
+        to_reverse = False
+        if u_e1 > v_e1 and u_e2 < v_e2:  # u is closer to e2 and v is closer to e1
+            to_reverse = True
+        elif u_e1 < v_e1 and u_e2  < v_e2:  # u is closer to e1 and e2 than v
+            if u_e1 > u_e2:
+                to_reverse = True
+        elif u_e1 > v_e1 and u_e2 > v_e2:  # v in closer to e1 and e2 than u
+            if v_e1 < v_e2:
+                to_reverse = True
+        if to_reverse:
             graph.edges[e][graph.edges_geometry_key] = LineString(reversed(line.coords))
