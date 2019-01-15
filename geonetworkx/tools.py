@@ -134,7 +134,6 @@ def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
     :param node_filter: Lambda returning if a given node (from the `other_graph` graph) has to be merged.
     :return: A new graph with the same type as `base_graph` if not inplace.
     """
-	#TODO : warn in doc that the two graphs have to be distinct, otherwise behaviour is undefined
     if base_graph.is_directed() != other_graph.is_directed():
         raise ValueError("Merging a directed graph and an undirected graph is ambiguous")
     if base_graph.is_multigraph() != other_graph.is_multigraph():
