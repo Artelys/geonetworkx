@@ -7,3 +7,7 @@
 
 # Results files
 geonetworkx/tests/datasets/results/
+
+# Distribution build file
+dist/
+build/
