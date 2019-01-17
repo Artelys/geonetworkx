@@ -97,17 +97,20 @@ def fill_edges_missing_geometry_attributes(graph: "GeoGraph"):
                 graph.edges[s][graph.edges_geometry_key] = LineString([n1_xy, n2_xy])
 
 
-def fill_length_attribute(graph: "GeoGraph", attribute_name="length"):
+def fill_length_attribute(graph: "GeoGraph", attribute_name="length", only_missing=True):
     """
     Fill the 'length' attribute of the given networkX Graph. The length is computed in meters using the vincenty
      formula.
     :param graph: graph to fill
     :param attribute_name: The length attribute name to set
+    :param only_missing: Compute the length only if the attribute is missing
     :return: None
     """
     edges_geometry = nx.get_edge_attributes(graph, graph.edges_geometry_key)
     for e in edges_geometry:
-        graph.edges[e][attribute_name] = measure_line_distance(edges_geometry[e])
+        edge_data = graph.edges[e]
+        if (not only_missing) or attribute_name not in edge_data:
+            edge_data[attribute_name] = measure_line_distance(edges_geometry[e])
 
 
 def join_lines_extremity_to_nodes_coordinates(graph: "GeoGraph"):
