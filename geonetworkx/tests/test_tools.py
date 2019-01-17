@@ -11,7 +11,7 @@ import geonetworkx as gnx
 import numpy as np
 from shapely.geometry import Point
 #os.chdir("geonetworkx/tests")
-from nose.tools import assert_in, assert_true
+from nose.tools import assert_in
 
 SEED = 70595
 np.random.seed(SEED)

@@ -344,6 +344,3 @@ def insert_point_in_line(line: LineString, point_coords: list, position: int):
     new_line_coordinates.extend(line.coords[position:])
     return LineString(new_line_coordinates)
 
-def plot_line(line):
-    import matplotlib.pyplot as plt
-    plt.plot([p[0] for p in line.coords], [p[1] for p in line.coords])
