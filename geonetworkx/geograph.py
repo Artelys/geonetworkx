@@ -1,6 +1,7 @@
 """Base class for geographic graphs"""
 import networkx as nx
 from shapely.geometry import Point
+import geonetworkx as gnx
 
 class GeoGraph(nx.Graph):
     EDGES_GEOMETRY_DEFAULT_KEY = "geometry"
@@ -59,10 +60,16 @@ class GeoGraph(nx.Graph):
     def copy(self, as_view=False):
         graph = nx.Graph.copy(self, as_view)
         return GeoGraph(graph, **self.get_spatial_keys())
-    """
-    TODO
-    def to_directed():
-        call nx.Graph to_directed
-        convert to GeoDiGraph at the end
-    """
 
+    def to_directed(self, as_view=False):
+        """Return a directed representation of the graph."""
+        if as_view:
+            return nx.Graph.to_directed(self, as_view)
+        else:
+            graph_class = self.to_directed_class()
+            directed_graph = nx.Graph.to_directed(self, as_view)
+            return graph_class(directed_graph, **self.get_spatial_keys())
+
+    def to_directed_class(self):
+        """Returns the class to use for empty directed copies."""
+        return gnx.GeoDiGraph
