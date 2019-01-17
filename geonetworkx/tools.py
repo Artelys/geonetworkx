@@ -6,6 +6,7 @@
 """
 import numpy as np
 import networkx as nx
+from networkx.classes.filters import no_filter
 import geopandas as gpd
 from shapely.geometry import Point, LineString
 from geonetworkx.geograph import GeoGraph
@@ -16,7 +17,8 @@ from geonetworkx.readwrite import graph_nodes_to_gdf
 from collections import defaultdict
 
 
-def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=True, merge_direction="both") -> GeoGraph:
+def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=True, merge_direction="both",
+                         node_filter=no_filter, edge_filter=no_filter) -> GeoGraph:
     """
     Merge given points as node with a spatial merge.
     :param graph: A GeoGraph or derived class describing a spatial graph.
@@ -24,18 +26,22 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
     graph and an intersection node is added if necessary. If two nodes a given point and a node have the same name, with
     equal coordinates, then the node is considered as already in the graph.
     :param inplace: If True, do operation inplace and return None.
-    :param merge_direction: For directed graphs:
+    :param merge_direction: For directed graphs only:
          * `both`: 2 edges are added: graph -> new node and new node -> graph
          * `in`: 1 edge is added: new_node -> graph
          * `out`: 1 edge is added: graph -> new_node
+    :param node_filter: A node filter (lambda) to exclude nodes (and by the way all concerned edges) from the projection
+     operation.
+    :param edge_filter: An edge filter (lambda) to exclude edges on which the projection will not take place.
     :return: None if inplace, new graph otherwise.
     """
-    if not any(graph.edges_geometry_key in graph.edges[e] for e in graph.edges):
-        raise ValueError("The given graph has no edge geometry, at least one edge geometry is required for a merge operation")
     if not inplace:
         graph = graph.copy()
     # 1. Find closest edge for each point
-    edges_as_lines = nx.get_edge_attributes(graph, graph.edges_geometry_key)
+    graph_view = nx.graphviews.subgraph_view(graph, filter_node=node_filter ,filter_edge=edge_filter)
+    edges_as_lines = nx.get_edge_attributes(graph_view, graph.edges_geometry_key)
+    if len(edges_as_lines) == 0:
+        raise ValueError("No edge geometry has been found in the given merging edges, at least one edge geometry is required for a merge operation")
     points = points_gdf[settings.GPD_GEOMETRY_KEY]
     points_coords = np.array([[p.x, p.y] for p in points])
     lines_indexes = get_closest_line_from_points(points_coords, edges_as_lines.values())

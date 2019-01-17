@@ -8,7 +8,7 @@ from shapely.geometry import LineString
 import numpy as np
 from ..geometry_operations import discretize_lines
 from ..testing.utils import assert_almost_intersect
-import geoneworkx as gnx
+import geonetworkx as gnx
 import geonetworkx.settings as settings
 
 np.random.seed(70595)

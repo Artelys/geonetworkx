@@ -9,20 +9,22 @@ import geopandas as gpd
 import networkx as nx
 import geonetworkx as gnx
 import numpy as np
+from shapely.geometry import Point
 #os.chdir("geonetworkx/tests")
-from nose.tools import assert_in
+from nose.tools import assert_in, assert_true
 
 SEED = 70595
 np.random.seed(SEED)
+data_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), "datasets")
+
 
 class TestTools():
-
     def test_spatial_points_merge(self):
         # test a spatial merge
-        mdg = nx.read_gpickle("datasets/grenoble200_mdg.gpickle")
+        mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_mdg.gpickle"))
         graph = gnx.GeoMultiDiGraph(mdg)
         gnx.utils.fill_edges_missing_geometry_attributes(graph)
-        points_gdf = gpd.read_file("datasets/grenoble200_buildings.geojson", driver="GeoJSON")
+        points_gdf = gpd.read_file(os.path.join(data_directory, "grenoble200_buildings.geojson"), driver="GeoJSON")
         gnx.tools.spatial_points_merge(graph, points_gdf)
         #gnx.readwrite.export_graph_as_shape_file(graph, "datasets/results/")
         for p in points_gdf.index:
@@ -36,14 +38,14 @@ class TestTools():
 
 
     def test_spatial_graph_merge(self):
-        streets_mdg = nx.read_gpickle("datasets/grenoble200_mdg.gpickle")
+        streets_mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_mdg.gpickle"))
         streets_mdg = streets_mdg.to_undirected()
         base_graph = gnx.GeoMultiGraph(streets_mdg)
         gnx.utils.fill_edges_missing_geometry_attributes(base_graph)
         base_graph.graph["name"] = "streets"
         #gnx.export_graph_as_shape_file(base_graph, "datasets/results/")
 
-        electrical_dg = nx.read_gpickle("datasets/grenoble200_electrical_dg.gpickle")
+        electrical_dg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_electrical_dg.gpickle"))
         electrical_dg = nx.MultiDiGraph(electrical_dg)
         original_edges = list(electrical_dg.edges(keys=True, data=True))
         electrical_mg = electrical_dg.to_undirected()
@@ -104,9 +106,55 @@ class TestTools():
         nc = [origins[n] if n in origins else 4 for n in merged_graph.nodes()]
         nx.draw_networkx(merged_graph, pos=merged_graph.get_nodes_coordinates(), node_color=nc)
 
-
-
-
-
+    def test_spatial_point_merge_with_filters(self):
+        nb_nodes = 30
+        edge_creation_prob = 0.1
+        g = nx.fast_gnp_random_graph(nb_nodes, edge_creation_prob, seed=SEED, directed=False)
+        nodes_coords = nx.kamada_kawai_layout(g)
+        nx.set_node_attributes(g, {n: coords[0] for n, coords in nodes_coords.items()}, 'x')
+        nx.set_node_attributes(g, {n: coords[1] for n, coords in nodes_coords.items()}, 'y')
+        graph = gnx.GeoGraph(g)
+        gnx.fill_edges_missing_geometry_attributes(graph)
+        nb_points = 200
+        points = np.random.rand(nb_points, 2)
+        points_gdf = gpd.GeoDataFrame(columns=["geometry"])
+        points_gdf["geometry"] = [Point([x,y]) for x,y in points]
+        points_gdf.index = range(nb_nodes, nb_nodes + nb_points)
+        # node filter
+        node_filter = lambda n: n > 5
+        merged_graph = gnx.spatial_points_merge(graph, points_gdf, node_filter=node_filter, inplace=False)
+        for n in graph.nodes:
+            assert_in(n, merged_graph.nodes)
+        for n in points_gdf.index:
+            assert_in(n, merged_graph.nodes)
+        for n in graph.nodes:
+            if not node_filter(n):
+                edges = [e for e in graph.edges if n in e]
+                for e in edges:
+                    assert_in(e, merged_graph.edges)
+        # edge filter
+        edge_filter = lambda u, v: u not in range(5, 10) and v not in range(12, 20)
+        merged_graph = gnx.spatial_points_merge(graph, points_gdf, edge_filter=edge_filter, inplace=False)
+        for n in graph.nodes:
+            assert_in(n, merged_graph.nodes)
+        for n in points_gdf.index:
+            assert_in(n, merged_graph.nodes)
+        for e in graph.edges:
+            if not edge_filter(e[0], e[1]):
+                assert_in(e, merged_graph.edges)
+        # node filter and edge filter
+        merged_graph = gnx.spatial_points_merge(graph, points_gdf, edge_filter=edge_filter, node_filter=node_filter, inplace=False)
+        for n in graph.nodes:
+            assert_in(n, merged_graph.nodes)
+        for n in points_gdf.index:
+            assert_in(n, merged_graph.nodes)
+        for e in graph.edges:
+            if not edge_filter(e[0], e[1]):
+                assert_in(e, merged_graph.edges)
+        for n in graph.nodes:
+            if not node_filter(n):
+                edges = [e for e in graph.edges if n in e]
+                for e in edges:
+                    assert_in(e, merged_graph.edges)
 
 
