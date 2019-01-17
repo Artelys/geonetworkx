@@ -40,7 +40,6 @@ def write_gpickle(geograph, path, **attr):
     nx.write_gpickle(G, path, **attr)
 """
 
-
 def graph_nodes_to_gdf(graph: GeoGraph) -> gpd.GeoDataFrame:
     """
     Create and fill a GeoDataFrame (geopandas) from nodes of a networkX graph. The 'geometry' attribute is used for
@@ -98,40 +97,6 @@ def parse_numpy_types(gdf: gpd.GeoDataFrame):
             if isinstance(gdf.loc[i, c], np.generic):
                 gdf.loc[i, c] = np.asscalar(gdf.loc[i, c])
 
-
-def export_graph_as_shape_file(graph: nx.Graph, path='./', nodes=True, edges=True, driver="ESRI Shapefile"):
-    """
-    Export a networkx graph as a geographic file.
-    :param graph: Graph to export
-    :param path: export directory
-    :param nodes: boolean to indicate whether export nodes or not.
-    :param edges: boolean to indicate whether export edges or not.
-    :param driver: driver for export file format (shapefile, geojson: can be found from fiona.supported_drivers)
-    :return: None
-    """
-    if not os.path.exists(path):
-        os.mkdir(path)
-    if nodes:
-        gdf_nodes = graph_nodes_to_gdf(graph)
-        parse_bool_columns_as_int(gdf_nodes)
-        parse_numpy_types(gdf_nodes)
-        stringify_unwritable_columns(gdf_nodes)
-        file_names = os.path.join(path, gdf_nodes.gdf_name)
-        if driver == "GeoJSON":
-            file_names += ".geojson"
-        gdf_nodes.to_file(file_names, driver=driver)
-        print('nodes written to : %s' % file_names)
-    if edges:
-        gdf_edges = graph_edges_to_gdf(graph)
-        parse_bool_columns_as_int(gdf_edges)
-        parse_numpy_types(gdf_edges)
-        stringify_unwritable_columns(gdf_edges)
-        file_names = os.path.join(path, gdf_edges.gdf_name)
-        if driver == "GeoJSON":
-            file_names += ".geojson"
-        gdf_edges.to_file(file_names, driver=driver)
-        print('edges written to : %s' % file_names)
-
 def stringify_unwritable_columns(gdf: gpd.GeoDataFrame):
     types_to_stringify = (bool, list)
     valid_columns_types = ("int64", "float64")
@@ -140,3 +105,42 @@ def stringify_unwritable_columns(gdf: gpd.GeoDataFrame):
             for ix in gdf.index:
                 if isinstance(gdf.loc[ix, c], types_to_stringify):
                     gdf.loc[ix, c] = str(gdf.loc[ix, c])
+
+def cast_for_fiona(gdf: gpd.GeoDataFrame):
+    parse_bool_columns_as_int(gdf)
+    parse_numpy_types(gdf)
+    stringify_unwritable_columns(gdf)
+
+def export_graph_as_shape_file(graph: nx.Graph, path='./', nodes=True, edges=True, driver="ESRI Shapefile", fiona_cast=False):
+    """
+    Export a networkx graph as a geographic file.
+    :param graph: Graph to export
+    :param path: export directory
+    :param nodes: boolean to indicate whether export nodes or not.
+    :param edges: boolean to indicate whether export edges or not.
+    :param driver: driver for export file format (shapefile, geojson: can be found from fiona.supported_drivers)
+    :param fiona_cast: If true, methods for casting types to writable fiona types are used
+    :return: None
+    """
+    if not os.path.exists(path):
+        os.mkdir(path)
+    if nodes:
+        gdf_nodes = graph_nodes_to_gdf(graph)
+        if fiona_cast:
+            cast_for_fiona(gdf_nodes)
+        file_names = os.path.join(path, gdf_nodes.gdf_name)
+        if driver == "GeoJSON":
+            file_names += ".geojson"
+        gdf_nodes.to_file(file_names, driver=driver)
+        print('nodes written to : %s' % file_names)
+    if edges:
+        gdf_edges = graph_edges_to_gdf(graph)
+        if fiona_cast:
+            cast_for_fiona(gdf_edges)
+        file_names = os.path.join(path, gdf_edges.gdf_name)
+        if driver == "GeoJSON":
+            file_names += ".geojson"
+        gdf_edges.to_file(file_names, driver=driver)
+        print('edges written to : %s' % file_names)
+
+

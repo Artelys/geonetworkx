@@ -31,7 +31,7 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
     :return: None if inplace, new graph otherwise.
     """
     if not any(graph.edges_geometry_key in graph.edges[e] for e in graph.edges):
-        raise ValueError("The given graph has no edge geometry, at least one edge geometry is required a merge operation")
+        raise ValueError("The given graph has no edge geometry, at least one edge geometry is required for a merge operation")
     if not inplace:
         graph = graph.copy()
     # 1. Find closest edge for each point
