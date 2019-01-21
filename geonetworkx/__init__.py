@@ -10,16 +10,16 @@ from geonetworkx.geomultigraph import *
 import geonetworkx.geomultidigraph
 from geonetworkx.geomultidigraph import *
 
-import geonetworkx.geograph
+import geonetworkx.geometry_operations
 from geonetworkx.geometry_operations import *
 
-import geonetworkx.geograph
+import geonetworkx.readwrite
 from geonetworkx.readwrite import *
 
 import geonetworkx.geograph
 from geonetworkx.simplify import *
 
-import geonetworkx.geograph
+import geonetworkx.utils
 from geonetworkx.utils import *
 
 import geonetworkx.settings

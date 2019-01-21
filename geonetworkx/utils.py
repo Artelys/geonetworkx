@@ -163,3 +163,8 @@ def order_well_lines(graph: "GeoGraph"):
                 to_reverse = True
         if to_reverse:
             graph.edges[e][graph.edges_geometry_key] = LineString(reversed(line.coords))
+
+
+def stringify_nodes(graph, copy=True):
+    """Modify the graph node names into strings."""
+    nx.relabel_nodes(graph, {n: str(n) for n in graph.nodes}, copy)

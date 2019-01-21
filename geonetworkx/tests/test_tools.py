@@ -4,7 +4,7 @@
     Creation date: 09/01/2019
     Python Version: 3.6
 """
-import sys, os
+import sys, os, shutil
 import geopandas as gpd
 import networkx as nx
 import geonetworkx as gnx
@@ -12,13 +12,25 @@ import numpy as np
 from shapely.geometry import Point
 #os.chdir("geonetworkx/tests")
 from nose.tools import assert_in
+import unittest
 
 SEED = 70595
 np.random.seed(SEED)
 data_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), "datasets")
 
 
-class TestTools():
+class TestTools(unittest.TestCase):
+
+    def setUp(self):
+        file_dir = os.path.dirname(__file__)
+        self.results_dir = os.path.join(file_dir, "datasets/results/")
+        if not os.path.exists(self.results_dir):
+            os.mkdir(self.results_dir)
+
+    def tearDown(self):
+        shutil.rmtree(self.results_dir)
+
+
     def test_spatial_points_merge(self):
         # test a spatial merge
         mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_mdg.gpickle"))

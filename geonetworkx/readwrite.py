@@ -1,8 +1,10 @@
 import os
+import pickle
 import numpy as np
 import networkx as nx
 import geopandas as gpd
 from shapely.geometry import Point, LineString
+from shapely.wkt import loads
 from .geograph import GeoGraph
 from .geomultigraph import GeoMultiGraph
 from .geodigraph import GeoDiGraph
@@ -22,23 +24,50 @@ def parse_graph_as_geograph(graph, **attr):
             geograph = GeoGraph(graph, **attr)
     return geograph
 
-"""
-def read_gpickle(path, **attr):
-    graph = nx.read_gpickle(path)
-    for key in ['x_key', 'y_key', 'edges_geometry_key']:
-        if key not in attr and key in graph.graph:
-            attr[key] = graph.graph[key]
-    return parse_graph_as_geograph(graph, **attr)
+def get_graph_with_wkt_geometry(geograph):
+    """Modify the edges geometry attribute to a well-kwown text format to make the graph writable is some text formats.
+    The returned graph is not as operational as the given one (edge geometries has been removed)"""
+    graph_shallow_copy = geograph.__class__(geograph, **geograph.get_spatial_keys())
+    edge_geometries = nx.get_edge_attributes(graph_shallow_copy, geograph.edges_geometry_key)
+    for e in edge_geometries:
+        if hasattr(edge_geometries[e], "to_wkt"):
+            graph_shallow_copy.edges[e][geograph.edges_geometry_key] = edge_geometries[e].to_wkt()
+    return graph_shallow_copy
+
+def parse_edge_attribute_as_wkt(graph, attribute_name):
+    wkt_lines = nx.get_edge_attributes(graph, attribute_name)
+    for e, w in wkt_lines.items():
+        graph.edges[e][attribute_name] = loads(w)
 
 def write_keys_as_graph_attributes(graph: GeoGraph):
     for key in ['x_key', 'y_key', 'edges_geometry_key']:
         graph.graph[key] = getattr(graph, key)
 
-def write_gpickle(geograph, path, **attr):
+def read_gpickle(path, **attr):
+    graph = nx.read_gpickle(path)
+    if isinstance(graph, (nx.Graph, nx.DiGraph, nx.MultiDiGraph, nx.MultiGraph)):
+        return parse_graph_as_geograph(graph, **attr)
+    else:
+        return graph
+
+def write_gpickle(geograph, path, protocol=pickle.HIGHEST_PROTOCOL):
     write_keys_as_graph_attributes(geograph)
-    graph = 
-    nx.write_gpickle(G, path, **attr)
-"""
+    nx.write_gpickle(geograph, path, protocol)
+
+def read_graphml(path, node_type=str, edge_key_type=int, **attr):
+    graph = nx.read_graphml(path, node_type, edge_key_type)
+    if "edges_geometry_key" in attr:
+        parse_edge_attribute_as_wkt(graph, attr["edges_geometry_key"])
+    elif "edges_geometry_key" in graph.graph:
+        parse_edge_attribute_as_wkt(graph, graph.graph["edges_geometry_key"])
+    else:
+        parse_edge_attribute_as_wkt(graph, GeoGraph.EDGES_GEOMETRY_DEFAULT_KEY)
+    return parse_graph_as_geograph(graph, **attr)
+
+def write_graphml(geograph, path, encoding='utf-8', prettyprint=True, infer_numeric_types=False):
+    write_keys_as_graph_attributes(geograph)
+    graph_wkt = get_graph_with_wkt_geometry(geograph)
+    nx.write_graphml(graph_wkt, path, encoding, prettyprint, infer_numeric_types)
 
 def graph_nodes_to_gdf(graph: GeoGraph) -> gpd.GeoDataFrame:
     """
