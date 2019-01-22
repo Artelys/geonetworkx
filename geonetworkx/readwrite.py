@@ -40,8 +40,13 @@ def parse_edge_attribute_as_wkt(graph, attribute_name):
         graph.edges[e][attribute_name] = loads(w)
 
 def write_keys_as_graph_attributes(graph: GeoGraph):
-    for key in ['x_key', 'y_key', 'edges_geometry_key']:
-        graph.graph[key] = getattr(graph, key)
+    spatial_keys = graph.get_spatial_keys()
+    for key, val in spatial_keys.items():
+        if isinstance(val, (int, float, str)):
+            graph.graph[key] = val
+        else:
+            graph.graph[key] = str(val)
+            delattr(graph, key)
 
 def read_gpickle(path, **attr):
     graph = nx.read_gpickle(path)
@@ -62,11 +67,13 @@ def read_graphml(path, node_type=str, edge_key_type=int, **attr):
         parse_edge_attribute_as_wkt(graph, graph.graph["edges_geometry_key"])
     else:
         parse_edge_attribute_as_wkt(graph, GeoGraph.EDGES_GEOMETRY_DEFAULT_KEY)
+    if 'crs' in graph.graph:
+        attr['crs'] = graph.graph['crs']
     return parse_graph_as_geograph(graph, **attr)
 
 def write_graphml(geograph, path, encoding='utf-8', prettyprint=True, infer_numeric_types=False):
-    write_keys_as_graph_attributes(geograph)
     graph_wkt = get_graph_with_wkt_geometry(geograph)
+    write_keys_as_graph_attributes(graph_wkt)
     nx.write_graphml(graph_wkt, path, encoding, prettyprint, infer_numeric_types)
 
 def graph_nodes_to_gdf(graph: GeoGraph) -> gpd.GeoDataFrame:
