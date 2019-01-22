@@ -29,12 +29,12 @@ class TestClasses():
         assert_is_instance(undirected_graph, gnx.GeoGraph)
 
     # GeoMultiGraph
-    def test_mutligraph_to_directed(self):
+    def test_multigraph_to_directed(self):
         graph = get_random_geomultigraph(NB_POINTS, SEED + 2)
         directed_graph = graph.to_directed()
         assert_is_instance(directed_graph, gnx.GeoMultiDiGraph)
 
-    def test_mutligraph_to_undirected(self):
+    def test_multigraph_to_undirected(self):
         graph = get_random_geomultigraph(NB_POINTS, SEED + 3)
         undirected_graph = graph.to_undirected()
         assert_is_instance(undirected_graph, gnx.GeoMultiGraph)
@@ -51,12 +51,12 @@ class TestClasses():
         assert_is_instance(undirected_graph, gnx.GeoGraph)
 
     # GeoMultiDiGraph
-    def test_mutlidigraph_to_directed(self):
+    def test_multidigraph_to_directed(self):
         graph = get_random_geomultidigraph(NB_POINTS, SEED + 6)
         directed_graph = graph.to_directed()
         assert_is_instance(directed_graph, gnx.GeoMultiDiGraph)
 
-    def test_mutlidigraph_to_undirected(self):
+    def test_multidigraph_to_undirected(self):
         graph = get_random_geomultidigraph(NB_POINTS, SEED + 7)
         undirected_graph = graph.to_undirected()
         assert_is_instance(undirected_graph, gnx.GeoMultiGraph)
