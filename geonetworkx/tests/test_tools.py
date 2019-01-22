@@ -37,7 +37,7 @@ class TestTools(unittest.TestCase):
         graph = gnx.GeoMultiDiGraph(mdg)
         gnx.utils.fill_edges_missing_geometry_attributes(graph)
         points_gdf = gpd.read_file(os.path.join(data_directory, "grenoble200_buildings.geojson"), driver="GeoJSON")
-        gnx.tools.spatial_points_merge(graph, points_gdf)
+        gnx.tools.spatial_points_merge(graph, points_gdf, inplace=True)
         #gnx.readwrite.export_graph_as_shape_file(graph, "datasets/results/")
         for p in points_gdf.index:
             assert_in(p, graph.nodes())
