@@ -17,7 +17,7 @@ from geonetworkx.readwrite import graph_nodes_to_gdf
 from collections import defaultdict
 
 
-def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=True, merge_direction="both",
+def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=False, merge_direction="both",
                          node_filter=no_filter, edge_filter=no_filter) -> GeoGraph:
     """
     Merge given points as node with a spatial merge.
@@ -130,7 +130,7 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
 
 
 def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
-                        inplace=True, merge_direction="both", node_filter=None):
+                        inplace=False, merge_direction="both", node_filter=None):
     """
     Operates spatial merge between two graphs. Spatial edge projection is used on merging nodes.
     :param base_graph: Base graph on which the merge operation is done.
@@ -143,7 +143,7 @@ def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
     if base_graph.is_directed() != other_graph.is_directed():
         raise ValueError("Merging a directed graph and an undirected graph is ambiguous")
     if base_graph.is_multigraph() != other_graph.is_multigraph():
-        raise ValueError("Merging a multigraph and a graph is ambiguous")
+        raise ValueError("Given graphs must both be graphs or multigraph")
     if node_filter is not None:
         other_graph_view = nx.graphviews.subgraph_view(other_graph, node_filter)
     else:
