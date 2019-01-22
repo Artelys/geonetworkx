@@ -14,21 +14,9 @@ class GeoGraph(nx.Graph):
         self.check_nodes_validity()
 
     def parse_input_keys(self, **attr):
-        if 'x_key' in attr:
-            self.x_key = attr['x_key']
-            del attr['x_key']
-        else:
-            self.x_key = GeoGraph.X_DEFAULT_KEY
-        if 'y_key' in attr:
-            self.y_key = attr['y_key']
-            del attr['y_key']
-        else:
-            self.y_key = GeoGraph.Y_DEFAULT_KEY
-        if 'edges_geometry_key' in attr:
-            self.edges_geometry_key = attr['edges_geometry_key']
-            del attr['edges_geometry_key']
-        else:
-            self.edges_geometry_key = GeoGraph.EDGES_GEOMETRY_DEFAULT_KEY
+        self.x_key = attr.pop('x_key', GeoGraph.X_DEFAULT_KEY)
+        self.y_key = attr.pop('y_key', GeoGraph.Y_DEFAULT_KEY)
+        self.edges_geometry_key = attr.pop('edges_geometry_key', GeoGraph.EDGES_GEOMETRY_DEFAULT_KEY)
 
     def check_nodes_validity(self):
         for n, node_data in self.nodes(data=True):
