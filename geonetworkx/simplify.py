@@ -1,4 +1,7 @@
 import networkx as nx
+from shapely.geometry import Polygon, MultiPolygon
+from geonetworkx import GeoGraph
+from typing import Union
 
 def remove_isolates(graph: nx.Graph) -> int:
     """
@@ -39,3 +42,37 @@ def remove_small_connected_components(graph: nx.Graph, minimum_allowed_size: int
             for n in cc:
                 graph.nodes[n]['cc'] = c_ix
     return nb_removed_cc
+
+
+def trim_graph_with_polygon(graph: GeoGraph, polygon: Union[Polygon, MultiPolygon], copy=False, method="intersects"):
+    """
+    Trim a graph with a given polygon. Keep only the nodes and edges that intersect (or are within) the polygon.
+    :param graph: A GeoGraph (or subclass)
+    :param polygon: A `shapely.Polygon` describing the area to keep
+    :param copy: If True, a deep copy is done and a new graph is returned.
+    :param method: If set to `intersects`, the `shapely.intersects` is used (keeps nodes and edges that intersects the
+    polygon). If set to `within`, the `shapely.within` is used (keep nodes and edges that are strictly into the polygon).
+    :return: The modified graph if `copy` is True.
+    """
+    if copy:
+        used_graph = graph.copy()
+    else:
+        used_graph = graph
+    if method not in ["intersects", "within"]:
+        raise ValueError("Unknown method for trimming : '%s'" % str(method))
+    nodes_series = used_graph.get_nodes_as_point_series()
+    edges_as_series = used_graph.get_edges_as_line_series()
+    if method == 'intersects':
+        nodes_criteria = ~ nodes_series.intersects(polygon)
+        edges_criteria = ~ edges_as_series.intersects(polygon)
+    else:
+        nodes_criteria = ~ nodes_series.within(polygon)
+        edges_criteria = ~ edges_as_series.within(polygon)
+    nodes_to_remove = nodes_series[nodes_criteria].index
+    edges_to_remove = edges_as_series[edges_criteria].index
+    used_graph.remove_nodes_from(nodes_to_remove)
+    used_graph.remove_edges_from(edges_to_remove)
+    if copy:
+        return used_graph
+
+

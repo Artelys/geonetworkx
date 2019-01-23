@@ -30,6 +30,12 @@ def assert_graphs_have_same_edges_geometry(graph1, graph2, msg='', tol=1e-4):
         assert_in(e, lines2, msg)
         assert_lines_almost_equals(lines1[e], lines2[e], msg, tol)
 
+def assert_is_subgraph(base_graph, sub_graph, msg=''):
+    for n in sub_graph.nodes:
+        assert_in(n, base_graph.nodes, msg)
+    for e in sub_graph.edges:
+        assert_in(e, base_graph.edges, msg)
+
 def assert_graphs_have_same_geonodes(graph1, graph2, msg='', tol=1e-4):
     assert_equal(len(graph1.nodes), len(graph2.nodes), msg)
     coordinates1 = graph1.get_nodes_coordinates()
@@ -81,13 +87,16 @@ def get_random_geomultidigraph(nb_nodes, seed):
     gnx.fill_edges_missing_geometry_attributes(multidigraph)
     return multidigraph
 
-
-def get_random_geograph_with_wgs84_scale(nb_nodes, seed, graph_type=gnx.GeoGraph):
+def get_random_geograph_subclass(nb_nodes, seed, graph_type=gnx.GeoGraph):
     graph_generation_methods = {gnx.GeoGraph: get_random_geograph,
                                 gnx.GeoMultiGraph: get_random_geomultigraph,
                                 gnx.GeoDiGraph: get_random_geodigraph,
                                 gnx.GeoMultiDiGraph: get_random_geomultidigraph}
     g = graph_generation_methods[graph_type](nb_nodes, seed)
+    return g
+
+def get_random_geograph_with_wgs84_scale(nb_nodes, seed, graph_type=gnx.GeoGraph):
+    g = get_random_geograph_subclass(nb_nodes, seed, graph_type)
     x_func = lambda x: 5.7 + 1e-1 * x
     y_func = lambda y: 45.1 + 1e-1 * y
     for n, data in g.nodes(data=True):
