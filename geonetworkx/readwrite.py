@@ -9,6 +9,7 @@ from .geograph import GeoGraph
 from .geomultigraph import GeoMultiGraph
 from .geodigraph import GeoDiGraph
 from .geomultidigraph import GeoMultiDiGraph
+import geonetworkx.settings as settings
 
 
 def parse_graph_as_geograph(graph, **attr):
@@ -66,7 +67,7 @@ def read_graphml(path, node_type=str, edge_key_type=int, **attr):
     elif "edges_geometry_key" in graph.graph:
         parse_edge_attribute_as_wkt(graph, graph.graph["edges_geometry_key"])
     else:
-        parse_edge_attribute_as_wkt(graph, GeoGraph.EDGES_GEOMETRY_DEFAULT_KEY)
+        parse_edge_attribute_as_wkt(graph, settings.EDGES_GEOMETRY_DEFAULT_KEY)
     if 'crs' in graph.graph:
         attr['crs'] = graph.graph['crs']
     return parse_graph_as_geograph(graph, **attr)
