@@ -13,12 +13,14 @@ from shapely.geometry import Point
 #os.chdir("geonetworkx/tests")
 from nose.tools import assert_in
 import unittest
+from nose.plugins.attrib import attr
+
 
 SEED = 70595
 np.random.seed(SEED)
 data_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), "datasets")
 
-
+@attr('tools')
 class TestTools(unittest.TestCase):
 
     def setUp(self):

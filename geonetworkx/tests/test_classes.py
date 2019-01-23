@@ -11,6 +11,7 @@ import geonetworkx as gnx
 import os, shutil
 import numpy as np
 from nose.tools import assert_is_instance
+from nose.plugins.attrib import attr
 import unittest
 
 
@@ -18,6 +19,7 @@ SEED = 70595
 np.random.seed(SEED)
 NB_POINTS = 100
 
+@attr('classes')
 class TestClasses(unittest.TestCase):
 
     def setUp(self):

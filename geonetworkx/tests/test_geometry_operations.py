@@ -6,6 +6,7 @@
 """
 from shapely.geometry import LineString
 import numpy as np
+from nose.plugins.attrib import attr
 from ..geometry_operations import discretize_lines
 from ..testing.utils import assert_almost_intersect
 import geonetworkx as gnx
@@ -13,6 +14,7 @@ import geonetworkx.settings as settings
 
 np.random.seed(70595)
 
+@attr('geometry_operations')
 class TestGeometryOperations():
 
     def test_discretize_lines(self):

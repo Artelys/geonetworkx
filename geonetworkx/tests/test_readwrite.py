@@ -7,6 +7,7 @@
 import os, shutil
 from nose.tools import assert_is_instance
 import unittest
+from nose.plugins.attrib import attr
 import networkx as nx
 import geonetworkx as gnx
 from geonetworkx.testing import get_random_geograph, get_random_geodigraph, get_random_geomultigraph,\
@@ -16,6 +17,7 @@ from geonetworkx.testing import get_random_geograph, get_random_geodigraph, get_
 SEED = 70595
 NB_VERTICES = 100
 
+@attr('readwrite')
 class TestReadWrite(unittest.TestCase):
 
     def setUp(self):
