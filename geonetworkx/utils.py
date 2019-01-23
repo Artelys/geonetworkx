@@ -3,9 +3,18 @@ import numpy as np
 import networkx as nx
 from shapely.geometry import Point, LineString
 from geopy.distance import vincenty
+import pyproj
 from geonetworkx.geometry_operations import coordinates_almost_equal, insert_point_in_line
+import geonetworkx.settings as settings
 from typing import Iterable
 
+def compare_crs(crs1, crs2):
+    """Compare crs using `pyproj.Proj` objects."""
+    if crs1 is None or crs2 is None:
+        return False
+    p1 = pyproj.Proj(crs1)
+    p2 = pyproj.Proj(crs2)
+    return p1.definition_string() == p2.definition_string()
 
 def compute_vincenty(p1, p2):
     """Returns the vincenty distance in meters given points with the format (longitude, latitude) in the WGS84
@@ -100,12 +109,14 @@ def fill_edges_missing_geometry_attributes(graph: "GeoGraph"):
 def fill_length_attribute(graph: "GeoGraph", attribute_name="length", only_missing=True):
     """
     Fill the 'length' attribute of the given networkX Graph. The length is computed in meters using the vincenty
-     formula.
+     formula. Method won't be consistent if the graph crs is not WGS84.
     :param graph: graph to fill
     :param attribute_name: The length attribute name to set
     :param only_missing: Compute the length only if the attribute is missing
     :return: None
     """
+    if compare_crs(graph.crs, settings.USED_CRS):
+        raise ValueError("Impossible to compute distance for graph with different crs than : '%s' " % str(settings.DEFAULT_CRS))
     edges_geometry = nx.get_edge_attributes(graph, graph.edges_geometry_key)
     for e in edges_geometry:
         edge_data = graph.edges[e]

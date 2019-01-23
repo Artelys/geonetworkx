@@ -75,9 +75,8 @@ class TestClasses(unittest.TestCase):
 
     def test_crs_modification(self):
         graph = get_random_geograph_with_wgs84_scale(NB_POINTS, SEED, gnx.GeoMultiDiGraph)
-        graph.crs = gnx.settings.DEFAULT_CRS
         modified_graph = graph.to_crs(crs={'init': 'epsg:3857'}, inplace=False)
-        re_modified_graph = modified_graph.to_crs(crs=gnx.settings.DEFAULT_CRS, inplace=False)
+        re_modified_graph = modified_graph.to_crs(crs=gnx.settings.WGS84_CRS, inplace=False)
         assert_graphs_have_same_edges_geometry(graph, re_modified_graph, "Some edge geometries seems to be different"
                                                                          " after re-modification", tol=1e-2)
         assert_graphs_have_same_geonodes(graph, re_modified_graph, "Some nodes seems to be different after "

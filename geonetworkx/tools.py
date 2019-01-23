@@ -25,7 +25,9 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
     :param points_gdf: A list of point describing new nodes to add. Points are projected on the closest edge of the
     graph and an intersection node is added if necessary. If two nodes a given point and a node have the same name, with
     equal coordinates, then the node is considered as already in the graph.
-    :param inplace: If True, do operation inplace and return None.
+    :param inplace: If True, do operation inplace and return None. A discretization tolerance (
+    `settings.DISCRETIZATION_TOLERANCE`) is used for edges lines and is set by default to a constant maching the WGS84
+     crs. If another crs is used, results may be inconsistent (high computational time or inaccuracy).
     :param merge_direction: For directed graphs only:
          * `both`: 2 edges are added: graph -> new node and new node -> graph
          * `in`: 1 edge is added: new_node -> graph

@@ -99,5 +99,6 @@ def get_random_geograph_with_wgs84_scale(nb_nodes, seed, graph_type=gnx.GeoGraph
         line_coords = list(line.coords)
         modified_coords = [(x_func(x), y_func(y)) for x, y in line_coords]
         edge_data[g.edges_geometry_key] = LineString(modified_coords)
+    g.crs = gnx.settings.WGS84_CRS
     return g
 
