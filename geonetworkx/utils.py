@@ -27,9 +27,9 @@ def compute_vincenty(p1, p2):
 def compute_vincenty_from_points(p1: Point, p2: Point):
     return compute_vincenty([p1.x, p1.y], [p2.x, p2.y])
 
-def approx_map_unit_factor(points, tolerance=1e-7):
-    """Compute a linear approximation of the map unit factor for 1 meter."""
-    centroid = np.mean(points, 0)
+def approx_map_unit_factor(points_coordinates, tolerance=1e-7):
+    """Compute a linear approximation of the map unit factor for 1 meter. Works only for the WGS84 CRS."""
+    centroid = np.array(points_coordinates)
     lower_bound = centroid
     initial_gap = tolerance
     while compute_vincenty(centroid, centroid + initial_gap) < 1.0:
