@@ -9,11 +9,11 @@ import geonetworkx.settings as settings
 class GeoGraph(nx.Graph):
 
     def __init__(self, incoming_graph_data=None, **attr):
-        self.parse_input_keys(**attr)
+        self.parse_input_keys(attr)
         super(GeoGraph, self).__init__(incoming_graph_data, **attr)
         self.check_nodes_validity()
 
-    def parse_input_keys(self, **attr):
+    def parse_input_keys(self, attr):
         self.x_key = attr.pop('x_key', settings.X_DEFAULT_KEY)
         self.y_key = attr.pop('y_key', settings.Y_DEFAULT_KEY)
         self.edges_geometry_key = attr.pop('edges_geometry_key', settings.EDGES_GEOMETRY_DEFAULT_KEY)

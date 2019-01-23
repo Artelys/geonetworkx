@@ -10,7 +10,7 @@ from .geomultigraph import GeoMultiGraph
 from .geodigraph import GeoDiGraph
 from .geomultidigraph import GeoMultiDiGraph
 import geonetworkx.settings as settings
-
+from geonetworkx.utils import get_crs_as_str
 
 def parse_graph_as_geograph(graph, **attr):
     if graph.is_directed():
@@ -43,11 +43,12 @@ def parse_edge_attribute_as_wkt(graph, attribute_name):
 def write_keys_as_graph_attributes(graph: GeoGraph):
     spatial_keys = graph.get_spatial_keys()
     for key, val in spatial_keys.items():
-        if isinstance(val, (int, float, str)):
-            graph.graph[key] = val
-        else:
-            graph.graph[key] = str(val)
+        if key == 'crs':
+            if graph.crs is not None:
+                graph.graph[key] = get_crs_as_str(graph.crs)
             delattr(graph, key)
+        else:
+            graph.graph[key] = val
 
 def read_gpickle(path, **attr):
     graph = nx.read_gpickle(path)

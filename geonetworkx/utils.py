@@ -8,13 +8,16 @@ from geonetworkx.geometry_operations import coordinates_almost_equal, insert_poi
 import geonetworkx.settings as settings
 from typing import Iterable
 
+def get_crs_as_str(crs):
+    """Return the given CRS as string `pyproj.Proj` methods."""
+    proj = pyproj.Proj(crs)
+    return proj.definition_string()
+
 def compare_crs(crs1, crs2):
-    """Compare crs using `pyproj.Proj` objects."""
+    """Compare CRS using `pyproj.Proj` objects."""
     if crs1 is None or crs2 is None:
         return False
-    p1 = pyproj.Proj(crs1)
-    p2 = pyproj.Proj(crs2)
-    return p1.definition_string() == p2.definition_string()
+    return get_crs_as_str(crs1) == get_crs_as_str(crs2)
 
 def compute_vincenty(p1, p2):
     """Returns the vincenty distance in meters given points with the format (longitude, latitude) in the WGS84
