@@ -150,6 +150,8 @@ def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
         other_graph_view = nx.graphviews.subgraph_view(other_graph, node_filter)
     else:
         other_graph_view = other_graph
+    if other_graph_view.number_of_nodes() == 0:
+        raise ValueError("Given graph has no nodes to project.")
     nodes_gdf = graph_nodes_to_gdf(other_graph_view)
     if inplace:
         spatial_points_merge(base_graph, nodes_gdf, inplace=inplace, merge_direction=merge_direction)
