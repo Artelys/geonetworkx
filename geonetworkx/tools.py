@@ -12,7 +12,7 @@ from shapely.geometry import Point, LineString
 from geonetworkx.geograph import GeoGraph
 import geonetworkx.settings as settings
 from geonetworkx.geometry_operations import get_closest_line_from_points, split_line, coordinates_almost_equal
-from geonetworkx.utils import get_new_node_unique_name, euclidian_distance
+from geonetworkx.utils import get_new_node_unique_name, euclidian_distance, get_line_ordered_edge
 from geonetworkx.readwrite import graph_nodes_to_gdf
 from collections import defaultdict
 
@@ -120,10 +120,11 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
                 split_lines.append(cut_lines[0])
             split_lines.append(cut_lines[1])
             # 2.2 add intermediary edges
+            oriented_edge = get_line_ordered_edge(graph, e, initial_line)
             first_edge_data = {graph.edges_geometry_key: split_lines[0]}
-            graph.add_edge(e[0], sorted_intersection_nodes[0], **first_edge_data)
+            graph.add_edge(oriented_edge[0], sorted_intersection_nodes[0], **first_edge_data)
             last_edge_data = {graph.edges_geometry_key: split_lines[-1]}
-            graph.add_edge(sorted_intersection_nodes[-1], e[1], **last_edge_data)
+            graph.add_edge(sorted_intersection_nodes[-1], oriented_edge[1], **last_edge_data)
             for i in range(len(sorted_intersection_nodes) - 1):
                 edge_data = {graph.edges_geometry_key: split_lines[i + 1]}
                 graph.add_edge(sorted_intersection_nodes[i], sorted_intersection_nodes[i + 1], **edge_data)

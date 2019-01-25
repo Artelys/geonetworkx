@@ -148,34 +148,46 @@ def join_lines_extremity_to_nodes_coordinates(graph: "GeoGraph"):
             graph.edges[e][graph.edges_geometry_key] = line
 
 
+def get_line_start(graph, e, line):
+    """For a given edge, return the node constituting the line start with a closest node rule."""
+    uxy = graph.get_node_coordinates(e[0])
+    vxy = graph.get_node_coordinates(e[1])
+    first_extremity = line.coords[0]
+    last_extremity = line.coords[-1]
+    u_e1 = euclidian_distance_coordinates(uxy, first_extremity)
+    v_e1 = euclidian_distance_coordinates(vxy, first_extremity)
+    u_e2 = euclidian_distance_coordinates(uxy, last_extremity)
+    v_e2 = euclidian_distance_coordinates(vxy, last_extremity)
+    if u_e1 > v_e1 and u_e2 < v_e2:  # u is closer to e2 and v is closer to e1
+        return e[1]
+    elif u_e1 < v_e1 and u_e2 < v_e2:  # u is closer to e1 and e2 than v
+        if u_e1 > u_e2:
+            return e[1]
+    elif u_e1 > v_e1 and u_e2 > v_e2:  # v in closer to e1 and e2 than u
+        if v_e1 < v_e2:
+            return e[1]
+    else:
+        return e[0]
+
+def get_line_ordered_edge(graph, e, line):
+    """Return the given edge with the first node of the edge representing the first line point and the second node
+    the last edge point. The closest node rule is applied."""
+    if get_line_start(graph, e, line) != e[0]:
+        return (e[1], e[0], *e[2:])
+    else:
+        return e
+
 def order_well_lines(graph: "GeoGraph"):
     """
     Try to order well each geometry attribute of edges so that the first coordinates of the line string are the
-    coordinates of the first vertex of the edge. The closest node rule is applied.
+    coordinates of the first vertex of the edge. The closest node rule is applied. If the graph is not oriented, the
+    modification will be inconsistent (nodes declaration in edges views are not ordered).
     :param graph: Graph on which to apply the ordering step. Modification is inplace.
     :return: None
     """
     line_strings = nx.get_edge_attributes(graph, graph.edges_geometry_key)
-    for e in line_strings:
-        uxy = graph.get_node_coordinates(e[0])
-        vxy = graph.get_node_coordinates(e[1])
-        line = line_strings[e]
-        first_extremity = line.coords[0]
-        last_extremity = line.coords[-1]
-        u_e1 = euclidian_distance_coordinates(uxy, first_extremity)
-        v_e1 = euclidian_distance_coordinates(vxy, first_extremity)
-        u_e2 = euclidian_distance_coordinates(uxy, last_extremity)
-        v_e2 = euclidian_distance_coordinates(vxy, last_extremity)
-        to_reverse = False
-        if u_e1 > v_e1 and u_e2 < v_e2:  # u is closer to e2 and v is closer to e1
-            to_reverse = True
-        elif u_e1 < v_e1 and u_e2  < v_e2:  # u is closer to e1 and e2 than v
-            if u_e1 > u_e2:
-                to_reverse = True
-        elif u_e1 > v_e1 and u_e2 > v_e2:  # v in closer to e1 and e2 than u
-            if v_e1 < v_e2:
-                to_reverse = True
-        if to_reverse:
+    for e, line in line_strings.items():
+        if get_line_start(graph, e, line) != e[0]:
             graph.edges[e][graph.edges_geometry_key] = LineString(reversed(line.coords))
 
 
