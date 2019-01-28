@@ -131,9 +131,10 @@ def parse_bool_columns_as_int(gdf: gpd.GeoDataFrame):
 
 def parse_numpy_types(gdf: gpd.GeoDataFrame):
     for c in gdf.columns:
-        for i in gdf.index:
-            if isinstance(gdf.loc[i, c], np.generic):
-                gdf.loc[i, c] = np.asscalar(gdf.loc[i, c])
+        if any(map(lambda x: isinstance(x, np.generic), gdf[c])):
+            for i in gdf.index:
+                if isinstance(gdf.loc[i, c], np.generic):
+                    gdf.loc[i, c] = np.asscalar(gdf.loc[i, c])
 
 def stringify_unwritable_columns(gdf: gpd.GeoDataFrame):
     types_to_stringify = (bool, list)
