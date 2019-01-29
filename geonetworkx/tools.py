@@ -18,7 +18,7 @@ from collections import defaultdict
 
 
 def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=False, merge_direction="both",
-                         node_filter=no_filter, edge_filter=no_filter) -> GeoGraph:
+                         node_filter=no_filter, edge_filter=no_filter, intersection_nodes_attr=None) -> GeoGraph:
     """
     Merge given points as node with a spatial merge.
     :param graph: A GeoGraph or derived class describing a spatial graph.
@@ -35,6 +35,7 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
     :param node_filter: A node filter (lambda) to exclude nodes (and by the way all concerned edges) from the projection
      operation.
     :param edge_filter: An edge filter (lambda) to exclude edges on which the projection will not take place.
+    :param intersection_nodes_attr: A dictionary of attributes (constant for all added intersection nodes).
     :return: None if inplace, new graph otherwise.
     """
     if not inplace:
@@ -72,6 +73,8 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
             projected_point = closest_line.interpolate(intersection_distance_on_line)
             intersection_node_name = get_new_node_unique_name(graph, settings.INTERSECTION_PREFIX + str(p_index))
             intersection_node_info = {graph.x_key: projected_point.x, graph.y_key: projected_point.y}
+            if intersection_nodes_attr is not None:
+                intersection_node_info.update(intersection_nodes_attr)
             graph.add_node(intersection_node_name, **intersection_node_info)
             # Store line to modify
             edges_to_split[closest_edge_name][intersection_node_name] = intersection_distance_on_line
