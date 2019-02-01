@@ -2,6 +2,7 @@ import networkx as nx
 from .geograph import GeoGraph
 import geonetworkx as gnx
 
+
 class GeoDiGraph(GeoGraph, nx.DiGraph):
 
     def to_nx_class(self):
@@ -33,7 +34,6 @@ class GeoDiGraph(GeoGraph, nx.DiGraph):
     def to_directed_class(self):
         """Returns the class to use for empty directed copies (see `networkx.DiGraph.to_directed_class`)."""
         return GeoDiGraph
-
 
     """ 
     TODO

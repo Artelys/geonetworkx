@@ -77,9 +77,9 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
     """
     Merge given points as node with a spatial merge. Points are projected on the closest edge of the
     graph and an intersection node is added if necessary. If two nodes a given point and a node have the same name, with
-    equal coordinates, then the node is considered as already in the graph. A discretization tolerance (`settings.DISCRETIZATION_TOLERANCE`)
-    is used for edges lines and is set by default to a constant matching the WGS84 crs. If another crs is used, results
-    may be inconsistent (high computational time or inaccuracy).
+    equal coordinates, then the node is considered as already in the graph. A discretization tolerance
+    (`settings.DISCRETIZATION_TOLERANCE`) is used for edges lines and is set by default to a constant matching the WGS84
+    crs. If another crs is used, results may be inconsistent (high computational time or inaccuracy).
 
     :param graph: A GeoGraph or derived class describing a spatial graph.
     :param points_gdf: A list of point describing new nodes to add.
@@ -97,10 +97,11 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
     if not inplace:
         graph = graph.copy()
     # 1. Find closest edge for each point
-    graph_view = nx.graphviews.subgraph_view(graph, filter_node=node_filter ,filter_edge=edge_filter)
+    graph_view = nx.graphviews.subgraph_view(graph, filter_node=node_filter, filter_edge=edge_filter)
     edges_as_lines = nx.get_edge_attributes(graph_view, graph.edges_geometry_key)
     if len(edges_as_lines) == 0:
-        raise ValueError("No edge geometry has been found in the given merging edges, at least one edge geometry is required for a merge operation")
+        raise ValueError("No edge geometry has been found in the given merging edges, at least one edge geometry is"
+                         " required for a merge operation")
     points = points_gdf[settings.GPD_GEOMETRY_KEY]
     points_coords = np.array([[p.x, p.y] for p in points])
     lines_indexes = get_closest_line_from_points(points_coords, edges_as_lines.values())
@@ -194,7 +195,8 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
 def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
                         inplace=False, merge_direction="both", node_filter=None):
     """
-    Operates spatial merge between two graphs. Spatial edge projection is used on merging nodes (see `spatial_points_merge`).
+    Operates spatial merge between two graphs. Spatial edge projection is used on merging nodes (see
+    `spatial_points_merge`).
 
     :param base_graph: Base graph on which the merge operation is done.
     :param other_graph: Input graph to merge. Modified graph if operation is done inplace.

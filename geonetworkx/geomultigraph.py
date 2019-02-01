@@ -2,6 +2,7 @@ import networkx as nx
 from .geograph import GeoGraph
 import geonetworkx as gnx
 
+
 class GeoMultiGraph(GeoGraph, nx.MultiGraph):
 
     def to_nx_class(self):

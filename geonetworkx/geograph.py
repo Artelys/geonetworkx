@@ -9,23 +9,19 @@ import geonetworkx.settings as settings
 class GeoGraph(nx.Graph):
     """
     This class extends the `networkx.Graph` to represent a graph that have a geographical meaning. Nodes are located
-    with their coordinates (x, y) and edges can be represented with a given broken line (using `shapely.geometry.LineString`
-    objects). Each graph has its own keys for naming nodes x and y coordinates and edges geometry (`x_key`, `y_key`,
-    `edges_geometry_key`). A coordinate reference system (CRS) can be defined for a graph and will be used for some
-    methods managing earth coordinates (especially for distances). For now, the only supported CRS is the WGS84 standard
-    (EPSG:4326). All nodes must have defined coordinates, otherwise an error will be raised.
+    with their coordinates (x, y) and edges can be represented with a given broken line (using
+    `shapely.geometry.LineString` objects). Each graph has its own keys for naming nodes x and y coordinates and edges
+    geometry (`x_key`, `y_key`, `edges_geometry_key`). A coordinate reference system (CRS) can be defined for a graph
+    and will be used for some methods managing earth coordinates (especially for distances). For now, the only supported
+    CRS is the WGS84 standard (EPSG:4326). All nodes must have defined coordinates, otherwise an error will be raised.
     """
     def __init__(self, incoming_graph_data=None, **attr):
-        self.parse_input_keys(attr)
-        super(GeoGraph, self).__init__(incoming_graph_data, **attr)
-        self.check_nodes_validity()
-
-    def parse_input_keys(self, attr):
-        """Set the spatial keys with the given attributes dictionary."""
         self.x_key = attr.pop('x_key', settings.X_DEFAULT_KEY)
         self.y_key = attr.pop('y_key', settings.Y_DEFAULT_KEY)
         self.edges_geometry_key = attr.pop('edges_geometry_key', settings.EDGES_GEOMETRY_DEFAULT_KEY)
         self.crs = attr.pop('crs', settings.DEFAULT_CRS)
+        super(GeoGraph, self).__init__(incoming_graph_data, **attr)
+        self.check_nodes_validity()
 
     def check_nodes_validity(self):
         """Check that all nodes have x and y coordinates."""

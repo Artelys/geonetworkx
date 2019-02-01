@@ -8,10 +8,12 @@ from geonetworkx.geometry_operations import coordinates_almost_equal, insert_poi
 import geonetworkx.settings as settings
 from typing import Iterable
 
+
 def get_crs_as_str(crs):
     """Return the given CRS as string `pyproj.Proj` methods."""
     proj = pyproj.Proj(crs)
     return proj.definition_string()
+
 
 def compare_crs(crs1, crs2):
     """Compare CRS using `pyproj.Proj` objects."""
@@ -19,13 +21,16 @@ def compare_crs(crs1, crs2):
         return False
     return get_crs_as_str(crs1) == get_crs_as_str(crs2)
 
+
 def compute_vincenty(p1, p2):
     """Returns the vincenty distance in meters given points with the format (longitude, latitude) in the WGS84
     crs."""
     return vincenty((p1[1], p1[0]), (p2[1], p2[0])).meters
 
+
 def compute_vincenty_from_points(p1: Point, p2: Point):
     return compute_vincenty([p1.x, p1.y], [p2.x, p2.y])
+
 
 def approx_map_unit_factor(points_coordinates, tolerance=1e-7):
     """Compute a linear approximation of the map unit factor for 1 meter. Works only for the WGS84 CRS."""
@@ -45,6 +50,7 @@ def approx_map_unit_factor(points_coordinates, tolerance=1e-7):
         unit_point = (lower_bound + upper_bound) / 2
         distance = compute_vincenty(centroid, unit_point)
     return np.linalg.norm(centroid - unit_point)
+
 
 def measure_line_distance(line: LineString) -> float:
     """
@@ -84,9 +90,11 @@ def get_new_node_unique_name(graph: nx.Graph, name: str):
             unique_name = "%s_%d" % (str(name), ct)
         return unique_name
 
+
 def euclidian_distance_coordinates(c1: Iterable, c2: Iterable) -> float:
     """Return the euclidian distance between the two sets of coordinates."""
     return math.sqrt(sum(((i - j) ** 2 for i, j in zip(c1, c2))))
+
 
 def euclidian_distance(p1: Point, p2: Point) -> float:
     """
@@ -97,6 +105,7 @@ def euclidian_distance(p1: Point, p2: Point) -> float:
     :return: The euclidian distance
     """
     return euclidian_distance_coordinates((p1.x, p1.y), (p2.x, p2.y))
+
 
 def fill_edges_missing_geometry_attributes(graph: "GeoGraph"):
     """
@@ -109,8 +118,10 @@ def fill_edges_missing_geometry_attributes(graph: "GeoGraph"):
     nodes = dict(graph.nodes)
     for s in edges:
         if graph.edges_geometry_key not in edges[s]:
-            if graph.x_key in nodes[s[0]] and graph.x_key in nodes[s[1]] and graph.y_key in nodes[s[0]] and graph.y_key in nodes[s[1]]:
-                n1_xy, n2_xy = (nodes[s[0]][graph.x_key], nodes[s[0]][graph.y_key]), (nodes[s[1]][graph.x_key], nodes[s[1]][graph.y_key])
+            if graph.x_key in nodes[s[0]] and graph.x_key in nodes[s[1]] and \
+                    graph.y_key in nodes[s[0]] and graph.y_key in nodes[s[1]]:
+                n1_xy, n2_xy = (nodes[s[0]][graph.x_key], nodes[s[0]][graph.y_key]),\
+                               (nodes[s[1]][graph.x_key], nodes[s[1]][graph.y_key])
                 graph.edges[s][graph.edges_geometry_key] = LineString([n1_xy, n2_xy])
 
 
@@ -125,7 +136,8 @@ def fill_length_attribute(graph: "GeoGraph", attribute_name="length", only_missi
     :return: None
     """
     if compare_crs(graph.crs, settings.USED_CRS):
-        raise ValueError("Impossible to compute distance for graph with different crs than : '%s' " % str(settings.DEFAULT_CRS))
+        raise ValueError("Impossible to compute distance for graph with different"
+                         " crs than : '%s' " % str(settings.DEFAULT_CRS))
     edges_geometry = nx.get_edge_attributes(graph, graph.edges_geometry_key)
     for e in edges_geometry:
         edge_data = graph.edges[e]
@@ -176,13 +188,15 @@ def get_line_start(graph, e, line):
     else:
         return e[0]
 
+
 def get_line_ordered_edge(graph, e, line):
     """Return the given edge with the first node of the edge representing the first line point and the second node
     the last edge point. The closest node rule is applied."""
     if get_line_start(graph, e, line) != e[0]:
-        return (e[1], e[0], *e[2:])
+        return e[1], e[0], *e[2:]
     else:
         return e
+
 
 def order_well_lines(graph: "GeoGraph"):
     """

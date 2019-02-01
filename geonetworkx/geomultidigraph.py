@@ -3,6 +3,7 @@ from .geomultigraph import GeoMultiGraph
 from .geodigraph import GeoDiGraph
 import geonetworkx as gnx
 
+
 class GeoMultiDiGraph(GeoMultiGraph, GeoDiGraph, nx.MultiDiGraph):
 
     def to_nx_class(self):

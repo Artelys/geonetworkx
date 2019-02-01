@@ -12,6 +12,7 @@ from .geomultidigraph import GeoMultiDiGraph
 import geonetworkx.settings as settings
 from geonetworkx.utils import get_crs_as_str
 
+
 def parse_graph_as_geograph(graph, **attr):
     """Parse a `networkx.Graph` as a `geonetworkx.GeoGraph` with the closest geonetworkx graph type."""
     if graph.is_directed():
@@ -26,8 +27,9 @@ def parse_graph_as_geograph(graph, **attr):
             geograph = GeoGraph(graph, **attr)
     return geograph
 
+
 def get_graph_with_wkt_geometry(geograph):
-    """Modify the edges geometry attribute to a well-kwown text format to make the graph writable is some text formats.
+    """Modify the edges geometry attribute to a well-known text format to make the graph writable is some text formats.
     The returned graph is not as operational as the given one (edge geometries has been removed)"""
     graph_shallow_copy = geograph.__class__(geograph, **geograph.get_spatial_keys())
     edge_geometries = nx.get_edge_attributes(graph_shallow_copy, geograph.edges_geometry_key)
@@ -36,11 +38,13 @@ def get_graph_with_wkt_geometry(geograph):
             graph_shallow_copy.edges[e][geograph.edges_geometry_key] = edge_geometries[e].to_wkt()
     return graph_shallow_copy
 
+
 def parse_edge_attribute_as_wkt(graph, attribute_name):
     """Parse edge geometries with a wkt (well known text) attribute."""
     wkt_lines = nx.get_edge_attributes(graph, attribute_name)
     for e, w in wkt_lines.items():
         graph.edges[e][attribute_name] = loads(w)
+
 
 def write_keys_as_graph_attributes(graph: GeoGraph):
     """Write the spatial keys as graph global attributes."""
@@ -53,6 +57,7 @@ def write_keys_as_graph_attributes(graph: GeoGraph):
         else:
             graph.graph[key] = val
 
+
 def read_gpickle(path, **attr):
     """Read graph object in Python pickle format."""
     graph = nx.read_gpickle(path)
@@ -61,10 +66,12 @@ def read_gpickle(path, **attr):
     else:
         return graph
 
+
 def write_gpickle(geograph, path, protocol=pickle.HIGHEST_PROTOCOL):
     """Write graph object in Python pickle format."""
     write_keys_as_graph_attributes(geograph)
     nx.write_gpickle(geograph, path, protocol)
+
 
 def read_graphml(path, node_type=str, edge_key_type=int, **attr):
     """Read graph in GraphML format from path."""
@@ -79,11 +86,13 @@ def read_graphml(path, node_type=str, edge_key_type=int, **attr):
         attr['crs'] = graph.graph['crs']
     return parse_graph_as_geograph(graph, **attr)
 
+
 def write_graphml(geograph, path, encoding='utf-8', prettyprint=True, infer_numeric_types=False):
     """Generate GraphML lines for G"""
     graph_wkt = get_graph_with_wkt_geometry(geograph)
     write_keys_as_graph_attributes(graph_wkt)
     nx.write_graphml(graph_wkt, path, encoding, prettyprint, infer_numeric_types)
+
 
 def graph_nodes_to_gdf(graph: GeoGraph) -> gpd.GeoDataFrame:
     """
@@ -133,11 +142,13 @@ def graph_edges_to_gdf(graph: nx.Graph) -> gpd.GeoDataFrame:
         gdf_edges.gdf_name = '{}_edges'.format(graph.graph['name'])
     return gdf_edges
 
+
 def parse_bool_columns_as_int(gdf: gpd.GeoDataFrame):
     """Transform bool columns into integer columns."""
     for c in gdf.columns:
         if gdf[c].dtype == "bool":
             gdf[c] = gdf[c].astype("int")
+
 
 def parse_numpy_types(gdf: gpd.GeoDataFrame):
     """Transform numpy types as scalar types."""
@@ -146,6 +157,7 @@ def parse_numpy_types(gdf: gpd.GeoDataFrame):
             for i in gdf.index:
                 if isinstance(gdf.loc[i, c], np.generic):
                     gdf.loc[i, c] = np.asscalar(gdf.loc[i, c])
+
 
 def stringify_unwritable_columns(gdf: gpd.GeoDataFrame):
     """Transform elements which have type bool or list to string"""
@@ -157,13 +169,16 @@ def stringify_unwritable_columns(gdf: gpd.GeoDataFrame):
                 if isinstance(gdf.loc[ix, c], types_to_stringify):
                     gdf.loc[ix, c] = str(gdf.loc[ix, c])
 
+
 def cast_for_fiona(gdf: gpd.GeoDataFrame):
     """Transform elements so that attributes can be writable by fiona."""
     parse_bool_columns_as_int(gdf)
     parse_numpy_types(gdf)
     stringify_unwritable_columns(gdf)
 
-def export_graph_as_shape_file(graph: nx.Graph, path='./', nodes=True, edges=True, driver="ESRI Shapefile", fiona_cast=False):
+
+def export_graph_as_shape_file(graph: nx.Graph, path='./', nodes=True, edges=True, driver="ESRI Shapefile",
+                               fiona_cast=False):
     """
     Export a networkx graph as a geographic file.
 

@@ -3,6 +3,7 @@ from shapely.geometry import Polygon, MultiPolygon
 from geonetworkx import GeoGraph
 from typing import Union
 
+
 def remove_isolates(graph: nx.Graph) -> int:
     """
     Removes all isolates nodes in the given graph.
@@ -55,7 +56,8 @@ def trim_graph_with_polygon(graph: GeoGraph, polygon: Union[Polygon, MultiPolygo
     :param polygon: A `shapely.Polygon` describing the area to keep
     :param copy: If True, a deep copy is done and a new graph is returned.
     :param method: If set to `intersects`, the `shapely.intersects` is used (keeps nodes and edges that intersects the
-        polygon). If set to `within`, the `shapely.within` is used (keep nodes and edges that are strictly into the polygon).
+        polygon). If set to `within`, the `shapely.within` is used (keep nodes and edges that are strictly into the
+        polygon).
     :return: The modified graph if `copy` is True.
     """
     if copy:
