@@ -6,6 +6,7 @@ from typing import Union
 def remove_isolates(graph: nx.Graph) -> int:
     """
     Removes all isolates nodes in the given graph.
+
     :param graph: A graph on which to remove all isolates
     :return: Number of removed isolates
     """
@@ -17,6 +18,7 @@ def remove_isolates(graph: nx.Graph) -> int:
 def remove_self_loop_edges(graph: nx.Graph) -> int:
     """
     Remove self loop edges on nodes of the given graph.
+
     :param graph: A graph on which to remove all self loops.
     :return: The number of removed self loops
     """
@@ -27,7 +29,8 @@ def remove_self_loop_edges(graph: nx.Graph) -> int:
 
 def remove_small_connected_components(graph: nx.Graph, minimum_allowed_size: int) -> int:
     """
-    Remove all connected components having strictly less than 'minimum_allowed_size'
+    Remove all connected components having strictly less than 'minimum_allowed_size'.
+
     :param graph: The graph on which to remove connected components
     :param minimum_allowed_size: The minimum number of nodes where a connected component is kept.
     :return: The number of removed connected components
@@ -47,11 +50,12 @@ def remove_small_connected_components(graph: nx.Graph, minimum_allowed_size: int
 def trim_graph_with_polygon(graph: GeoGraph, polygon: Union[Polygon, MultiPolygon], copy=False, method="intersects"):
     """
     Trim a graph with a given polygon. Keep only the nodes and edges that intersect (or are within) the polygon.
+
     :param graph: A GeoGraph (or subclass)
     :param polygon: A `shapely.Polygon` describing the area to keep
     :param copy: If True, a deep copy is done and a new graph is returned.
     :param method: If set to `intersects`, the `shapely.intersects` is used (keeps nodes and edges that intersects the
-    polygon). If set to `within`, the `shapely.within` is used (keep nodes and edges that are strictly into the polygon).
+        polygon). If set to `within`, the `shapely.within` is used (keep nodes and edges that are strictly into the polygon).
     :return: The modified graph if `copy` is True.
     """
     if copy:

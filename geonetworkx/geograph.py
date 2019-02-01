@@ -7,34 +7,47 @@ import geonetworkx.settings as settings
 
 
 class GeoGraph(nx.Graph):
-
+    """
+    This class extends the `networkx.Graph` to represent a graph that have a geographical meaning. Nodes are located
+    with their coordinates (x, y) and edges can be represented with a given broken line (using `shapely.geometry.LineString`
+    objects). Each graph has its own keys for naming nodes x and y coordinates and edges geometry (`x_key`, `y_key`,
+    `edges_geometry_key`). A coordinate reference system (CRS) can be defined for a graph and will be used for some
+    methods managing earth coordinates (especially for distances). For now, the only supported CRS is the WGS84 standard
+    (EPSG:4326). All nodes must have defined coordinates, otherwise an error will be raised.
+    """
     def __init__(self, incoming_graph_data=None, **attr):
         self.parse_input_keys(attr)
         super(GeoGraph, self).__init__(incoming_graph_data, **attr)
         self.check_nodes_validity()
 
     def parse_input_keys(self, attr):
+        """Set the spatial keys with the given attributes dictionary."""
         self.x_key = attr.pop('x_key', settings.X_DEFAULT_KEY)
         self.y_key = attr.pop('y_key', settings.Y_DEFAULT_KEY)
         self.edges_geometry_key = attr.pop('edges_geometry_key', settings.EDGES_GEOMETRY_DEFAULT_KEY)
         self.crs = attr.pop('crs', settings.DEFAULT_CRS)
 
     def check_nodes_validity(self):
+        """Check that all nodes have x and y coordinates."""
         for n, node_data in self.nodes(data=True):
             if self.x_key not in node_data or self.y_key not in node_data:
                 raise ValueError("Unable to find (x, y) coordinates for node: '%s'" % str(n))
 
     def get_node_coordinates(self, node_name):
+        """Return the coordinates of a given node."""
         node_data = self.nodes[node_name]
         return [node_data[self.x_key], node_data[self.y_key]]
 
     def get_nodes_coordinates(self):
+        """Return all nodes coordinates within a dictionary."""
         return {n: self.get_node_coordinates(n) for n in self.nodes}
 
     def get_node_as_point(self, node_name):
+        """Return a node as a `shapely.geometry.Point` object."""
         return Point(self.get_node_coordinates(node_name))
 
     def get_nodes_as_points(self):
+        """Return all nodes as `shapely.geometry.Point` objects within a dictionary."""
         return {n: self.get_node_as_point(n) for n in self.nodes}
 
     def get_nodes_as_point_series(self):
@@ -52,24 +65,31 @@ class GeoGraph(nx.Graph):
         return line_series
 
     def get_spatial_keys(self):
+        """Return the current graph spatial keys."""
         return {'x_key': self.x_key,
                 'y_key': self.y_key,
                 'edges_geometry_key': self.edges_geometry_key,
                 'crs': self.crs}
 
     def set_nodes_coordinates(self, coordinates: dict):
+        """Set nodes coordinates with a given dictionary of coordinates (can be used for a subset of all nodes)."""
         for n, coords in coordinates.items():
             node_data = self.nodes[n]
             node_data[self.x_key] = coords[0]
             node_data[self.y_key] = coords[1]
 
+    def to_nx_class(self):
+        """Return the closest networkx class (in the inheritance graph)."""
+        return nx.Graph
 
     def copy(self, as_view=False):
-        graph = nx.Graph.copy(self, as_view)
-        return GeoGraph(graph, **self.get_spatial_keys())
+        """Return a copy of the graph (see `networkx.Graph.copy`)."""
+        nx_graph_class = self.to_nx_class()
+        graph = nx_graph_class.copy(self, as_view)
+        return self.__class__(graph, **self.get_spatial_keys())
 
     def to_directed(self, as_view=False):
-        """Return a directed representation of the graph."""
+        """Return a directed representation of the graph (see `networkx.Graph.to_directed`)."""
         if as_view:
             return nx.Graph.to_directed(self, as_view)
         else:
@@ -78,11 +98,11 @@ class GeoGraph(nx.Graph):
             return graph_class(directed_graph, **self.get_spatial_keys())
 
     def to_directed_class(self):
-        """Returns the class to use for empty directed copies."""
+        """Returns the class to use for empty directed copies (see `networkx.Graph.to_directed_class`)."""
         return gnx.GeoDiGraph
 
     def to_undirected(self, as_view=False):
-        """Return an undirected copy of the graph."""
+        """Return an undirected copy of the graph (see `networkx.Graph.to_undirected`)."""
         if as_view:
             return nx.Graph.to_undirected(self, as_view)
         else:
@@ -91,7 +111,7 @@ class GeoGraph(nx.Graph):
             return graph_class(undirected_graph, **self.get_spatial_keys())
 
     def to_undirected_class(self):
-        """Returns the class to use for empty undirected copies."""
+        """Returns the class to use for empty undirected copies (see `networkx.Graph.to_undirected_class`)."""
         return gnx.GeoGraph
 
     def to_crs(self, crs=None, epsg=None, inplace=False):

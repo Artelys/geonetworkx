@@ -49,6 +49,7 @@ def approx_map_unit_factor(points_coordinates, tolerance=1e-7):
 def measure_line_distance(line: LineString) -> float:
     """
     Measure the length of a shapely LineString object using the vincenty distance.
+
     :param line: Linestring to measure. Coordinates have to be (in the WGS-84 ellipsoid model)
     :return: distance in meters of the linestring.
     """
@@ -68,6 +69,7 @@ def get_new_node_unique_name(graph: nx.Graph, name: str):
     """
     Return a new unique node name from an initial node name. A counter suffix is added at the end if the node name is
     already used.
+
     :param graph: A given graph
     :param name: A initial node name
     :return: A unique name not in `graph.nodes()`.
@@ -89,6 +91,7 @@ def euclidian_distance_coordinates(c1: Iterable, c2: Iterable) -> float:
 def euclidian_distance(p1: Point, p2: Point) -> float:
     """
     Return the euclidian distance between the two points
+
     :param p1: The first shapely Point
     :param p2: The second shapely Point
     :return: The euclidian distance
@@ -99,6 +102,8 @@ def fill_edges_missing_geometry_attributes(graph: "GeoGraph"):
     """
     Add a geometry attribute to the edges that don't have any. The created geometry is a straight line between the
     two nodes.
+
+    :param graph: graph to fill
     """
     edges = dict(graph.edges)
     nodes = dict(graph.nodes)
@@ -111,8 +116,9 @@ def fill_edges_missing_geometry_attributes(graph: "GeoGraph"):
 
 def fill_length_attribute(graph: "GeoGraph", attribute_name="length", only_missing=True):
     """
-    Fill the 'length' attribute of the given networkX Graph. The length is computed in meters using the vincenty
-     formula. Method won't be consistent if the graph crs is not WGS84.
+    Fill the `length` attribute of the given networkX Graph. The length is computed in meters using the vincenty
+    formula. Method won't be consistent if the graph crs is not WGS84.
+
     :param graph: graph to fill
     :param attribute_name: The length attribute name to set
     :param only_missing: Compute the length only if the attribute is missing
@@ -130,6 +136,7 @@ def fill_length_attribute(graph: "GeoGraph", attribute_name="length", only_missi
 def join_lines_extremity_to_nodes_coordinates(graph: "GeoGraph"):
     """
     Modify the edges geometry attribute so that lines extremities match with nodes coordinates.
+
     :param graph: A geograph to modify
     """
     edges_geometry = nx.get_edge_attributes(graph, graph.edges_geometry_key)
@@ -182,6 +189,7 @@ def order_well_lines(graph: "GeoGraph"):
     Try to order well each geometry attribute of edges so that the first coordinates of the line string are the
     coordinates of the first vertex of the edge. The closest node rule is applied. If the graph is not oriented, the
     modification will be inconsistent (nodes declaration in edges views are not ordered).
+
     :param graph: Graph on which to apply the ordering step. Modification is inplace.
     :return: None
     """

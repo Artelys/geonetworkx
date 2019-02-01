@@ -21,6 +21,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../../'))
 import geonetworkx
+from geonetworkx import *
 
 # -- General configuration ------------------------------------------------
 autoclass_content = "both"
@@ -36,6 +37,10 @@ autodoc_default_flags = [
 #
 # needs_sphinx = '1.0'
 
+# If true, the current module name will be prepended to all description
+# unit titles (such as .. function::).
+add_module_names = False
+
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
@@ -46,7 +51,9 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-	'sphinx.ext.autosummary']
+	'sphinx.ext.autosummary',
+    'sphinx.ext.inheritance_diagram',
+    'sphinx_autodoc_typehints']
 
 
 # Add any paths that contain templates here, relative to this directory.

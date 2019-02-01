@@ -5,12 +5,12 @@ import geonetworkx as gnx
 
 class GeoMultiDiGraph(GeoMultiGraph, GeoDiGraph, nx.MultiDiGraph):
 
-    def copy(self, as_view=False):
-        graph = nx.MultiDiGraph.copy(self, as_view)
-        return GeoMultiDiGraph(graph, **self.get_spatial_keys())
+    def to_nx_class(self):
+        """Return the closest networkx class (in the inheritance graph)."""
+        return nx.MultiDiGraph
 
     def to_undirected(self, reciprocal=False, as_view=False):
-        """Return an undirected copy of the graph."""
+        """Return an undirected copy of the graph (see `networkx.MultiDiGraph.to_undirected`)."""
         if as_view:
             return nx.MultiDiGraph.to_undirected(self, reciprocal, as_view)
         else:
@@ -19,11 +19,11 @@ class GeoMultiDiGraph(GeoMultiGraph, GeoDiGraph, nx.MultiDiGraph):
             return graph_class(undirected_graph, **self.get_spatial_keys())
 
     def to_undirected_class(self):
-        """Returns the class to use for empty undirected copies."""
+        """Returns the class to use for empty undirected copies (see `networkx.MultiDiGraph.to_undirected_class`)."""
         return gnx.GeoMultiGraph
 
     def to_directed(self, as_view=False):
-        """Return a directed representation of the graph."""
+        """Return a directed representation of the graph (see `networkx.MultiDiGraph.to_directed`)."""
         if as_view:
             return nx.MultiDiGraph.to_directed(self, as_view)
         else:
@@ -32,5 +32,5 @@ class GeoMultiDiGraph(GeoMultiGraph, GeoDiGraph, nx.MultiDiGraph):
             return graph_class(directed_graph, **self.get_spatial_keys())
 
     def to_directed_class(self):
-        """Returns the class to use for empty directed copies."""
+        """Returns the class to use for empty directed copies (see `networkx.MultiDiGraph.to_directed_class`)."""
         return GeoMultiDiGraph

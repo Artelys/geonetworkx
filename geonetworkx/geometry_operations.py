@@ -33,6 +33,7 @@ class Extremity:
 def merge_two_shape(e1: Extremity, e2: Extremity, line1: LineString, line2: LineString) -> LineString:
     """
     Merge two lines (line1 and line2) with the given extremities (e1 and e2).
+
     :param e1: line1 extremity
     :param e2: line2 extremity
     :param line1: first line (shapely LineString)
@@ -55,6 +56,7 @@ def merge_two_shape(e1: Extremity, e2: Extremity, line1: LineString, line2: Line
 def merge_two_shapes_with_closest_extremities(shape1: LineString, shape2: LineString) -> LineString:
     """
     Merge two lines with their closest extremities
+
     :param shape1: first line
     :param shape2: second line
     :return: merged shape
@@ -71,6 +73,7 @@ def merge_two_shapes_with_closest_extremities(shape1: LineString, shape2: LineSt
 def merge_edges_connected_with_two_degree_node(graph: nx.Graph, filter=None) -> int:
     """
     Merge all nodes with one incoming edge and one outgoing edge.
+
     :param graph: The graph to modify
     :param filter: A lambda function indicating if a given node is has to be potentially merge
     :return: The number of merged nodes
@@ -101,6 +104,7 @@ def merge_edges_connected_with_two_degree_node(graph: nx.Graph, filter=None) -> 
 def get_shape_extremities(shape: LineString, shape_id: int):
     """
     Return the extremities of a shape in the network_shapes_gdf.
+
     :param shape: LineString on which to parse Extremity objects
     :param shape_id: id of the shape
     :return: Two extremities of the shape.
@@ -118,7 +122,8 @@ def get_shape_extremities(shape: LineString, shape_id: int):
 def convert_multilinestring_to_linestring(gdf: gpd.GeoDataFrame) -> int:
     """
     Convert all geometry attribute being a 'MultiLineString' to a 'LineString'. The created line is a merge of all sub
-    lines
+    lines.
+
     :param gdf: A GeoDataFrame with a 'geometry' column to modify
     :return: The number of converted 'MultiLineString'
     """
@@ -143,6 +148,7 @@ def discretize_line(line: LineString):
     """
     Takes a shapely LineString and discretize it into a list of shapely Points. Each point is at most at the
     discretization tolerance distance of the following point.
+
     :param line: Line to discretize
     :return: An ordered list of shapely Point
     """
@@ -173,6 +179,7 @@ def discretize_lines(lines: Iterable[LineString]):
 def get_closest_point_from_points(points_from: PointsCoordinatesLike, points_to: list = None, kd_tree: KDTree = None):
     """
     Compute the closest point among the 'points_from' list for each point in the 'points_from' list.
+
     :param points_to: Iterable of points coordinates
     :param points_from: Iterable of points coordinates
     :return: tuple: (distances, indexes)
@@ -187,6 +194,7 @@ def get_closest_point_from_points(points_from: PointsCoordinatesLike, points_to:
 def get_closest_point_from_line(line_from: LineString, points_to: list = None, kd_tree: KDTree = None):
     """
     Return the closest point from a given line and its distance.
+
     :param line_from: A shapely LineString
     :param points_to: A list of points among which the closest to the line has to be found (optional is 'kdtree' is given)
     :param kd_tree: A kdtree representing the points among which the closest to the line has to be found (optional if 'points_to' is given)
@@ -205,6 +213,7 @@ def get_closest_point_from_multi_shape(multi_shape, points_to=None, kd_tree=None
     """
     Computes the closest point to the multi shape (i.e. the point that has the smallest projection distance on the
     entire multi shape object.
+
     :param multi_shape: The multi shape object can be any shapely object among: MultiPoint, MultiLineString
     :param points_to:  A list of points among which to find the closest to the multi shape
     :return: A couple containing the distance and the index of the closest point
@@ -226,6 +235,7 @@ def get_closest_point_from_shape(shape: Union[Point, LineString, MultiPoint, Mul
                                  kd_tree: KDTree = None):
     """
     Compute the closest point to the given shape.
+
     :param shape: Any shapely shape (Point, MultiPoint, LineString, MultiLineString)
     :param points_to:  A list of points among which to find the closest to the multi shape
     :return: A couple containing the distance and the index of the closest point
@@ -244,6 +254,7 @@ def get_closest_point_from_shape(shape: Union[Point, LineString, MultiPoint, Mul
 def get_closest_point_from_shapes(shapes_from, points_to):
     """
     Compute the closest point for each given shape.
+
     :param shapes_from: An iterable of shapes (Point, MultiPoint, LineString, MultiLineString)
     :param points_to:  A list of points among which to find the closest to the multi shape
     :return: A list of couple containing the distance and the index of the closest point
@@ -262,6 +273,7 @@ def get_closest_line_from_point(point_from: PointCoordinatesLike,
                                 points_line_association = None):
     """
     Find the closest line from a given point.
+
     :param point_from: Point coordinate to find the closest line.
     :param lines_to: Group of lines among which the closest has to be found (optional if `kdtree` and
                     `points_line_association` are given).
@@ -286,6 +298,7 @@ def get_closest_line_from_point(point_from: PointCoordinatesLike,
 def get_closest_line_from_points(points_from, lines_to):
     """
     Find the closest line for each given points.
+
     :param point_from: Points coordinates.
     :param lines_to: Group of lines among which the closest has to be found.
     :return: A list of closest lines indexes.
