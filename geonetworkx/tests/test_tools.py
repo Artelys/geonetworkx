@@ -17,8 +17,8 @@ from nose.plugins.attrib import attr
 
 
 SEED = 70595
-np.random.seed(SEED)
 data_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), "datasets")
+
 
 @attr('tools')
 class TestTools(unittest.TestCase):
@@ -31,7 +31,6 @@ class TestTools(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.results_dir)
-
 
     def test_spatial_points_merge(self):
         # test a spatial merge
@@ -84,7 +83,7 @@ class TestTools(unittest.TestCase):
         # base graph definition
         nb_nodes = 20
         edge_creation_prob = 0.1
-        g = nx.fast_gnp_random_graph(nb_nodes, edge_creation_prob, seed=SEED, directed=False)
+        g = nx.fast_gnp_random_graph(nb_nodes, edge_creation_prob, directed=False)
         nodes_coords = nx.kamada_kawai_layout(g)
         nx.set_node_attributes(g, {n: coords[0] for n, coords in nodes_coords.items()}, 'x')
         nx.set_node_attributes(g, {n: coords[1] for n, coords in nodes_coords.items()}, 'y')
@@ -94,7 +93,7 @@ class TestTools(unittest.TestCase):
 
         # other graph definition
         nb_nodes_2 = 20
-        g2 = nx.fast_gnp_random_graph(nb_nodes_2,edge_creation_prob, seed=SEED + 1, directed=False)
+        g2 = nx.fast_gnp_random_graph(nb_nodes_2,edge_creation_prob, directed=False)
         nx.relabel_nodes(g2, {n: n + nb_nodes for n in g2.nodes}, False)
         distinct_nodes = list(g2.nodes())
         nodes_coords_2 = nx.kamada_kawai_layout(g2)
@@ -123,7 +122,7 @@ class TestTools(unittest.TestCase):
     def test_spatial_point_merge_with_filters(self):
         nb_nodes = 30
         edge_creation_prob = 0.1
-        g = nx.fast_gnp_random_graph(nb_nodes, edge_creation_prob, seed=SEED, directed=False)
+        g = nx.fast_gnp_random_graph(nb_nodes, edge_creation_prob, directed=False)
         nodes_coords = nx.kamada_kawai_layout(g)
         nx.set_node_attributes(g, {n: coords[0] for n, coords in nodes_coords.items()}, 'x')
         nx.set_node_attributes(g, {n: coords[1] for n, coords in nodes_coords.items()}, 'y')

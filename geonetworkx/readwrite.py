@@ -177,7 +177,7 @@ def cast_for_fiona(gdf: gpd.GeoDataFrame):
     stringify_unwritable_columns(gdf)
 
 
-def write_geofile(graph: nx.Graph, path='./', nodes=True, edges=True, driver="GPKG", fiona_cast=False):
+def write_geofile(graph: GeoGraph, path='./', nodes=True, edges=True, driver="GPKG", fiona_cast=False):
     """
     Export a networkx graph as a geographic file.
 
@@ -193,17 +193,17 @@ def write_geofile(graph: nx.Graph, path='./', nodes=True, edges=True, driver="GP
     if not os.path.exists(path):
         os.mkdir(path)
     if nodes:
-        gdf_nodes = graph_nodes_to_gdf(graph)
+        gdf_nodes = graph.nodes_to_gdf()
         if fiona_cast:
             cast_for_fiona(gdf_nodes)
-        file_name = os.path.join(path, gdf_nodes.gdf_name)
+        file_name = os.path.join(path, '{}_nodes'.format(graph.name))
         file_name += known_files_extension.get(driver, "")
         gdf_nodes.to_file(file_name, driver=driver)
     if edges:
-        gdf_edges = graph_edges_to_gdf(graph)
+        gdf_edges = graph.edges_to_gdf()
         if fiona_cast:
             cast_for_fiona(gdf_edges)
-        file_name = os.path.join(path, gdf_edges.gdf_name)
+        file_name = os.path.join(path, '{}_edges'.format(graph.name))
         file_name += known_files_extension.get(driver, "")
         gdf_edges.to_file(file_name, driver=driver)
 

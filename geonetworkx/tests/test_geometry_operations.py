@@ -12,7 +12,8 @@ from ..testing.utils import assert_almost_intersect
 import geonetworkx as gnx
 import geonetworkx.settings as settings
 
-np.random.seed(70595)
+SEED = 70595
+np.random.seed(SEED)
 
 @attr('geometry_operations')
 class TestGeometryOperations():

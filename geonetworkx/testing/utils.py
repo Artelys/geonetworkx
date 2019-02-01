@@ -11,6 +11,10 @@ from shapely.geometry import LineString
 from nose.tools import assert_true, assert_equal, assert_in
 
 
+ALL_CLASSES = [gnx.GeoGraph, gnx.GeoMultiGraph, gnx.GeoDiGraph, gnx.GeoMultiDiGraph]
+SEED = 70595
+
+
 def assert_almost_intersect(shape1, shape2, msg='', tol=1e-4):
     assert_true(shape1.buffer(tol).intersects(shape2), msg)
 
@@ -45,9 +49,11 @@ def assert_graphs_have_same_geonodes(graph1, graph2, msg='', tol=1e-4):
         assert_in(n, coordinates2)
         assert_coordinates_almost_equals(coordinates1[n], coordinates2[n], msg, tol)
 
-def get_random_geograph(nb_nodes, seed):
+def get_random_geograph(nb_nodes):
+    global SEED
     edge_creation_prob = 0.1
-    g = nx.fast_gnp_random_graph(nb_nodes, edge_creation_prob, seed=seed, directed=False)
+    g = nx.fast_gnp_random_graph(nb_nodes, edge_creation_prob, seed=SEED, directed=False)
+    SEED += 1
     nodes_coords = nx.kamada_kawai_layout(g)
     nx.set_node_attributes(g, {n: coords[0] for n, coords in nodes_coords.items()}, 'x')
     nx.set_node_attributes(g, {n: coords[1] for n, coords in nodes_coords.items()}, 'y')
@@ -55,9 +61,11 @@ def get_random_geograph(nb_nodes, seed):
     gnx.fill_edges_missing_geometry_attributes(graph)
     return graph
 
-def get_random_geodigraph(nb_nodes, seed):
+def get_random_geodigraph(nb_nodes):
+    global SEED
     edge_creation_prob = 0.1
-    g = nx.fast_gnp_random_graph(nb_nodes, edge_creation_prob, seed=seed, directed=True)
+    g = nx.fast_gnp_random_graph(nb_nodes, edge_creation_prob, seed=SEED, directed=True)
+    SEED += 1
     nodes_coords = nx.kamada_kawai_layout(g)
     nx.set_node_attributes(g, {n: coords[0] for n, coords in nodes_coords.items()}, 'x')
     nx.set_node_attributes(g, {n: coords[1] for n, coords in nodes_coords.items()}, 'y')
@@ -65,38 +73,42 @@ def get_random_geodigraph(nb_nodes, seed):
     gnx.fill_edges_missing_geometry_attributes(graph)
     return graph
 
-def get_random_geomultigraph(nb_nodes, seed):
+def get_random_geomultigraph(nb_nodes):
+    global SEED
     edge_creation_prob = 0.1
-    g = get_random_geograph(nb_nodes, seed)
+    g = get_random_geograph(nb_nodes)
     multigraph = gnx.GeoMultiGraph(g)
-    np.random.seed(seed)
+    np.random.seed(SEED)
+    SEED += 1
     for e in list(multigraph.edges):
         if np.random.rand() < edge_creation_prob:
             multigraph.add_edge(e[0], e[1])
     gnx.fill_edges_missing_geometry_attributes(multigraph)
     return multigraph
 
-def get_random_geomultidigraph(nb_nodes, seed):
+def get_random_geomultidigraph(nb_nodes):
+    global SEED
     edge_creation_prob = 0.1
-    g = get_random_geodigraph(nb_nodes, seed)
+    g = get_random_geodigraph(nb_nodes)
     multidigraph = gnx.GeoMultiDiGraph(g)
-    np.random.seed(seed)
+    np.random.seed(SEED)
+    SEED += 1
     for e in list(multidigraph.edges):
         if np.random.rand() < edge_creation_prob:
             multidigraph.add_edge(e[0], e[1])
     gnx.fill_edges_missing_geometry_attributes(multidigraph)
     return multidigraph
 
-def get_random_geograph_subclass(nb_nodes, seed, graph_type=gnx.GeoGraph):
+def get_random_geograph_subclass(nb_nodes, graph_type=gnx.GeoGraph):
     graph_generation_methods = {gnx.GeoGraph: get_random_geograph,
                                 gnx.GeoMultiGraph: get_random_geomultigraph,
                                 gnx.GeoDiGraph: get_random_geodigraph,
                                 gnx.GeoMultiDiGraph: get_random_geomultidigraph}
-    g = graph_generation_methods[graph_type](nb_nodes, seed)
+    g = graph_generation_methods[graph_type](nb_nodes)
     return g
 
-def get_random_geograph_with_wgs84_scale(nb_nodes, seed, graph_type=gnx.GeoGraph):
-    g = get_random_geograph_subclass(nb_nodes, seed, graph_type)
+def get_random_geograph_with_wgs84_scale(nb_nodes, graph_type=gnx.GeoGraph):
+    g = get_random_geograph_subclass(nb_nodes, graph_type)
     x_func = lambda x: 5.7 + 1e-1 * x
     y_func = lambda y: 45.1 + 1e-1 * y
     for n, data in g.nodes(data=True):

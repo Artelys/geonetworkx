@@ -1,7 +1,7 @@
 """Base class for geographic graphs"""
 import networkx as nx
 import geopandas as gpd
-from shapely.geometry import Point
+from shapely.geometry import Point, LineString
 import geonetworkx as gnx
 import geonetworkx.settings as settings
 
@@ -135,3 +135,48 @@ class GeoGraph(nx.Graph):
         graph.crs = transformed_nodes.crs
         if not inplace:
             return graph
+
+
+    def nodes_to_gdf(self) -> gpd.GeoDataFrame:
+        """
+        Create a `geopandas.GeoDataFrame` from nodes of the current graph. The 'geometry' attribute is used for shapes
+        writing (from `geopandas.GeoDataFrame.DEFAULT_GEO_COLUMN_NAME`).
+
+        :return: The resulting GeoDataFrame : one row is a node
+        """
+        nodes = {node: data for node, data in self.nodes(data=True)}
+        gdf_nodes = gpd.GeoDataFrame(nodes).T
+        gdf_nodes[settings.NODE_ID_COLUMN_NAME] = gdf_nodes.index
+        gdf_nodes[settings.GPD_GEOMETRY_KEY] = gdf_nodes.apply(lambda row: Point(row[self.x_key], row[self.y_key]),
+                                                               axis=1)
+        gdf_nodes.crs = self.crs
+        return gdf_nodes
+
+    def edges_to_gdf(self) -> gpd.GeoDataFrame:
+        """
+        Create a `geopandas.GeoDataFrame` from edges of the current graph. The 'geometry' attribute is used for shapes
+        writing (from `geopandas.GeoDataFrame.DEFAULT_GEO_COLUMN_NAME`).
+
+        :return: The resulting GeoDataFrame : one row is an edge
+        """
+        # create a list to hold our edges, then loop through each edge in the graph
+        edges = []
+        for u, v, data in self.edges(data=True):
+            # for each edge, add key and all attributes in data dict to the edge_details
+            edge_details = {settings.EDGE_FIRST_NODE_COLUMN_NAME: u, settings.EDGE_SECOND_NODE_COLUMN_NAME: v}
+            for attr_key in data:
+                edge_details[attr_key] = data[attr_key]
+            # if edge doesn't already have a geometry attribute, create one now
+            if self.edges_geometry_key not in data:
+                point_u = Point((self.nodes[u][self.x_key], self.nodes[u][self.y_key]))
+                point_v = Point((self.nodes[v][self.x_key], self.nodes[v][self.y_key]))
+                edge_details[settings.GPD_GEOMETRY_KEY] = LineString([point_u, point_v])
+            else:
+                line = edge_details[self.edges_geometry_key]
+                del edge_details[self.edges_geometry_key]
+                edge_details[settings.GPD_GEOMETRY_KEY] = line
+            edges.append(edge_details)
+        # create a GeoDataFrame from the list of edges and set the CRS
+        gdf_edges = gpd.GeoDataFrame(edges)
+        gdf_edges.crs = self.crs
+        return gdf_edges

@@ -5,18 +5,15 @@
     Python Version: 3.6
 """
 from geonetworkx.testing import get_random_geograph, get_random_geomultigraph, get_random_geodigraph,\
-    get_random_geomultidigraph, get_random_geograph_with_wgs84_scale
-from geonetworkx.testing import assert_graphs_have_same_edges_geometry, assert_graphs_have_same_geonodes
+    get_random_geomultidigraph, get_random_geograph_with_wgs84_scale, get_random_geograph_subclass
+from geonetworkx.testing import assert_graphs_have_same_edges_geometry, assert_graphs_have_same_geonodes, ALL_CLASSES
 import geonetworkx as gnx
 import os, shutil
-import numpy as np
-from nose.tools import assert_is_instance
+from nose.tools import assert_is_instance, assert_equal
 from nose.plugins.attrib import attr
 import unittest
 
-
 SEED = 70595
-np.random.seed(SEED)
 NB_POINTS = 100
 
 @attr('classes')
@@ -33,50 +30,50 @@ class TestClasses(unittest.TestCase):
 
     # GeoGraph
     def test_graph_to_directed(self):
-        graph = get_random_geograph(NB_POINTS, SEED)
+        graph = get_random_geograph(NB_POINTS)
         directed_graph = graph.to_directed()
         assert_is_instance(directed_graph, gnx.GeoDiGraph)
 
     def test_graph_to_undirected(self):
-        graph = get_random_geograph(NB_POINTS, SEED + 1)
+        graph = get_random_geograph(NB_POINTS)
         undirected_graph = graph.to_undirected()
         assert_is_instance(undirected_graph, gnx.GeoGraph)
 
     # GeoMultiGraph
     def test_multigraph_to_directed(self):
-        graph = get_random_geomultigraph(NB_POINTS, SEED + 2)
+        graph = get_random_geomultigraph(NB_POINTS)
         directed_graph = graph.to_directed()
         assert_is_instance(directed_graph, gnx.GeoMultiDiGraph)
 
     def test_multigraph_to_undirected(self):
-        graph = get_random_geomultigraph(NB_POINTS, SEED + 3)
+        graph = get_random_geomultigraph(NB_POINTS)
         undirected_graph = graph.to_undirected()
         assert_is_instance(undirected_graph, gnx.GeoMultiGraph)
 
     # GeoDiGraph
     def test_digraph_to_directed(self):
-        graph = get_random_geodigraph(NB_POINTS, SEED + 4)
+        graph = get_random_geodigraph(NB_POINTS)
         directed_graph = graph.to_directed()
         assert_is_instance(directed_graph, gnx.GeoDiGraph)
 
     def test_digraph_to_undirected(self):
-        graph = get_random_geodigraph(NB_POINTS, SEED + 5)
+        graph = get_random_geodigraph(NB_POINTS)
         undirected_graph = graph.to_undirected()
         assert_is_instance(undirected_graph, gnx.GeoGraph)
 
     # GeoMultiDiGraph
     def test_multidigraph_to_directed(self):
-        graph = get_random_geomultidigraph(NB_POINTS, SEED + 6)
+        graph = get_random_geomultidigraph(NB_POINTS)
         directed_graph = graph.to_directed()
         assert_is_instance(directed_graph, gnx.GeoMultiDiGraph)
 
     def test_multidigraph_to_undirected(self):
-        graph = get_random_geomultidigraph(NB_POINTS, SEED + 7)
+        graph = get_random_geomultidigraph(NB_POINTS)
         undirected_graph = graph.to_undirected()
         assert_is_instance(undirected_graph, gnx.GeoMultiGraph)
 
     def test_crs_modification(self):
-        graph = get_random_geograph_with_wgs84_scale(NB_POINTS, SEED, gnx.GeoMultiDiGraph)
+        graph = get_random_geograph_with_wgs84_scale(NB_POINTS, gnx.GeoMultiDiGraph)
         modified_graph = graph.to_crs(crs={'init': 'epsg:3857'}, inplace=False)
         re_modified_graph = modified_graph.to_crs(crs=gnx.settings.WGS84_CRS, inplace=False)
         assert_graphs_have_same_edges_geometry(graph, re_modified_graph, "Some edge geometries seems to be different"
@@ -84,7 +81,15 @@ class TestClasses(unittest.TestCase):
         assert_graphs_have_same_geonodes(graph, re_modified_graph, "Some nodes seems to be different after "
                                                                    "re-modification")
 
+    def test_nodes_to_gdf(self):
+        for graph_type in ALL_CLASSES:
+            g = get_random_geograph_subclass(NB_POINTS, graph_type)
+            gdf = g.nodes_to_gdf()
+            assert_equal(g.number_of_nodes(), len(gdf))
 
-
-
+    def test_edges_to_gdf(self):
+        for graph_type in ALL_CLASSES:
+            g = get_random_geograph_subclass(NB_POINTS, graph_type)
+            gdf = g.edges_to_gdf()
+            assert_equal(g.number_of_edges(), len(gdf))
 

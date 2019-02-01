@@ -17,3 +17,8 @@ Y_DEFAULT_KEY = 'y'
 
 # Intersection prefix for spatial merges
 INTERSECTION_PREFIX = "intersect_"
+
+# read/write convention
+EDGE_FIRST_NODE_COLUMN_NAME = "u"
+EDGE_SECOND_NODE_COLUMN_NAME = "v"
+NODE_ID_COLUMN_NAME = "id"
