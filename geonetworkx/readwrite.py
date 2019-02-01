@@ -177,8 +177,7 @@ def cast_for_fiona(gdf: gpd.GeoDataFrame):
     stringify_unwritable_columns(gdf)
 
 
-def export_graph_as_shape_file(graph: nx.Graph, path='./', nodes=True, edges=True, driver="ESRI Shapefile",
-                               fiona_cast=False):
+def write_geofile(graph: nx.Graph, path='./', nodes=True, edges=True, driver="GPKG", fiona_cast=False):
     """
     Export a networkx graph as a geographic file.
 
@@ -186,29 +185,26 @@ def export_graph_as_shape_file(graph: nx.Graph, path='./', nodes=True, edges=Tru
     :param path: export directory
     :param nodes: boolean to indicate whether export nodes or not.
     :param edges: boolean to indicate whether export edges or not.
-    :param driver: driver for export file format (shapefile, geojson: can be found from fiona.supported_drivers)
+    :param driver: driver for export file format (GPKG, geojson: can be found from `fiona.supported_drivers`)
     :param fiona_cast: If true, methods for casting types to writable fiona types are used
     :return: None
     """
+    known_files_extension = {'GeoJSON': '.geojson', 'GPKG': '.gpkg', 'ESRI Shapefile': '.shp'}
     if not os.path.exists(path):
         os.mkdir(path)
     if nodes:
         gdf_nodes = graph_nodes_to_gdf(graph)
         if fiona_cast:
             cast_for_fiona(gdf_nodes)
-        file_names = os.path.join(path, gdf_nodes.gdf_name)
-        if driver == "GeoJSON":
-            file_names += ".geojson"
-        gdf_nodes.to_file(file_names, driver=driver)
-        print('nodes written to : %s' % file_names)
+        file_name = os.path.join(path, gdf_nodes.gdf_name)
+        file_name += known_files_extension.get(driver, "")
+        gdf_nodes.to_file(file_name, driver=driver)
     if edges:
         gdf_edges = graph_edges_to_gdf(graph)
         if fiona_cast:
             cast_for_fiona(gdf_edges)
-        file_names = os.path.join(path, gdf_edges.gdf_name)
-        if driver == "GeoJSON":
-            file_names += ".geojson"
-        gdf_edges.to_file(file_names, driver=driver)
-        print('edges written to : %s' % file_names)
+        file_name = os.path.join(path, gdf_edges.gdf_name)
+        file_name += known_files_extension.get(driver, "")
+        gdf_edges.to_file(file_name, driver=driver)
 
 
