@@ -193,7 +193,7 @@ def get_line_ordered_edge(graph, e, line):
     """Return the given edge with the first node of the edge representing the first line point and the second node
     the last edge point. The closest node rule is applied."""
     if get_line_start(graph, e, line) != e[0]:
-        return e[1], e[0], *e[2:]
+        return (e[1], e[0], *e[2:])
     else:
         return e
 
