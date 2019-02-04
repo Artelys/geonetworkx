@@ -161,13 +161,10 @@ def parse_numpy_types(gdf: gpd.GeoDataFrame):
 
 def stringify_unwritable_columns(gdf: gpd.GeoDataFrame):
     """Transform elements which have type bool or list to string"""
-    types_to_stringify = (bool, list)
     valid_columns_types = ("int64", "float64")
     for c in gdf.columns:
-        if not gdf[c].dtype in valid_columns_types:
-            for ix in gdf.index:
-                if isinstance(gdf.loc[ix, c], types_to_stringify):
-                    gdf.loc[ix, c] = str(gdf.loc[ix, c])
+        if not gdf[c].dtype in valid_columns_types and c != settings.GPD_GEOMETRY_KEY:
+            gdf[c] = list(map(str, gdf[c]))
 
 
 def cast_for_fiona(gdf: gpd.GeoDataFrame):
@@ -175,6 +172,7 @@ def cast_for_fiona(gdf: gpd.GeoDataFrame):
     parse_bool_columns_as_int(gdf)
     parse_numpy_types(gdf)
     stringify_unwritable_columns(gdf)
+
 
 def write_edges_to_geofile(graph: GeoGraph, file_name, driver="GPKG", fiona_cast=True):
     """ Writes the edges of a geograph as a geographic file.
@@ -188,6 +186,7 @@ def write_edges_to_geofile(graph: GeoGraph, file_name, driver="GPKG", fiona_cast
     if fiona_cast:
         cast_for_fiona(gdf_edges)
     gdf_edges.to_file(file_name, driver=driver)
+
 
 def write_nodes_to_geofile(graph: GeoGraph, file_name, driver="GPKG", fiona_cast=True):
     """ Writes the nodes of a geograph as a geographic file.
