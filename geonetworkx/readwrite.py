@@ -176,6 +176,32 @@ def cast_for_fiona(gdf: gpd.GeoDataFrame):
     parse_numpy_types(gdf)
     stringify_unwritable_columns(gdf)
 
+def write_edges_to_geofile(graph: GeoGraph, file_name, driver="GPKG", fiona_cast=True):
+    """ Writes the edges of a geograph as a geographic file.
+
+    :param graph: Graph to export
+    :param file_name: File name (with path)
+    :param driver: driver for export file format (GPKG, geojson, etc: can be found from `fiona.supported_drivers`)
+    :param fiona_cast: If true, methods for casting types to writable fiona types are used
+    """
+    gdf_edges = graph.edges_to_gdf()
+    if fiona_cast:
+        cast_for_fiona(gdf_edges)
+    gdf_edges.to_file(file_name, driver=driver)
+
+def write_nodes_to_geofile(graph: GeoGraph, file_name, driver="GPKG", fiona_cast=True):
+    """ Writes the nodes of a geograph as a geographic file.
+
+    :param graph: Graph to export
+    :param file_name: File name (with path)
+    :param driver: driver for export file format (GPKG, geojson, etc: can be found from `fiona.supported_drivers`)
+    :param fiona_cast: If true, methods for casting types to writable fiona types are used
+    """
+    gdf_nodes = graph.nodes_to_gdf()
+    if fiona_cast:
+        cast_for_fiona(gdf_nodes)
+    gdf_nodes.to_file(file_name, driver=driver)
+
 
 def write_geofile(graph: GeoGraph, path='./', nodes=True, edges=True, driver="GPKG", fiona_cast=False):
     """
@@ -185,26 +211,19 @@ def write_geofile(graph: GeoGraph, path='./', nodes=True, edges=True, driver="GP
     :param path: export directory
     :param nodes: boolean to indicate whether export nodes or not.
     :param edges: boolean to indicate whether export edges or not.
-    :param driver: driver for export file format (GPKG, geojson: can be found from `fiona.supported_drivers`)
+    :param driver: driver for export file format (GPKG, geojson, etc: can be found from `fiona.supported_drivers`)
     :param fiona_cast: If true, methods for casting types to writable fiona types are used
     :return: None
     """
-    known_files_extension = {'GeoJSON': '.geojson', 'GPKG': '.gpkg', 'ESRI Shapefile': '.shp'}
     if not os.path.exists(path):
         os.mkdir(path)
     if nodes:
-        gdf_nodes = graph.nodes_to_gdf()
-        if fiona_cast:
-            cast_for_fiona(gdf_nodes)
         file_name = os.path.join(path, '{}_nodes'.format(graph.name))
-        file_name += known_files_extension.get(driver, "")
-        gdf_nodes.to_file(file_name, driver=driver)
+        file_name += settings.KNOWN_FILES_EXTENSION.get(driver, "")
+        write_nodes_to_geofile(graph, file_name, driver, fiona_cast)
     if edges:
-        gdf_edges = graph.edges_to_gdf()
-        if fiona_cast:
-            cast_for_fiona(gdf_edges)
         file_name = os.path.join(path, '{}_edges'.format(graph.name))
-        file_name += known_files_extension.get(driver, "")
-        gdf_edges.to_file(file_name, driver=driver)
+        file_name += settings.KNOWN_FILES_EXTENSION.get(driver, "")
+        write_edges_to_geofile(graph, file_name, driver, fiona_cast)
 
 

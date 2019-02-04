@@ -22,3 +22,4 @@ INTERSECTION_PREFIX = "intersect_"
 EDGE_FIRST_NODE_COLUMN_NAME = "u"
 EDGE_SECOND_NODE_COLUMN_NAME = "v"
 NODE_ID_COLUMN_NAME = "id"
+KNOWN_FILES_EXTENSION = {'GeoJSON': '.geojson', 'GPKG': '.gpkg', 'ESRI Shapefile': '.shp'}
