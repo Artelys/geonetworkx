@@ -15,7 +15,7 @@ def get_crs_as_str(crs):
     return proj.definition_string()
 
 
-def compare_crs(crs1, crs2):
+def crs_equals(crs1, crs2):
     """Compare CRS using `pyproj.Proj` objects."""
     if crs1 is None or crs2 is None:
         return False
@@ -135,9 +135,9 @@ def fill_length_attribute(graph: "GeoGraph", attribute_name="length", only_missi
     :param only_missing: Compute the length only if the attribute is missing
     :return: None
     """
-    if compare_crs(graph.crs, settings.USED_CRS):
+    if not crs_equals(graph.crs, settings.USED_CRS):
         raise ValueError("Impossible to compute distance for graph with different"
-                         " crs than : '%s' " % str(settings.DEFAULT_CRS))
+                         " crs than '%s'. Graph crs: '%s' " % (str(settings.USED_CRS), str(graph.crs)))
     edges_geometry = nx.get_edge_attributes(graph, graph.edges_geometry_key)
     for e in edges_geometry:
         edge_data = graph.edges[e]
