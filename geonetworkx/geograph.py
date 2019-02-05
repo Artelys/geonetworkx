@@ -16,12 +16,27 @@ class GeoGraph(nx.Graph):
     CRS is the WGS84 standard (EPSG:4326). All nodes must have defined coordinates, otherwise an error will be raised.
     """
     def __init__(self, incoming_graph_data=None, **attr):
-        self.x_key = attr.pop('x_key', settings.X_DEFAULT_KEY)
-        self.y_key = attr.pop('y_key', settings.Y_DEFAULT_KEY)
-        self.edges_geometry_key = attr.pop('edges_geometry_key', settings.EDGES_GEOMETRY_DEFAULT_KEY)
-        self.crs = attr.pop('crs', settings.DEFAULT_CRS)
+        self.parse_spatial_keys(incoming_graph_data, attr)
         super(GeoGraph, self).__init__(incoming_graph_data, **attr)
         self.check_nodes_validity()
+
+    def parse_spatial_keys(self, incoming_graph_data, attr):
+        """Parse the spatial keys of the graph with the given input data (called from constructor)"""
+        if incoming_graph_data is not None:
+            self.x_key = getattr(incoming_graph_data, 'x_key', settings.X_DEFAULT_KEY)
+            self.y_key = getattr(incoming_graph_data, 'y_key', settings.Y_DEFAULT_KEY)
+            self.edges_geometry_key = getattr(incoming_graph_data, 'edges_geometry_key',
+                                              settings.EDGES_GEOMETRY_DEFAULT_KEY)
+            self.crs = getattr(incoming_graph_data, 'crs', settings.DEFAULT_CRS)
+            self.x_key = attr.pop('x_key', self.x_key)
+            self.y_key = attr.pop('y_key', self.y_key)
+            self.edges_geometry_key = attr.pop('edges_geometry_key', self.edges_geometry_key)
+            self.crs = attr.pop('crs', self.crs)
+        else:
+            self.x_key = attr.pop('x_key', settings.X_DEFAULT_KEY)
+            self.y_key = attr.pop('y_key', settings.Y_DEFAULT_KEY)
+            self.edges_geometry_key = attr.pop('edges_geometry_key', settings.EDGES_GEOMETRY_DEFAULT_KEY)
+            self.crs = attr.pop('crs', settings.DEFAULT_CRS)
 
     def check_nodes_validity(self):
         """Check that all nodes have x and y coordinates."""
