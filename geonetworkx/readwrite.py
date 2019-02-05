@@ -53,7 +53,6 @@ def write_keys_as_graph_attributes(graph: GeoGraph):
         if key == 'crs':
             if graph.crs is not None:
                 graph.graph[key] = get_crs_as_str(graph.crs)
-            delattr(graph, key)
         else:
             graph.graph[key] = val
 
@@ -91,6 +90,7 @@ def write_graphml(geograph, path, encoding='utf-8', prettyprint=True, infer_nume
     """Generate GraphML lines for G"""
     graph_wkt = get_graph_with_wkt_geometry(geograph)
     write_keys_as_graph_attributes(graph_wkt)
+    graph_wkt.crs = None
     nx.write_graphml(graph_wkt, path, encoding, prettyprint, infer_numeric_types)
 
 
