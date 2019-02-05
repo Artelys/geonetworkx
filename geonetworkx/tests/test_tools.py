@@ -35,7 +35,7 @@ class TestTools(unittest.TestCase):
     def test_spatial_points_merge(self):
         # test a spatial merge
         mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_mdg.gpickle"))
-        graph = gnx.GeoMultiDiGraph(mdg)
+        graph = gnx.GeoMultiDiGraph(mdg, crs=gnx.WGS84_CRS)
         gnx.utils.fill_edges_missing_geometry_attributes(graph)
         points_gdf = gpd.read_file(os.path.join(data_directory, "grenoble200_buildings.geojson"), driver="GeoJSON")
         gnx.tools.spatial_points_merge(graph, points_gdf, inplace=True)
@@ -53,7 +53,7 @@ class TestTools(unittest.TestCase):
     def test_spatial_graph_merge(self):
         streets_mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_mdg.gpickle"))
         streets_mdg = streets_mdg.to_undirected()
-        base_graph = gnx.GeoMultiGraph(streets_mdg)
+        base_graph = gnx.GeoMultiGraph(streets_mdg, crs=gnx.WGS84_CRS)
         gnx.utils.fill_edges_missing_geometry_attributes(base_graph)
         base_graph.graph["name"] = "streets"
         #gnx.export_graph_as_shape_file(base_graph, "datasets/results/")
@@ -62,7 +62,7 @@ class TestTools(unittest.TestCase):
         electrical_dg = nx.MultiDiGraph(electrical_dg)
         original_edges = list(electrical_dg.edges(keys=True, data=True))
         electrical_mg = electrical_dg.to_undirected()
-        other_graph = gnx.GeoMultiGraph(electrical_mg)
+        other_graph = gnx.GeoMultiGraph(electrical_mg, crs=gnx.WGS84_CRS)
         gnx.order_well_lines(other_graph)
         gnx.join_lines_extremity_to_nodes_coordinates(other_graph)
         other_graph.graph["name"] = "electrical"
@@ -111,13 +111,13 @@ class TestTools(unittest.TestCase):
         gnx.fill_edges_missing_geometry_attributes(other_graph)
         nx.set_node_attributes(other_graph, {n: 3 for n in common_nodes}, "origin")
         nx.set_node_attributes(base_graph, {n: 3 for n in common_nodes}, "origin")
-        nx.draw_networkx(base_graph, pos=nodes_coords, node_color ="red")
-        nx.draw_networkx(other_graph, pos=other_graph.get_nodes_coordinates(), node_color=[2 if n in base_graph.nodes() else 3 for n in g2.nodes()])
+        #nx.draw_networkx(base_graph, pos=nodes_coords, node_color ="red")
+        #nx.draw_networkx(other_graph, pos=other_graph.get_nodes_coordinates(), node_color=[2 if n in base_graph.nodes() else 3 for n in g2.nodes()])
 
         merged_graph = gnx.spatial_graph_merge(base_graph, other_graph, inplace=False)
         origins = nx.get_node_attributes(merged_graph, "origin")
         nc = [origins[n] if n in origins else 4 for n in merged_graph.nodes()]
-        nx.draw_networkx(merged_graph, pos=merged_graph.get_nodes_coordinates(), node_color=nc)
+        #nx.draw_networkx(merged_graph, pos=merged_graph.get_nodes_coordinates(), node_color=nc)
 
     def test_spatial_point_merge_with_filters(self):
         nb_nodes = 30
