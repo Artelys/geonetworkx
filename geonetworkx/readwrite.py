@@ -34,8 +34,8 @@ def get_graph_with_wkt_geometry(geograph):
     graph_shallow_copy = geograph.__class__(geograph, **geograph.get_spatial_keys())
     edge_geometries = nx.get_edge_attributes(graph_shallow_copy, geograph.edges_geometry_key)
     for e in edge_geometries:
-        if hasattr(edge_geometries[e], "to_wkt"):
-            graph_shallow_copy.edges[e][geograph.edges_geometry_key] = edge_geometries[e].to_wkt()
+        if hasattr(edge_geometries[e], "wkt"):
+            graph_shallow_copy.edges[e][geograph.edges_geometry_key] = edge_geometries[e].wkt
     return graph_shallow_copy
 
 
