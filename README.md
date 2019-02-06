@@ -24,3 +24,17 @@ Examples
 --------
 
 TODO
+
+Tests
+-----
+
+Tests can be launched with `unittest` with the following command:
+```
+python -m unittest discover -v geonetworkx
+```
+Or with `nose` like this:
+```
+nosetests
+```
+
+
