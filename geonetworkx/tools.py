@@ -79,7 +79,8 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
     graph and an intersection node is added if necessary. If two nodes a given point and a node have the same name, with
     equal coordinates, then the node is considered as already in the graph. A discretization tolerance
     (`settings.DISCRETIZATION_TOLERANCE`) is used for edges lines and is set by default to a constant matching the WGS84
-    crs. If another crs is used, results may be inconsistent (high computational time or inaccuracy).
+    crs. If another crs is used, results may be inconsistent (high computational time or inaccuracy). New nodes created
+    from the geodataframe have attributes described by other columns (except if an attribute value is `nan`).
 
     :param graph: A GeoGraph or derived class describing a spatial graph.
     :param points_gdf: A list of point describing new nodes to add.
