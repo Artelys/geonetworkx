@@ -10,13 +10,14 @@ from nose.tools import assert_less, assert_not_in, assert_in
 import unittest
 import geonetworkx as gnx
 from geonetworkx.testing.utils import get_random_geograph_subclass, assert_is_subgraph, ALL_CLASSES
+import geonetworkx.testing.utils as gnx_tu
 from shapely.geometry import Polygon
 import math
 import numpy as np
 
 
 NB_VERTICES = 50
-SEED = 70595
+gnx_tu.SEED = 70595
 
 @attr("simplify")
 class TestSimplify(unittest.TestCase):
@@ -42,7 +43,7 @@ class TestSimplify(unittest.TestCase):
         not_nan_examples = {'t4': "abcd", 't5': 1.23, 't6': ["a", "b", "c", None, np.nan, math.nan]}
         for graph_type in ALL_CLASSES:
             for copy in [True, False]:
-                with self.subTest(graph_type=graph_type, SEED=SEED, copy=copy):
+                with self.subTest(graph_type=graph_type, SEED=gnx_tu.SEED, copy=copy):
                     g = get_random_geograph_subclass(NB_VERTICES, graph_type)
                     for n, d in g.nodes(data=True):
                         d.update(nan_examples)

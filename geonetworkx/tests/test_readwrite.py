@@ -12,9 +12,10 @@ import networkx as nx
 import geonetworkx as gnx
 from geonetworkx.testing import get_random_geograph, get_random_geodigraph, get_random_geomultigraph,\
     get_random_geomultidigraph, assert_graphs_have_same_edges_geometry, ALL_CLASSES, get_random_geograph_subclass
+import geonetworkx.testing.utils as gnx_tu
 
 
-SEED = 70595
+gnx_tu.SEED = 70595
 NB_VERTICES = 50
 
 

@@ -10,13 +10,13 @@ import networkx as nx
 import geonetworkx as gnx
 import numpy as np
 from shapely.geometry import Point
-#os.chdir("geonetworkx/tests")
 from nose.tools import assert_in
 import unittest
 from nose.plugins.attrib import attr
+import geonetworkx.testing.utils as gnx_tu
 
 
-SEED = 70595
+gnx_tu.SEED = 70595
 data_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), "datasets")
 
 

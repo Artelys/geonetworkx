@@ -7,13 +7,14 @@
 from geonetworkx.testing import get_random_geograph, get_random_geomultigraph, get_random_geodigraph,\
     get_random_geomultidigraph, get_random_geograph_with_wgs84_scale, get_random_geograph_subclass
 from geonetworkx.testing import assert_graphs_have_same_edges_geometry, assert_graphs_have_same_geonodes, ALL_CLASSES
+import geonetworkx.testing.utils as gnx_tu
 import geonetworkx as gnx
 import os, shutil
 from nose.tools import assert_is_instance, assert_equal
 from nose.plugins.attrib import attr
 import unittest
 
-SEED = 70595
+gnx_tu.SEED = 70595
 NB_POINTS = 100
 
 @attr('classes')
