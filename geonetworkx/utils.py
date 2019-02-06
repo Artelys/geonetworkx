@@ -216,3 +216,7 @@ def order_well_lines(graph: "GeoGraph"):
 def stringify_nodes(graph, copy=True):
     """Modify the graph node names into strings."""
     nx.relabel_nodes(graph, {n: str(n) for n in graph.nodes}, copy)
+
+
+def is_nan(val):
+    return val is np.nan or val != val

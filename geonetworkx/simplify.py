@@ -2,6 +2,7 @@ import numpy as np
 import networkx as nx
 from shapely.geometry import Polygon, MultiPolygon
 from geonetworkx import GeoGraph
+from geonetworkx.utils import is_nan
 from typing import Union
 
 
@@ -103,7 +104,7 @@ def remove_nan_attributes(graph: nx.Graph, remove_nan=True, remove_none=True, co
         for k, v in data.items():
             if remove_none and v is None:
                 keys_to_remove.add(k)
-            if remove_nan and v is np.nan or v != v:
+            if remove_nan and is_nan(v):
                 keys_to_remove.add(k)
         for k in keys_to_remove:
             del data[k]

@@ -12,7 +12,7 @@ from shapely.geometry import Point, LineString
 from geonetworkx.geograph import GeoGraph
 import geonetworkx.settings as settings
 from geonetworkx.geometry_operations import get_closest_line_from_points, split_line, coordinates_almost_equal
-from geonetworkx.utils import get_new_node_unique_name, euclidian_distance, get_line_ordered_edge
+from geonetworkx.utils import get_new_node_unique_name, euclidian_distance, get_line_ordered_edge, is_nan
 from geonetworkx.readwrite import graph_nodes_to_gdf
 from collections import defaultdict
 
@@ -116,7 +116,7 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
                 node_name = get_new_node_unique_name(graph, p_index)
         else:
             node_name = p_index
-        node_info = {c: points_gdf.at[p_index, c] for c in points_gdf.columns}
+        node_info = {c: points_gdf.at[p_index, c] for c in points_gdf.columns if not is_nan(points_gdf.at[p_index, c])}
         node_info[graph.x_key] = point.x
         node_info[graph.y_key] = point.y
         graph.add_node(node_name, **node_info)
