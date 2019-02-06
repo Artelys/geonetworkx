@@ -194,7 +194,7 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
 
 
 def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
-                        inplace=False, merge_direction="both", node_filter=None):
+                        inplace=False, merge_direction="both", node_filter=None, intersection_nodes_attr=None):
     """
     Operates spatial merge between two graphs. Spatial edge projection is used on merging nodes (see
     `spatial_points_merge`).
@@ -204,6 +204,7 @@ def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
     :param inplace: If True, do operation inplace and return None.
     :param merge_direction: See `spatial_points_merge`
     :param node_filter: Lambda returning if a given node (from the `other_graph` graph) has to be merged.
+    :param intersection_nodes_attr: A dictionary of attributes (constant for all added intersection nodes).
     :return: A new graph with the same type as `base_graph` if not inplace.
     """
     if base_graph.is_directed() != other_graph.is_directed():
@@ -218,10 +219,12 @@ def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
         raise ValueError("Given graph has no nodes to project.")
     nodes_gdf = other_graph_view.nodes_to_gdf()
     if inplace:
-        spatial_points_merge(base_graph, nodes_gdf, inplace=inplace, merge_direction=merge_direction)
+        spatial_points_merge(base_graph, nodes_gdf, inplace=inplace, merge_direction=merge_direction,
+                             intersection_nodes_attr=intersection_nodes_attr)
         merged_graph = base_graph
     else:
-        merged_graph = spatial_points_merge(base_graph, nodes_gdf, inplace=inplace, merge_direction=merge_direction)
+        merged_graph = spatial_points_merge(base_graph, nodes_gdf, inplace=inplace, merge_direction=merge_direction,
+                                            intersection_nodes_attr=intersection_nodes_attr)
     merged_graph = nx.compose(merged_graph, other_graph)
     if not inplace:
         return merged_graph
