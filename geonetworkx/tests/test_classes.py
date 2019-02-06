@@ -31,47 +31,22 @@ class TestClasses(unittest.TestCase):
 
     # GeoGraph
     def test_graph_to_directed(self):
-        graph = get_random_geograph(NB_POINTS)
-        directed_graph = graph.to_directed()
-        assert_is_instance(directed_graph, gnx.GeoDiGraph)
+        graphs_directed_match = {gnx.GeoGraph: gnx.GeoDiGraph, gnx.GeoMultiGraph: gnx.GeoMultiDiGraph,
+                                 gnx.GeoDiGraph: gnx.GeoDiGraph, gnx.GeoMultiDiGraph: gnx.GeoMultiDiGraph}
+        for graph_type in ALL_CLASSES:
+            with self.subTest(graph_type=graph_type, SEED=gnx_tu.SEED):
+                graph = get_random_geograph_subclass(NB_POINTS, graph_type)
+                directed_graph = graph.to_directed()
+                assert_is_instance(directed_graph, graphs_directed_match[graph_type])
 
     def test_graph_to_undirected(self):
-        graph = get_random_geograph(NB_POINTS)
-        undirected_graph = graph.to_undirected()
-        assert_is_instance(undirected_graph, gnx.GeoGraph)
-
-    # GeoMultiGraph
-    def test_multigraph_to_directed(self):
-        graph = get_random_geomultigraph(NB_POINTS)
-        directed_graph = graph.to_directed()
-        assert_is_instance(directed_graph, gnx.GeoMultiDiGraph)
-
-    def test_multigraph_to_undirected(self):
-        graph = get_random_geomultigraph(NB_POINTS)
-        undirected_graph = graph.to_undirected()
-        assert_is_instance(undirected_graph, gnx.GeoMultiGraph)
-
-    # GeoDiGraph
-    def test_digraph_to_directed(self):
-        graph = get_random_geodigraph(NB_POINTS)
-        directed_graph = graph.to_directed()
-        assert_is_instance(directed_graph, gnx.GeoDiGraph)
-
-    def test_digraph_to_undirected(self):
-        graph = get_random_geodigraph(NB_POINTS)
-        undirected_graph = graph.to_undirected()
-        assert_is_instance(undirected_graph, gnx.GeoGraph)
-
-    # GeoMultiDiGraph
-    def test_multidigraph_to_directed(self):
-        graph = get_random_geomultidigraph(NB_POINTS)
-        directed_graph = graph.to_directed()
-        assert_is_instance(directed_graph, gnx.GeoMultiDiGraph)
-
-    def test_multidigraph_to_undirected(self):
-        graph = get_random_geomultidigraph(NB_POINTS)
-        undirected_graph = graph.to_undirected()
-        assert_is_instance(undirected_graph, gnx.GeoMultiGraph)
+        graphs_undirected_match = {gnx.GeoGraph: gnx.GeoGraph, gnx.GeoMultiGraph: gnx.GeoMultiGraph,
+                                   gnx.GeoDiGraph: gnx.GeoGraph, gnx.GeoMultiDiGraph: gnx.GeoMultiGraph}
+        for graph_type in ALL_CLASSES:
+            with self.subTest(graph_type=graph_type, SEED=gnx_tu.SEED):
+                graph = get_random_geograph_subclass(NB_POINTS, graph_type)
+                directed_graph = graph.to_undirected()
+                assert_is_instance(directed_graph, graphs_undirected_match[graph_type])
 
     def test_crs_modification(self):
         graph = get_random_geograph_with_wgs84_scale(NB_POINTS, gnx.GeoMultiDiGraph)
@@ -84,13 +59,15 @@ class TestClasses(unittest.TestCase):
 
     def test_nodes_to_gdf(self):
         for graph_type in ALL_CLASSES:
-            g = get_random_geograph_subclass(NB_POINTS, graph_type)
-            gdf = g.nodes_to_gdf()
-            assert_equal(g.number_of_nodes(), len(gdf))
+            with self.subTest(graph_type=graph_type, SEED=gnx_tu.SEED):
+                g = get_random_geograph_subclass(NB_POINTS, graph_type)
+                gdf = g.nodes_to_gdf()
+                assert_equal(g.number_of_nodes(), len(gdf))
 
     def test_edges_to_gdf(self):
         for graph_type in ALL_CLASSES:
-            g = get_random_geograph_subclass(NB_POINTS, graph_type)
-            gdf = g.edges_to_gdf()
-            assert_equal(g.number_of_edges(), len(gdf))
+            with self.subTest(graph_type=graph_type, SEED=gnx_tu.SEED):
+                g = get_random_geograph_subclass(NB_POINTS, graph_type)
+                gdf = g.edges_to_gdf()
+                assert_equal(g.number_of_edges(), len(gdf))
 
