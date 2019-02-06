@@ -7,8 +7,9 @@
 from shapely.geometry import LineString
 import numpy as np
 from nose.plugins.attrib import attr
-from ..geometry_operations import discretize_lines
-from ..testing.utils import assert_almost_intersect
+import unittest
+from geonetworkx.geometry_operations import discretize_lines
+from geonetworkx.testing.utils import assert_almost_intersect
 import geonetworkx as gnx
 import geonetworkx.settings as settings
 
@@ -16,7 +17,7 @@ SEED = 70595
 np.random.seed(SEED)
 
 @attr('geometry_operations')
-class TestGeometryOperations():
+class TestGeometryOperations(unittest.TestCase):
 
     def test_discretize_lines(self):
         # Test that a discretization of lines is well set for each line
