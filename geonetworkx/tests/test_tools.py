@@ -39,15 +39,8 @@ class TestTools(unittest.TestCase):
         gnx.utils.fill_edges_missing_geometry_attributes(graph)
         points_gdf = gpd.read_file(os.path.join(data_directory, "grenoble200_buildings.geojson"), driver="GeoJSON")
         gnx.tools.spatial_points_merge(graph, points_gdf, inplace=True)
-        #gnx.readwrite.export_graph_as_shape_file(graph, "datasets/results/")
         for p in points_gdf.index:
             assert_in(p, graph.nodes())
-        #nx.write_gpickle(graph, "datasets/grenoble100_merged.gpickle")
-        gnx.utils.fill_length_attribute(graph)
-        voro = nx.voronoi_cells(graph, set(points_gdf.index), weight='length')
-        for ct, c in enumerate(voro):
-            for n in voro[c]:
-                graph.nodes[n]["voro"] = ct
 
 
     def test_spatial_graph_merge(self):
@@ -56,7 +49,6 @@ class TestTools(unittest.TestCase):
         base_graph = gnx.GeoMultiGraph(streets_mdg, crs=gnx.WGS84_CRS)
         gnx.utils.fill_edges_missing_geometry_attributes(base_graph)
         base_graph.graph["name"] = "streets"
-        #gnx.export_graph_as_shape_file(base_graph, "datasets/results/")
 
         electrical_dg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_electrical_dg.gpickle"))
         electrical_dg = nx.MultiDiGraph(electrical_dg)
@@ -66,10 +58,8 @@ class TestTools(unittest.TestCase):
         gnx.order_well_lines(other_graph)
         gnx.join_lines_extremity_to_nodes_coordinates(other_graph)
         other_graph.graph["name"] = "electrical"
-        #gnx.export_graph_as_shape_file(other_graph, "datasets/results")
         merged_graph = gnx.tools.spatial_graph_merge(base_graph, other_graph, inplace=False)
         merged_graph.graph["name"] = "merged_graph"
-        #gnx.readwrite.export_graph_as_shape_file(merged_graph, "datasets/results/")
         for n in other_graph.nodes():
             assert_in(n, merged_graph.nodes())
         for n in base_graph.nodes():
