@@ -6,11 +6,13 @@
 """
 
 from nose.plugins.attrib import attr
-from nose.tools import assert_less
+from nose.tools import assert_less, assert_not_in, assert_in
 import unittest
 import geonetworkx as gnx
 from geonetworkx.testing.utils import get_random_geograph_subclass, assert_is_subgraph, ALL_CLASSES
 from shapely.geometry import Polygon
+import math
+import numpy as np
 
 
 NB_VERTICES = 50
@@ -34,3 +36,34 @@ class TestSimplify(unittest.TestCase):
                 new_graph = gnx.trim_graph_with_polygon(g, polygon, copy=True, method=method)
                 assert_less(len(new_graph.nodes), len(g.nodes), "Half bounding box trimming must remove some nodes")
                 assert_is_subgraph(g, new_graph, "The trimmed graph must be a sub graph of the original graph")
+
+    def test_remove_nan_attributes(self):
+        nan_examples = {'t1': None, 't2': math.nan, 't3': np.nan}
+        not_nan_examples = {'t4': "abcd", 't5': 1.23, 't6': ["a", "b", "c", None, np.nan, math.nan]}
+        for graph_type in ALL_CLASSES:
+            for copy in [True, False]:
+                with self.subTest(graph_type=graph_type, SEED=SEED, copy=copy):
+                    g = get_random_geograph_subclass(NB_VERTICES, graph_type)
+                    for n, d in g.nodes(data=True):
+                        d.update(nan_examples)
+                        d.update(not_nan_examples)
+                    for u, v, d in g.edges(data=True):
+                        d.update(nan_examples)
+                        d.update(not_nan_examples)
+                    if copy:
+                        modified_graph = gnx.remove_nan_attributes(g, copy=copy)
+                    else:
+                        gnx.remove_nan_attributes(g, copy=copy)
+                        modified_graph = g
+
+                    for n, d in modified_graph.nodes(data=True):
+                        for k in nan_examples.keys():
+                            assert_not_in(k, d.keys())
+                        for k in not_nan_examples.keys():
+                            assert_in(k, d.keys())
+                    for u, v, d in modified_graph.edges(data=True):
+                        for k in nan_examples.keys():
+                            assert_not_in(k, d.keys())
+                        for k in not_nan_examples.keys():
+                            assert_in(k, d.keys())
+

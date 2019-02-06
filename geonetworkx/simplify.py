@@ -1,3 +1,4 @@
+import numpy as np
 import networkx as nx
 from shapely.geometry import Polygon, MultiPolygon
 from geonetworkx import GeoGraph
@@ -78,6 +79,39 @@ def trim_graph_with_polygon(graph: GeoGraph, polygon: Union[Polygon, MultiPolygo
     edges_to_remove = edges_as_series[edges_criteria].index
     used_graph.remove_nodes_from(nodes_to_remove)
     used_graph.remove_edges_from(edges_to_remove)
+    if copy:
+        return used_graph
+
+
+def remove_nan_attributes(graph: nx.Graph, remove_nan=True, remove_none=True, copy=False):
+    """
+    Remove the `nan` and `None` values from nodes and edges attributes.
+
+    :param graph: Graph (or subclass)
+    :param remove_nan: If true, remove the `nan` values (test is `val is np.nan`)
+    :param remove_none: If true, remove the `None` values (test is `val is None`)
+    :param copy: If True, a copy of the graph is returned, otherwise the graph is modified inplace.
+    :return: The modified graph if `copy`is true.
+    """
+    if copy:
+        used_graph = graph.copy()
+    else:
+        used_graph = graph
+
+    def trim_data(data):
+        keys_to_remove = set()
+        for k, v in data.items():
+            if remove_none and v is None:
+                keys_to_remove.add(k)
+            if remove_nan and v is np.nan or v != v:
+                keys_to_remove.add(k)
+        for k in keys_to_remove:
+            del data[k]
+
+    for n, data in used_graph.nodes(data=True):
+        trim_data(data)
+    for u, v, data in used_graph.edges(data=True):
+        trim_data(data)
     if copy:
         return used_graph
 

@@ -151,7 +151,6 @@ class GeoGraph(nx.Graph):
         if not inplace:
             return graph
 
-
     def nodes_to_gdf(self) -> gpd.GeoDataFrame:
         """
         Create a `geopandas.GeoDataFrame` from nodes of the current graph. The 'geometry' attribute is used for shapes
