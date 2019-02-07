@@ -16,7 +16,7 @@ class GeoMultiGraph(GeoGraph, nx.MultiGraph):
         else:
             graph_class = self.to_directed_class()
             directed_graph = nx.MultiGraph.to_directed(self, as_view)
-            return graph_class(directed_graph, **self.get_spatial_keys())
+            return graph_class(directed_graph)
 
     def to_directed_class(self):
         """Returns the class to use for empty directed copies (see `networkx.MultiGraph.to_directed_class`)."""
@@ -29,7 +29,7 @@ class GeoMultiGraph(GeoGraph, nx.MultiGraph):
         else:
             graph_class = self.to_undirected_class()
             undirected_graph = nx.MultiGraph.to_undirected(self, as_view)
-            return graph_class(undirected_graph, **self.get_spatial_keys())
+            return graph_class(undirected_graph)
 
     def to_undirected_class(self):
         """Returns the class to use for empty undirected copies (see `networkx.MultiGraph.to_undirected_class`).."""

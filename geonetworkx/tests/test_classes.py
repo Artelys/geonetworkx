@@ -4,9 +4,9 @@
     Creation date: 17/01/2019
     Python Version: 3.6
 """
-from geonetworkx.testing import get_random_geograph, get_random_geomultigraph, get_random_geodigraph,\
-    get_random_geomultidigraph, get_random_geograph_with_wgs84_scale, get_random_geograph_subclass
-from geonetworkx.testing import assert_graphs_have_same_edges_geometry, assert_graphs_have_same_geonodes, ALL_CLASSES
+from geonetworkx.testing import get_random_geograph_with_wgs84_scale, get_random_geograph_subclass
+from geonetworkx.testing import assert_graphs_have_same_edges_geometry, assert_graphs_have_same_geonodes, ALL_CLASSES, \
+                                assert_graphs_have_same_spatial_keys
 import geonetworkx.testing.utils as gnx_tu
 import geonetworkx as gnx
 import os, shutil
@@ -70,4 +70,24 @@ class TestClasses(unittest.TestCase):
                 g = get_random_geograph_subclass(NB_POINTS, graph_type)
                 gdf = g.edges_to_gdf()
                 assert_equal(g.number_of_edges(), len(gdf))
+
+    def test_spatial_keys_persistence(self):
+        for graph_type in ALL_CLASSES:
+            with self.subTest(graph_type=graph_type, SEED=gnx_tu.SEED):
+                g = get_random_geograph_subclass(NB_POINTS, graph_type)
+                gnx.rename_edges_attribute(g, g.edges_geometry_key, "abcd")
+                g.edges_geometry_key = "abcd"
+                gnx.rename_nodes_attribute(g, g.x_key, "efgh")
+                g.x_key = "efgh"
+                gnx.rename_nodes_attribute(g, g.y_key, "ijkl")
+                g.y_key = "ijkl"
+                g.crs = {'init': 'epsg:3945'}
+                g2 = g.copy(as_view=False)
+                assert_graphs_have_same_spatial_keys(g, g2)
+                g3 = g.to_undirected(as_view=False)
+                assert_graphs_have_same_spatial_keys(g, g3)
+                g4 = g.to_directed(as_view=False)
+                assert_graphs_have_same_spatial_keys(g, g4)
+
+
 

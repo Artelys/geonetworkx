@@ -220,3 +220,16 @@ def stringify_nodes(graph, copy=True):
 
 def is_nan(val):
     return val is np.nan or val != val
+
+def rename_nodes_attribute(graph, old_name, new_name):
+    """Rename nodes attribute defined by its old name to a new name."""
+    for n, d in graph.nodes(data=True):
+        if old_name in d:
+            d[new_name] = d.pop(old_name)
+
+
+def rename_edges_attribute(graph, old_name, new_name):
+    """Rename edges attribute defined by its old name to a new name."""
+    for u, v, d in graph.edges(data=True):
+        if old_name in d:
+            d[new_name] = d.pop(old_name)

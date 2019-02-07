@@ -16,33 +16,54 @@ class GeoGraph(nx.Graph):
     CRS is the WGS84 standard (EPSG:4326). All nodes must have defined coordinates, otherwise an error will be raised.
     """
     def __init__(self, incoming_graph_data=None, **attr):
-        self.parse_spatial_keys(incoming_graph_data, attr)
         super(GeoGraph, self).__init__(incoming_graph_data, **attr)
         self.check_nodes_validity()
-
-    def parse_spatial_keys(self, incoming_graph_data, attr):
-        """Parse the spatial keys of the graph with the given input data (called from constructor)"""
-        if incoming_graph_data is not None:
-            self.x_key = getattr(incoming_graph_data, 'x_key', settings.X_DEFAULT_KEY)
-            self.y_key = getattr(incoming_graph_data, 'y_key', settings.Y_DEFAULT_KEY)
-            self.edges_geometry_key = getattr(incoming_graph_data, 'edges_geometry_key',
-                                              settings.EDGES_GEOMETRY_DEFAULT_KEY)
-            self.crs = getattr(incoming_graph_data, 'crs', settings.DEFAULT_CRS)
-            self.x_key = attr.pop('x_key', self.x_key)
-            self.y_key = attr.pop('y_key', self.y_key)
-            self.edges_geometry_key = attr.pop('edges_geometry_key', self.edges_geometry_key)
-            self.crs = attr.pop('crs', self.crs)
-        else:
-            self.x_key = attr.pop('x_key', settings.X_DEFAULT_KEY)
-            self.y_key = attr.pop('y_key', settings.Y_DEFAULT_KEY)
-            self.edges_geometry_key = attr.pop('edges_geometry_key', settings.EDGES_GEOMETRY_DEFAULT_KEY)
-            self.crs = attr.pop('crs', settings.DEFAULT_CRS)
 
     def check_nodes_validity(self):
         """Check that all nodes have x and y coordinates."""
         for n, node_data in self.nodes(data=True):
             if self.x_key not in node_data or self.y_key not in node_data:
                 raise ValueError("Unable to find (x, y) coordinates for node: '%s'" % str(n))
+
+    @property
+    def x_key(self):
+        """Attribute name for the x-coordinate of the nodes. This graph attribute appears in the attribute dict G.graph
+         keyed by the string `"x_key"` as well as an attribute `G.x_key`"""
+        return self.graph.get('x_key', settings.X_DEFAULT_KEY)
+
+    @x_key.setter
+    def x_key(self, s):
+        self.graph['x_key'] = s
+
+    @property
+    def y_key(self):
+        """Attribute name for the y-coordinate of the nodes. This graph attribute appears in the attribute dict G.graph
+         keyed by the string `"y_key"` as well as an attribute `G.y_key`"""
+        return self.graph.get('y_key', settings.Y_DEFAULT_KEY)
+
+    @y_key.setter
+    def y_key(self, s):
+        self.graph['y_key'] = s
+
+    @property
+    def edges_geometry_key(self):
+        """Attribute name for the edges geometry attributes. This graph attribute appears in the attribute dict G.graph
+         keyed by the string `"edges_geometry_key"` as well as an attribute `G.edges_geometry_key`"""
+        return self.graph.get('edges_geometry_key', settings.EDGES_GEOMETRY_DEFAULT_KEY)
+
+    @edges_geometry_key.setter
+    def edges_geometry_key(self, s):
+        self.graph['edges_geometry_key'] = s
+
+    @property
+    def crs(self):
+        """Coordinate Reference System of the graph. This graph attribute appears in the attribute dict G.graph keyed
+        by the string `"crs"` as well as an attribute `G.crs`"""
+        return self.graph.get('crs', gnx.DEFAULT_CRS)
+
+    @crs.setter
+    def crs(self, c):
+        self.graph['crs'] = c
 
     def get_node_coordinates(self, node_name):
         """Return the coordinates of a given node."""
@@ -97,7 +118,7 @@ class GeoGraph(nx.Graph):
         """Return a copy of the graph (see `networkx.Graph.copy`)."""
         nx_graph_class = self.to_nx_class()
         graph = nx_graph_class.copy(self, as_view)
-        return self.__class__(graph, **self.get_spatial_keys())
+        return self.__class__(graph)
 
     def to_directed(self, as_view=False):
         """Return a directed representation of the graph (see `networkx.Graph.to_directed`)."""
@@ -106,7 +127,7 @@ class GeoGraph(nx.Graph):
         else:
             graph_class = self.to_directed_class()
             directed_graph = nx.Graph.to_directed(self, as_view)
-            return graph_class(directed_graph, **self.get_spatial_keys())
+            return graph_class(directed_graph)
 
     def to_directed_class(self):
         """Returns the class to use for empty directed copies (see `networkx.Graph.to_directed_class`)."""
@@ -119,7 +140,7 @@ class GeoGraph(nx.Graph):
         else:
             graph_class = self.to_undirected_class()
             undirected_graph = nx.Graph.to_undirected(self, as_view)
-            return graph_class(undirected_graph, **self.get_spatial_keys())
+            return graph_class(undirected_graph)
 
     def to_undirected_class(self):
         """Returns the class to use for empty undirected copies (see `networkx.Graph.to_undirected_class`)."""

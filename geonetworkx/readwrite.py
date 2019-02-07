@@ -31,7 +31,7 @@ def parse_graph_as_geograph(graph, **attr):
 def get_graph_with_wkt_geometry(geograph):
     """Modify the edges geometry attribute to a well-known text format to make the graph writable is some text formats.
     The returned graph is not as operational as the given one (edge geometries has been removed)"""
-    graph_shallow_copy = geograph.__class__(geograph, **geograph.get_spatial_keys())
+    graph_shallow_copy = geograph.__class__(geograph)
     edge_geometries = nx.get_edge_attributes(graph_shallow_copy, geograph.edges_geometry_key)
     for e in edge_geometries:
         if hasattr(edge_geometries[e], "wkt"):
@@ -46,15 +46,14 @@ def parse_edge_attribute_as_wkt(graph, attribute_name):
         graph.edges[e][attribute_name] = loads(w)
 
 
-def write_keys_as_graph_attributes(graph: GeoGraph):
-    """Write the spatial keys as graph global attributes."""
-    spatial_keys = graph.get_spatial_keys()
-    for key, val in spatial_keys.items():
-        if key == 'crs':
-            if graph.crs is not None:
-                graph.graph[key] = get_crs_as_str(graph.crs)
-        else:
-            graph.graph[key] = val
+def stringify_crs(graph: GeoGraph):
+    """Write the CRS attribute as a string."""
+    if graph.crs is not None:
+        if not isinstance(graph.crs, str):
+            graph.crs = get_crs_as_str(graph.crs)
+    else:
+        if 'crs' in graph.graph:
+           del graph.graph['crs']
 
 
 def read_gpickle(path, **attr):
@@ -68,7 +67,6 @@ def read_gpickle(path, **attr):
 
 def write_gpickle(geograph, path, protocol=pickle.HIGHEST_PROTOCOL):
     """Write graph object in Python pickle format."""
-    write_keys_as_graph_attributes(geograph)
     nx.write_gpickle(geograph, path, protocol)
 
 
@@ -89,8 +87,7 @@ def read_graphml(path, node_type=str, edge_key_type=int, **attr):
 def write_graphml(geograph, path, encoding='utf-8', prettyprint=True, infer_numeric_types=False):
     """Generate GraphML lines for G"""
     graph_wkt = get_graph_with_wkt_geometry(geograph)
-    write_keys_as_graph_attributes(graph_wkt)
-    graph_wkt.crs = None
+    stringify_crs(graph_wkt)
     nx.write_graphml(graph_wkt, path, encoding, prettyprint, infer_numeric_types)
 
 

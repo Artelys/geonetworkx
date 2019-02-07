@@ -9,6 +9,7 @@ import geonetworkx as gnx
 import numpy as np
 from shapely.geometry import LineString
 from nose.tools import assert_true, assert_equal, assert_in
+from geonetworkx.utils import crs_equals
 
 
 ALL_CLASSES = [gnx.GeoGraph, gnx.GeoMultiGraph, gnx.GeoDiGraph, gnx.GeoMultiDiGraph]
@@ -48,6 +49,16 @@ def assert_graphs_have_same_geonodes(graph1, graph2, msg='', tol=1e-4):
     for n in coordinates1.keys():
         assert_in(n, coordinates2)
         assert_coordinates_almost_equals(coordinates1[n], coordinates2[n], msg, tol)
+
+def assert_graphs_have_same_spatial_keys(graph1, graph2, msg=''):
+    keys1 = graph1.get_spatial_keys()
+    keys2 = graph2.get_spatial_keys()
+    assert_equal(len(keys1), len(keys2))
+    for k in keys1.keys():
+        if k != 'crs':
+            assert_equal(keys1[k], keys2[k], msg)
+        else:
+            assert_true(crs_equals(keys1[k], keys2[k]), msg)
 
 def get_random_geograph(nb_nodes):
     global SEED
