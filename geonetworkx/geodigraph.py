@@ -10,7 +10,7 @@ class GeoDiGraph(GeoGraph, nx.DiGraph):
         return nx.DiGraph
 
     def to_undirected(self, reciprocal=False, as_view=False):
-        """Return an undirected copy of the graph (see `networkx.DiGraph.to_undirected`)."""
+        """Return an undirected copy of the graph (see ``networkx.DiGraph.to_undirected``)."""
         if as_view:
             return nx.DiGraph.to_undirected(self, reciprocal, as_view)
         else:
@@ -19,11 +19,11 @@ class GeoDiGraph(GeoGraph, nx.DiGraph):
             return graph_class(undirected_graph)
 
     def to_undirected_class(self):
-        """Returns the class to use for empty undirected copies (see `networkx.DiGraph.to_undirected_class`)."""
+        """Returns the class to use for empty undirected copies (see ``networkx.DiGraph.to_undirected_class``)."""
         return gnx.GeoGraph
 
     def to_directed(self, as_view=False):
-        """Return a directed representation of the graph (see `networkx.DiGraph.to_directed`)."""
+        """Return a directed representation of the graph (see ``networkx.DiGraph.to_directed``)."""
         if as_view:
             return nx.DiGraph.to_directed(self, as_view)
         else:
@@ -32,7 +32,7 @@ class GeoDiGraph(GeoGraph, nx.DiGraph):
             return graph_class(directed_graph)
 
     def to_directed_class(self):
-        """Returns the class to use for empty directed copies (see `networkx.DiGraph.to_directed_class`)."""
+        """Returns the class to use for empty directed copies (see ``networkx.DiGraph.to_directed_class``)."""
         return GeoDiGraph
 
     """ 

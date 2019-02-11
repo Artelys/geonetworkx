@@ -180,11 +180,11 @@ def discretize_lines(lines: Iterable[LineString]):
 
 def get_closest_point_from_points(points_from: PointsCoordinatesLike, points_to: list = None, kd_tree: KDTree = None):
     """
-    Compute the closest point among the 'points_from' list for each point in the 'points_from' list.
+    Compute the closest point among the ``points_from`` list for each point in the ``points_to`` list.
 
     :param points_from: Iterable of points coordinates
     :param points_to: Iterable of points coordinates
-    :param kd_tree: a constructed kd tree representing `points_from`
+    :param kd_tree: a constructed kd tree representing ``points_from``
     :return: tuple: (distances, indexes)
     """
     if points_to is None and kd_tree is None:
@@ -199,10 +199,10 @@ def get_closest_point_from_line(line_from: LineString, points_to: list = None, k
     Return the closest point from a given line and its distance.
 
     :param line_from: A shapely LineString
-    :param points_to: A list of points among which the closest to the line has to be found (optional is `kdtree` is
+    :param points_to: A list of points among which the closest to the line has to be found (optional is ``kdtree`` is
         given)
     :param kd_tree: A kd-tree representing the points among which the closest to the line has to be found (optional if
-        'points_to' is given)
+        ``points_to`` is given)
     :return: a couple containing the closest distance and the index of the closest point
     """
     if points_to is None and kd_tree is None:
@@ -287,8 +287,8 @@ def get_closest_line_from_point(point_from: PointCoordinatesLike,
     Find the closest line from a given point.
 
     :param point_from: Point coordinate to find the closest line.
-    :param lines_to: Group of lines among which the closest has to be found (optional if `kdtree` and
-                    `points_line_association` are given).
+    :param lines_to: Group of lines among which the closest has to be found (optional if ``kdtree`` and
+                    ``points_line_association`` are given).
     :param kd_tree: An optional pre-computed kd_tree of discretized lines.
     :param points_line_association: An optional pre-computed dictionary matching lines and discretized points.
     :return: The closest distance and closest line index.

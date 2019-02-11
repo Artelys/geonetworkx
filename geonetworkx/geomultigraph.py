@@ -10,7 +10,7 @@ class GeoMultiGraph(GeoGraph, nx.MultiGraph):
         return nx.MultiGraph
 
     def to_directed(self, as_view=False):
-        """Return a directed representation of the graph (see `networkx.MultiGraph.to_directed`)."""
+        """Return a directed representation of the graph (see ``networkx.MultiGraph.to_directed``)."""
         if as_view:
             return nx.MultiGraph.to_directed(self, as_view)
         else:
@@ -19,11 +19,11 @@ class GeoMultiGraph(GeoGraph, nx.MultiGraph):
             return graph_class(directed_graph)
 
     def to_directed_class(self):
-        """Returns the class to use for empty directed copies (see `networkx.MultiGraph.to_directed_class`)."""
+        """Returns the class to use for empty directed copies (see ``networkx.MultiGraph.to_directed_class``)."""
         return gnx.GeoMultiDiGraph
 
     def to_undirected(self, as_view=False):
-        """Return an undirected copy of the graph (see `networkx.MultiGraph.to_undirected`)."""
+        """Return an undirected copy of the graph (see ``networkx.MultiGraph.to_undirected``)."""
         if as_view:
             return nx.MultiGraph.to_undirected(self, as_view)
         else:
@@ -32,5 +32,5 @@ class GeoMultiGraph(GeoGraph, nx.MultiGraph):
             return graph_class(undirected_graph)
 
     def to_undirected_class(self):
-        """Returns the class to use for empty undirected copies (see `networkx.MultiGraph.to_undirected_class`).."""
+        """Returns the class to use for empty undirected copies (see ``networkx.MultiGraph.to_undirected_class``).."""
         return GeoMultiGraph

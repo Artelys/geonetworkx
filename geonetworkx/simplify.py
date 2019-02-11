@@ -32,7 +32,7 @@ def remove_self_loop_edges(graph: nx.Graph) -> int:
 
 def remove_small_connected_components(graph: nx.Graph, minimum_allowed_size: int) -> int:
     """
-    Remove all connected components having strictly less than 'minimum_allowed_size'.
+    Remove all connected components having strictly less than ``minimum_allowed_size``.
 
     :param graph: The graph on which to remove connected components
     :param minimum_allowed_size: The minimum number of nodes where a connected component is kept.
@@ -55,12 +55,12 @@ def trim_graph_with_polygon(graph: GeoGraph, polygon: Union[Polygon, MultiPolygo
     Trim a graph with a given polygon. Keep only the nodes and edges that intersect (or are within) the polygon.
 
     :param graph: A GeoGraph (or subclass)
-    :param polygon: A `shapely.Polygon` describing the area to keep
-    :param copy: If True, a deep copy is done and a new graph is returned.
-    :param method: If set to `intersects`, the `shapely.intersects` is used (keeps nodes and edges that intersects the
-        polygon). If set to `within`, the `shapely.within` is used (keep nodes and edges that are strictly into the
-        polygon).
-    :return: The modified graph if `copy` is True.
+    :param polygon: A ``shapely.Polygon`` describing the area to keep
+    :param copy: If ``True``, a deep copy is done and a new graph is returned.
+    :param method: If set to ``"intersects"``, the ``shapely.intersects`` is used (keeps nodes and edges that
+        intersects the polygon). If set to ``"within"``, the ``shapely.within`` is used (keep nodes and edges that are
+        strictly into the polygon).
+    :return: The modified graph if ``copy`` is ``True``.
     """
     if copy:
         used_graph = graph.copy()
@@ -89,10 +89,10 @@ def remove_nan_attributes(graph: nx.Graph, remove_nan=True, remove_none=True, co
     Remove the `nan` and `None` values from nodes and edges attributes.
 
     :param graph: Graph (or subclass)
-    :param remove_nan: If true, remove the `nan` values (test is `val is np.nan`)
-    :param remove_none: If true, remove the `None` values (test is `val is None`)
+    :param remove_nan: If true, remove the `nan` values (test is ``val is np.nan``)
+    :param remove_none: If true, remove the ``None`` values (test is ``val is None``)
     :param copy: If True, a copy of the graph is returned, otherwise the graph is modified inplace.
-    :return: The modified graph if `copy`is true.
+    :return: The modified graph if ``copy`` is true.
     """
     if copy:
         used_graph = graph.copy()

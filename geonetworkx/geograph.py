@@ -8,12 +8,13 @@ import geonetworkx.settings as settings
 
 class GeoGraph(nx.Graph):
     """
-    This class extends the `networkx.Graph` to represent a graph that have a geographical meaning. Nodes are located
+    This class extends the ``networkx.Graph`` to represent a graph that have a geographical meaning. Nodes are located
     with their coordinates (x, y) and edges can be represented with a given broken line (using
-    `shapely.geometry.LineString` objects). Each graph has its own keys for naming nodes x and y coordinates and edges
-    geometry (`x_key`, `y_key`, `edges_geometry_key`). A coordinate reference system (CRS) can be defined for a graph
-    and will be used for some methods managing earth coordinates (especially for distances). For now, the only supported
-    CRS is the WGS84 standard (EPSG:4326). All nodes must have defined coordinates, otherwise an error will be raised.
+    ``shapely.geometry.LineString`` objects). Each graph has its own keys for naming nodes x and y coordinates and edges
+    geometry (``x_key``, ``y_key``, ``edges_geometry_key``). A coordinate reference system (CRS) can be defined for a
+    graph and will be used for some methods managing earth coordinates (especially for distances). For now, the only
+    supported CRS is the WGS84 standard (EPSG:4326). All nodes must have defined coordinates, otherwise an error will be
+    raised.
     """
     def __init__(self, incoming_graph_data=None, **attr):
         super(GeoGraph, self).__init__(incoming_graph_data, **attr)

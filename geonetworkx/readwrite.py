@@ -14,7 +14,7 @@ from geonetworkx.utils import get_crs_as_str
 
 
 def parse_graph_as_geograph(graph, **attr):
-    """Parse a `networkx.Graph` as a `geonetworkx.GeoGraph` with the closest geonetworkx graph type."""
+    """Parse a ``networkx.Graph`` as a ``geonetworkx.GeoGraph`` with the closest geonetworkx graph type."""
     if graph.is_directed():
         if graph.is_multigraph():
             geograph = GeoMultiDiGraph(graph, **attr)
@@ -93,7 +93,7 @@ def write_graphml(geograph, path, encoding='utf-8', prettyprint=True, infer_nume
 
 def graph_nodes_to_gdf(graph: GeoGraph) -> gpd.GeoDataFrame:
     """
-    Create and fill a GeoDataFrame (geopandas) from nodes of a networkX graph. The 'geometry' attribute is used for
+    Create and fill a GeoDataFrame (geopandas) from nodes of a networkX graph. The ``'geometry'`` attribute is used for
     shapes.
 
     :param graph: Graph to parse
@@ -112,7 +112,7 @@ def graph_nodes_to_gdf(graph: GeoGraph) -> gpd.GeoDataFrame:
 
 def graph_edges_to_gdf(graph: nx.Graph) -> gpd.GeoDataFrame:
     """
-    Create and fill a GeoDataFrame (geopandas) from edges of a networkX graph. The 'geometry' attribute is used for
+    Create and fill a GeoDataFrame (geopandas) from edges of a networkX graph. The ``'geometry'`` attribute is used for
     shapes.
 
     :param graph: Graph to parse
@@ -176,7 +176,7 @@ def write_edges_to_geofile(graph: GeoGraph, file_name, driver="GPKG", fiona_cast
 
     :param graph: Graph to export
     :param file_name: File name (with path)
-    :param driver: driver for export file format (GPKG, geojson, etc: can be found from `fiona.supported_drivers`)
+    :param driver: driver for export file format (GPKG, geojson, etc: can be found from ``fiona.supported_drivers``)
     :param fiona_cast: If true, methods for casting types to writable fiona types are used
     """
     gdf_edges = graph.edges_to_gdf()
@@ -190,7 +190,7 @@ def write_nodes_to_geofile(graph: GeoGraph, file_name, driver="GPKG", fiona_cast
 
     :param graph: Graph to export
     :param file_name: File name (with path)
-    :param driver: driver for export file format (GPKG, geojson, etc: can be found from `fiona.supported_drivers`)
+    :param driver: driver for export file format (GPKG, geojson, etc: can be found from ``fiona.supported_drivers``)
     :param fiona_cast: If true, methods for casting types to writable fiona types are used
     """
     gdf_nodes = graph.nodes_to_gdf()
@@ -207,7 +207,7 @@ def write_geofile(graph: GeoGraph, path='./', nodes=True, edges=True, driver="GP
     :param path: export directory
     :param nodes: boolean to indicate whether export nodes or not.
     :param edges: boolean to indicate whether export edges or not.
-    :param driver: driver for export file format (GPKG, geojson, etc: can be found from `fiona.supported_drivers`)
+    :param driver: driver for export file format (GPKG, geojson, etc: can be found from ``fiona.supported_drivers``)
     :param fiona_cast: If true, methods for casting types to writable fiona types are used
     :return: None
     """

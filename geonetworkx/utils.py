@@ -10,13 +10,13 @@ from typing import Iterable
 
 
 def get_crs_as_str(crs):
-    """Return the given CRS as string `pyproj.Proj` methods."""
+    """Return the given CRS as string ``pyproj.Proj`` methods."""
     proj = pyproj.Proj(crs)
     return proj.definition_string()
 
 
 def crs_equals(crs1, crs2):
-    """Compare CRS using `pyproj.Proj` objects."""
+    """Compare CRS using ``pyproj.Proj`` objects."""
     if crs1 is None or crs2 is None:
         return False
     return get_crs_as_str(crs1) == get_crs_as_str(crs2)
@@ -78,7 +78,7 @@ def get_new_node_unique_name(graph: nx.Graph, name: str):
 
     :param graph: A given graph
     :param name: A initial node name
-    :return: A unique name not in `graph.nodes()`.
+    :return: A unique name not in ``graph.nodes()``.
     """
     if name not in graph.nodes():
         return name
@@ -127,7 +127,7 @@ def fill_edges_missing_geometry_attributes(graph: "GeoGraph"):
 
 def fill_length_attribute(graph: "GeoGraph", attribute_name="length", only_missing=True):
     """
-    Fill the `length` attribute of the given networkX Graph. The length is computed in meters using the vincenty
+    Fill the ``'length'`` attribute of the given networkX Graph. The length is computed in meters using the vincenty
     formula. Method won't be consistent if the graph crs is not WGS84.
 
     :param graph: graph to fill
