@@ -239,7 +239,8 @@ def write_geofile(graph: GeoGraph, path='./', nodes=True, edges=True, driver="GP
 
 
 def read_geograph_with_coordinates_attributes(graph: nx.Graph, x_key='x', y_key='y', **attr) -> GeoGraph:
-    """Parse a `networkx` graph which have node's coordinates as attribute.
+    """Parse a `networkx` graph which have node's coordinates as attribute. This method can be useful to parse an output
+    graph of the `osmnx` package.
 
     :param graph: Given graph to parse. All nodes must have the ``x_key`` and ``y_key`` attributes.
     :param x_key: x-coordinates attribute to parse
