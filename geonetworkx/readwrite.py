@@ -238,28 +238,26 @@ def write_geofile(graph: GeoGraph, path='./', nodes=True, edges=True, driver="GP
         write_edges_to_geofile(graph, file_name, driver, fiona_cast)
 
 
-def read_geograph_from_osmnx_graph(osmnx_graph: nx.Graph, **attr):
-    """Parse a `networkx` graph with the `osmnx` output format into a `GeoGraph`."""
-    graph = osmnx_graph.__class__(osmnx_graph)
-    x_coords = nx.get_node_attributes(osmnx_graph, 'x')
-    y_coords = nx.get_node_attributes(osmnx_graph, 'x')
-    nodes_geometry_key = attr.pop("nodes_geometry_key", "geometry")
-    edges_geometry_key = attr.pop("edges_geometry_key", "geometry")
-    for n in osmnx_graph.nodes:
+def read_geograph_with_coordinates_attributes(graph: nx.Graph, x_key='x', y_key='y', **attr) -> GeoGraph:
+    """Parse a `networkx` graph which have node's coordinates as attribute.
+
+    :param graph: Given graph to parse. All nodes must have the ``x_key`` and ``y_key`` attributes.
+    :param x_key: x-coordinates attribute to parse
+    :param y_key: y-coordinates attribute to parse
+    :param attr: Optional geograph spatial keys.
+    :return: The parsed geograph (shallow copy of the input graph).
+    """
+    graph = graph.__class__(graph)
+    x_coords = nx.get_node_attributes(graph, x_key)
+    y_coords = nx.get_node_attributes(graph, y_key)
+    nodes_geometry_key = attr.pop("nodes_geometry_key", settings.NODES_GEOMETRY_DEFAULT_KEY)
+    edges_geometry_key = attr.pop("edges_geometry_key", settings.EDGES_GEOMETRY_DEFAULT_KEY)
+    for n in graph.nodes:
         if n not in x_coords or n not in y_coords:
             raise ValueError("Unable to find coordinates for node : '%s'" % str(n))
         point = Point([x_coords[n], y_coords[n]])
         graph.nodes[n][nodes_geometry_key] = point
     graph.nodes_geometry_key = nodes_geometry_key
     graph.edges_geometry_key = edges_geometry_key
-    if graph.is_multigraph():
-        if graph.is_directed():
-            return GeoMultiDiGraph(graph, **attr)
-        else:
-            return GeoMultiGraph(graph, **attr)
-    else:
-        if graph.is_directed():
-            return GeoDiGraph(graph, **attr)
-        else:
-            return GeoGraph(graph, **attr)
+    return parse_graph_as_geograph(graph, **attr)
 
