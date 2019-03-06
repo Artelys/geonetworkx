@@ -28,18 +28,29 @@ def parse_graph_as_geograph(graph, **attr):
     return geograph
 
 
-def get_graph_with_wkt_geometry(geograph):
+def get_graph_with_wkt_geometry(geograph: GeoGraph) -> nx.Graph:
     """Modify the edges geometry attribute to a well-known text format to make the graph writable is some text formats.
     The returned graph is not as operational as the given one (edge geometries has been removed)"""
-    graph_shallow_copy = geograph.__class__(geograph)
+    graph_shallow_copy = geograph.to_nx_class()(geograph)
+    nodes_geometries = nx.get_node_attributes(graph_shallow_copy, geograph.nodes_geometry_key)
+    for n, point in nodes_geometries.items():
+        if hasattr(point, "wkt"):
+            graph_shallow_copy.nodes[n][geograph.nodes_geometry_key] = point.wkt
     edge_geometries = nx.get_edge_attributes(graph_shallow_copy, geograph.edges_geometry_key)
-    for e in edge_geometries:
-        if hasattr(edge_geometries[e], "wkt"):
-            graph_shallow_copy.edges[e][geograph.edges_geometry_key] = edge_geometries[e].wkt
+    for e, line in edge_geometries.items():
+        if hasattr(line, "wkt"):
+            graph_shallow_copy.edges[e][geograph.edges_geometry_key] = line.wkt
     return graph_shallow_copy
 
 
-def parse_edge_attribute_as_wkt(graph, attribute_name):
+def parse_nodes_attribute_as_wkt(graph: nx.Graph, attribute_name: str):
+    """Parse nodes geometries with a wkt (well known text) attribute"""
+    wkt_points = nx.get_node_attributes(graph, attribute_name)
+    for n, w in wkt_points.items():
+        graph.nodes[n][attribute_name] = loads(w)
+
+
+def parse_edges_attribute_as_wkt(graph: nx.Graph, attribute_name: str):
     """Parse edge geometries with a wkt (well known text) attribute."""
     wkt_lines = nx.get_edge_attributes(graph, attribute_name)
     for e, w in wkt_lines.items():
@@ -48,12 +59,9 @@ def parse_edge_attribute_as_wkt(graph, attribute_name):
 
 def stringify_crs(graph: GeoGraph):
     """Write the CRS attribute as a string."""
-    if graph.crs is not None:
-        if not isinstance(graph.crs, str):
-            graph.crs = get_crs_as_str(graph.crs)
-    else:
-        if 'crs' in graph.graph:
-           del graph.graph['crs']
+    if 'crs' in graph.graph and graph.graph['crs'] is not None:
+        if not isinstance(graph.graph['crs'], str):
+            graph.graph['crs'] = get_crs_as_str(graph.crs)
 
 
 def read_gpickle(path, **attr):
@@ -71,16 +79,23 @@ def write_gpickle(geograph, path, protocol=pickle.HIGHEST_PROTOCOL):
 
 
 def read_graphml(path, node_type=str, edge_key_type=int, **attr):
-    """Read graph in GraphML format from path."""
+    """Read graph in GraphML format from path.
+
+    :param path: File path to the graphml file.
+    :param node_type: See ``nx.read_graphml``
+    :param edge_key_type: See ``nx.read_graphml``
+    :param attr: GeoGraph spatial keys specification
+    :return: 
+    """
     graph = nx.read_graphml(path, node_type, edge_key_type)
-    if "edges_geometry_key" in attr:
-        parse_edge_attribute_as_wkt(graph, attr["edges_geometry_key"])
-    elif "edges_geometry_key" in graph.graph:
-        parse_edge_attribute_as_wkt(graph, graph.graph["edges_geometry_key"])
-    else:
-        parse_edge_attribute_as_wkt(graph, settings.EDGES_GEOMETRY_DEFAULT_KEY)
-    if 'crs' in graph.graph:
-        attr['crs'] = graph.graph['crs']
+    nodes_geometry_attr = attr.get("nodes_geometry_key",
+                                   graph.graph.get("nodes_geometry_key",
+                                                   settings.NODES_GEOMETRY_DEFAULT_KEY))
+    parse_nodes_attribute_as_wkt(graph, nodes_geometry_attr)
+    edges_geometry_attr = attr.get("edges_geometry_key",
+                                   graph.graph.get("edges_geometry_key",
+                                                   settings.EDGES_GEOMETRY_DEFAULT_KEY))
+    parse_edges_attribute_as_wkt(graph, edges_geometry_attr)
     return parse_graph_as_geograph(graph, **attr)
 
 
