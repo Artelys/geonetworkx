@@ -10,9 +10,8 @@ DISCRETIZATION_TOLERANCE = 1e-4
 GPD_GEOMETRY_KEY = "geometry"
 
 # Graph default spatial keys
+NODES_GEOMETRY_DEFAULT_KEY = "geometry"
 EDGES_GEOMETRY_DEFAULT_KEY = "geometry"
-X_DEFAULT_KEY = 'x'
-Y_DEFAULT_KEY = 'y'
 
 
 # Intersection prefix for spatial merges

@@ -77,10 +77,8 @@ class TestClasses(unittest.TestCase):
                 g = get_random_geograph_subclass(NB_POINTS, graph_type)
                 gnx.rename_edges_attribute(g, g.edges_geometry_key, "abcd")
                 g.edges_geometry_key = "abcd"
-                gnx.rename_nodes_attribute(g, g.x_key, "efgh")
-                g.x_key = "efgh"
-                gnx.rename_nodes_attribute(g, g.y_key, "ijkl")
-                g.y_key = "ijkl"
+                gnx.rename_nodes_attribute(g, g.nodes_geometry_key, "efgh")
+                g.nodes_geometry_key = "efgh"
                 g.crs = {'init': 'epsg:3945'}
                 g2 = g.copy(as_view=False)
                 assert_graphs_have_same_spatial_keys(g, g2)

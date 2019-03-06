@@ -223,3 +223,28 @@ def write_geofile(graph: GeoGraph, path='./', nodes=True, edges=True, driver="GP
         write_edges_to_geofile(graph, file_name, driver, fiona_cast)
 
 
+def read_geograph_from_osmnx_graph(osmnx_graph: nx.Graph, **attr):
+    """Parse a `networkx` graph with the `osmnx` output format into a `GeoGraph`."""
+    graph = osmnx_graph.__class__(osmnx_graph)
+    x_coords = nx.get_node_attributes(osmnx_graph, 'x')
+    y_coords = nx.get_node_attributes(osmnx_graph, 'x')
+    nodes_geometry_key = attr.pop("nodes_geometry_key", "geometry")
+    edges_geometry_key = attr.pop("edges_geometry_key", "geometry")
+    for n in osmnx_graph.nodes:
+        if n not in x_coords or n not in y_coords:
+            raise ValueError("Unable to find coordinates for node : '%s'" % str(n))
+        point = Point([x_coords[n], y_coords[n]])
+        graph.nodes[n][nodes_geometry_key] = point
+    graph.nodes_geometry_key = nodes_geometry_key
+    graph.edges_geometry_key = edges_geometry_key
+    if graph.is_multigraph():
+        if graph.is_directed():
+            return GeoMultiDiGraph(graph, **attr)
+        else:
+            return GeoMultiGraph(graph, **attr)
+    else:
+        if graph.is_directed():
+            return GeoDiGraph(graph, **attr)
+        else:
+            return GeoGraph(graph, **attr)
+

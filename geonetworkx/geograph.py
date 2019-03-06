@@ -10,8 +10,8 @@ class GeoGraph(nx.Graph):
     """
     This class extends the ``networkx.Graph`` to represent a graph that have a geographical meaning. Nodes are located
     with their coordinates (x, y) and edges can be represented with a given broken line (using
-    ``shapely.geometry.LineString`` objects). Each graph has its own keys for naming nodes x and y coordinates and edges
-    geometry (``x_key``, ``y_key``, ``edges_geometry_key``). A coordinate reference system (CRS) can be defined for a
+    ``shapely.geometry.LineString`` objects). Each graph has its own keys for naming nodes and edges
+    geometry (``nodes_geometry_key``, ``edges_geometry_key``). A coordinate reference system (CRS) can be defined for a
     graph and will be used for some methods managing earth coordinates (especially for distances). For now, the only
     supported CRS is the WGS84 standard (EPSG:4326). All nodes must have defined coordinates, otherwise an error will be
     raised.
@@ -23,28 +23,18 @@ class GeoGraph(nx.Graph):
     def check_nodes_validity(self):
         """Check that all nodes have x and y coordinates."""
         for n, node_data in self.nodes(data=True):
-            if self.x_key not in node_data or self.y_key not in node_data:
-                raise ValueError("Unable to find (x, y) coordinates for node: '%s'" % str(n))
+            if self.nodes_geometry_key not in node_data:
+                raise ValueError("Unable to find geometry for node: '%s'" % str(n))
 
     @property
-    def x_key(self):
-        """Attribute name for the x-coordinate of the nodes. This graph attribute appears in the attribute dict G.graph
-         keyed by the string `"x_key"` as well as an attribute `G.x_key`"""
-        return self.graph.get('x_key', settings.X_DEFAULT_KEY)
+    def nodes_geometry_key(self):
+        """Attribute name for the edges geometry attributes. This graph attribute appears in the attribute dict G.graph
+         keyed by the string `"edges_geometry_key"` as well as an attribute `G.edges_geometry_key`"""
+        return self.graph.get('nodes_geometry_key', settings.NODES_GEOMETRY_DEFAULT_KEY)
 
-    @x_key.setter
-    def x_key(self, s):
-        self.graph['x_key'] = s
-
-    @property
-    def y_key(self):
-        """Attribute name for the y-coordinate of the nodes. This graph attribute appears in the attribute dict G.graph
-         keyed by the string `"y_key"` as well as an attribute `G.y_key`"""
-        return self.graph.get('y_key', settings.Y_DEFAULT_KEY)
-
-    @y_key.setter
-    def y_key(self, s):
-        self.graph['y_key'] = s
+    @nodes_geometry_key.setter
+    def nodes_geometry_key(self, s):
+        self.graph['nodes_geometry_key'] = s
 
     @property
     def edges_geometry_key(self):
@@ -68,8 +58,8 @@ class GeoGraph(nx.Graph):
 
     def get_node_coordinates(self, node_name):
         """Return the coordinates of a given node."""
-        node_data = self.nodes[node_name]
-        return [node_data[self.x_key], node_data[self.y_key]]
+        point = self.get_node_as_point(node_name)
+        return [point.x, point.y]
 
     def get_nodes_coordinates(self):
         """Return all nodes coordinates within a dictionary."""
@@ -77,7 +67,8 @@ class GeoGraph(nx.Graph):
 
     def get_node_as_point(self, node_name):
         """Return a node as a `shapely.geometry.Point` object."""
-        return Point(self.get_node_coordinates(node_name))
+        node_data = self.nodes[node_name]
+        return node_data[self.nodes_geometry_key]
 
     def get_nodes_as_points(self):
         """Return all nodes as `shapely.geometry.Point` objects within a dictionary."""
@@ -99,8 +90,7 @@ class GeoGraph(nx.Graph):
 
     def get_spatial_keys(self):
         """Return the current graph spatial keys."""
-        return {'x_key': self.x_key,
-                'y_key': self.y_key,
+        return {'nodes_geometry_key': self.nodes_geometry_key,
                 'edges_geometry_key': self.edges_geometry_key,
                 'crs': self.crs}
 
@@ -108,8 +98,7 @@ class GeoGraph(nx.Graph):
         """Set nodes coordinates with a given dictionary of coordinates (can be used for a subset of all nodes)."""
         for n, coords in coordinates.items():
             node_data = self.nodes[n]
-            node_data[self.x_key] = coords[0]
-            node_data[self.y_key] = coords[1]
+            node_data[self.nodes_geometry_key] = Point(coords)
 
     def to_nx_class(self):
         """Return the closest networkx class (in the inheritance graph)."""
@@ -164,8 +153,7 @@ class GeoGraph(nx.Graph):
         # Operate the transformation
         for n, point in transformed_nodes.iteritems():
             node_data = graph.nodes[n]
-            node_data[graph.x_key] = point.x
-            node_data[graph.y_key] = point.y
+            node_data[graph.nodes_geometry_key] = point
         for e, line in transformed_edges.iteritems():
             edge_data = graph.edges[e]
             edge_data[graph.edges_geometry_key] = line
@@ -175,23 +163,22 @@ class GeoGraph(nx.Graph):
 
     def nodes_to_gdf(self) -> gpd.GeoDataFrame:
         """
-        Create a `geopandas.GeoDataFrame` from nodes of the current graph. The 'geometry' attribute is used for shapes
-        writing (from `geopandas.GeoDataFrame.DEFAULT_GEO_COLUMN_NAME`).
+        Create a ``geopandas.GeoDataFrame`` from nodes of the current graph. The column representing the geometry is
+        named after the current ``nodes_geometry_key`` attribute.
 
         :return: The resulting GeoDataFrame : one row is a node
         """
         nodes = {node: data for node, data in self.nodes(data=True)}
         gdf_nodes = gpd.GeoDataFrame(nodes).T
         gdf_nodes[settings.NODE_ID_COLUMN_NAME] = gdf_nodes.index
-        gdf_nodes[settings.GPD_GEOMETRY_KEY] = gdf_nodes.apply(lambda row: Point(row[self.x_key], row[self.y_key]),
-                                                               axis=1)
+        gdf_nodes.set_geometry(self.nodes_geometry_key, inplace=True)
         gdf_nodes.crs = self.crs
         return gdf_nodes
 
     def edges_to_gdf(self) -> gpd.GeoDataFrame:
         """
-        Create a `geopandas.GeoDataFrame` from edges of the current graph. The 'geometry' attribute is used for shapes
-        writing (from `geopandas.GeoDataFrame.DEFAULT_GEO_COLUMN_NAME`).
+        Create a ``geopandas.GeoDataFrame`` from edges of the current graph. The column representing the geometry is
+        named after the current ``edges_geometry_key`` attribute.
 
         :return: The resulting GeoDataFrame : one row is an edge
         """
@@ -200,19 +187,15 @@ class GeoGraph(nx.Graph):
         for u, v, data in self.edges(data=True):
             # for each edge, add key and all attributes in data dict to the edge_details
             edge_details = {settings.EDGE_FIRST_NODE_COLUMN_NAME: u, settings.EDGE_SECOND_NODE_COLUMN_NAME: v}
-            for attr_key in data:
-                edge_details[attr_key] = data[attr_key]
+            edge_details.update(data)
             # if edge doesn't already have a geometry attribute, create one now
             if self.edges_geometry_key not in data:
-                point_u = Point((self.nodes[u][self.x_key], self.nodes[u][self.y_key]))
-                point_v = Point((self.nodes[v][self.x_key], self.nodes[v][self.y_key]))
-                edge_details[settings.GPD_GEOMETRY_KEY] = LineString([point_u, point_v])
-            else:
-                line = edge_details[self.edges_geometry_key]
-                del edge_details[self.edges_geometry_key]
-                edge_details[settings.GPD_GEOMETRY_KEY] = line
+                point_u = self.nodes[u][self.nodes_geometry_key]
+                point_v = self.nodes[v][self.nodes_geometry_key]
+                edge_details[self.edges_geometry_key] = LineString([point_u, point_v])
             edges.append(edge_details)
         # create a GeoDataFrame from the list of edges and set the CRS
         gdf_edges = gpd.GeoDataFrame(edges)
+        gdf_edges.set_geometry(self.edges_geometry_key, inplace=True)
         gdf_edges.crs = self.crs
         return gdf_edges

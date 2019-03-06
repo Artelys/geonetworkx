@@ -7,7 +7,7 @@
 import networkx as nx
 import geonetworkx as gnx
 import numpy as np
-from shapely.geometry import LineString
+from shapely.geometry import LineString, Point
 from nose.tools import assert_true, assert_equal, assert_in
 from geonetworkx.utils import crs_equals
 
@@ -66,9 +66,9 @@ def get_random_geograph(nb_nodes):
     g = nx.fast_gnp_random_graph(nb_nodes, edge_creation_prob, seed=SEED, directed=False)
     SEED += 1
     nodes_coords = nx.kamada_kawai_layout(g)
-    nx.set_node_attributes(g, {n: coords[0] for n, coords in nodes_coords.items()}, 'x')
-    nx.set_node_attributes(g, {n: coords[1] for n, coords in nodes_coords.items()}, 'y')
-    graph = gnx.GeoGraph(g)
+    geometry_attr = "geometry"
+    nx.set_node_attributes(g, {n: Point(coords) for n, coords in nodes_coords.items()}, geometry_attr)
+    graph = gnx.GeoGraph(g, nodes_geometry_key=geometry_attr, edges_geometry_key=geometry_attr)
     gnx.fill_edges_missing_geometry_attributes(graph)
     return graph
 
@@ -78,9 +78,9 @@ def get_random_geodigraph(nb_nodes):
     g = nx.fast_gnp_random_graph(nb_nodes, edge_creation_prob, seed=SEED, directed=True)
     SEED += 1
     nodes_coords = nx.kamada_kawai_layout(g)
-    nx.set_node_attributes(g, {n: coords[0] for n, coords in nodes_coords.items()}, 'x')
-    nx.set_node_attributes(g, {n: coords[1] for n, coords in nodes_coords.items()}, 'y')
-    graph = gnx.GeoDiGraph(g)
+    geometry_attr = "geometry"
+    nx.set_node_attributes(g, {n: Point(coords) for n, coords in nodes_coords.items()}, geometry_attr)
+    graph = gnx.GeoDiGraph(g, nodes_geometry_key=geometry_attr, edges_geometry_key=geometry_attr)
     gnx.fill_edges_missing_geometry_attributes(graph)
     return graph
 
@@ -122,9 +122,9 @@ def get_random_geograph_with_wgs84_scale(nb_nodes, graph_type=gnx.GeoGraph):
     g = get_random_geograph_subclass(nb_nodes, graph_type)
     x_func = lambda x: 5.7 + 1e-1 * x
     y_func = lambda y: 45.1 + 1e-1 * y
+    transform_point = lambda p: Point([x_func(p.x), y_func(p.y)])
     for n, data in g.nodes(data=True):
-        data[g.x_key] = x_func(data[g.x_key])
-        data[g.y_key] = y_func(data[g.y_key])
+        data[g.nodes_geometry_key] = transform_point(data[g.nodes_geometry_key])
     for e in g.edges:
         edge_data = g.edges[e]
         line = edge_data[g.edges_geometry_key]

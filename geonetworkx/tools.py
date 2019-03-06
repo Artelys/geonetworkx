@@ -118,8 +118,7 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
         else:
             node_name = p_index
         node_info = {c: points_gdf.at[p_index, c] for c in points_gdf.columns if not is_nan(points_gdf.at[p_index, c])}
-        node_info[graph.x_key] = point.x
-        node_info[graph.y_key] = point.y
+        node_info[graph.nodes_geometry_key] = point
         graph.add_node(node_name, **node_info)
         # 1.2 Add projected node if necessary
         closest_edge_name = list(edges_as_lines.keys())[lines_indexes[p]]
@@ -130,7 +129,7 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
         if 0 < intersection_distance_on_line < closest_line_length:
             projected_point = closest_line.interpolate(intersection_distance_on_line)
             intersection_node_name = get_new_node_unique_name(graph, settings.INTERSECTION_PREFIX + str(p_index))
-            intersection_node_info = {graph.x_key: projected_point.x, graph.y_key: projected_point.y}
+            intersection_node_info = {graph.nodes_geometry_key: projected_point}
             if intersection_nodes_attr is not None:
                 intersection_node_info.update(intersection_nodes_attr)
             graph.add_node(intersection_node_name, **intersection_node_info)
@@ -138,9 +137,9 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
             edges_to_split[closest_edge_name][intersection_node_name] = intersection_distance_on_line
         else:  # if the intersection point is on of the two edge extremities
             first_node = closest_edge_name[0]
-            first_node_point = Point([graph.nodes[first_node][graph.x_key], graph.nodes[first_node][graph.y_key]])
+            first_node_point = graph.nodes[first_node][graph.nodes_geometry_key]
             second_node = closest_edge_name[1]
-            second_node_point = Point([graph.nodes[second_node][graph.x_key], graph.nodes[second_node][graph.y_key]])
+            second_node_point = graph.nodes[second_node][graph.nodes_geometry_key]
             distance_to_first_extremity = euclidian_distance(point, first_node_point)
             distance_to_second_extremity = euclidian_distance(point, second_node_point)
             if distance_to_first_extremity < distance_to_second_extremity:

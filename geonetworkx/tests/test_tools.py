@@ -35,7 +35,7 @@ class TestTools(unittest.TestCase):
     def test_spatial_points_merge(self):
         # test a spatial merge
         mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_mdg.gpickle"))
-        graph = gnx.GeoMultiDiGraph(mdg, crs=gnx.WGS84_CRS)
+        graph = gnx.read_geograph_from_osmnx_graph(mdg, crs=gnx.WGS84_CRS)
         gnx.utils.fill_edges_missing_geometry_attributes(graph)
         points_gdf = gpd.read_file(os.path.join(data_directory, "grenoble200_buildings.geojson"), driver="GeoJSON")
         gnx.tools.spatial_points_merge(graph, points_gdf, inplace=True)
@@ -46,7 +46,7 @@ class TestTools(unittest.TestCase):
     def test_spatial_graph_merge(self):
         streets_mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_mdg.gpickle"))
         streets_mdg = streets_mdg.to_undirected()
-        base_graph = gnx.GeoMultiGraph(streets_mdg, crs=gnx.WGS84_CRS)
+        base_graph = gnx.read_geograph_from_osmnx_graph(streets_mdg, crs=gnx.WGS84_CRS)
         gnx.utils.fill_edges_missing_geometry_attributes(base_graph)
         base_graph.graph["name"] = "streets"
 
@@ -54,7 +54,7 @@ class TestTools(unittest.TestCase):
         electrical_dg = nx.MultiDiGraph(electrical_dg)
         original_edges = list(electrical_dg.edges(keys=True, data=True))
         electrical_mg = electrical_dg.to_undirected()
-        other_graph = gnx.GeoMultiGraph(electrical_mg, crs=gnx.WGS84_CRS)
+        other_graph = gnx.read_geograph_from_osmnx_graph(electrical_mg, crs=gnx.WGS84_CRS)
         gnx.order_well_lines(other_graph)
         gnx.join_lines_extremity_to_nodes_coordinates(other_graph)
         other_graph.graph["name"] = "electrical"

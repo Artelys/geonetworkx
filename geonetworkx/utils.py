@@ -118,11 +118,10 @@ def fill_edges_missing_geometry_attributes(graph: "GeoGraph"):
     nodes = dict(graph.nodes)
     for s in edges:
         if graph.edges_geometry_key not in edges[s]:
-            if graph.x_key in nodes[s[0]] and graph.x_key in nodes[s[1]] and \
-                    graph.y_key in nodes[s[0]] and graph.y_key in nodes[s[1]]:
-                n1_xy, n2_xy = (nodes[s[0]][graph.x_key], nodes[s[0]][graph.y_key]),\
-                               (nodes[s[1]][graph.x_key], nodes[s[1]][graph.y_key])
-                graph.edges[s][graph.edges_geometry_key] = LineString([n1_xy, n2_xy])
+            if graph.nodes_geometry_key in nodes[s[0]] and graph.nodes_geometry_key in nodes[s[1]]:
+                p1 = nodes[s[0]][graph.nodes_geometry_key]
+                p2 = nodes[s[1]][graph.nodes_geometry_key]
+                graph.edges[s][graph.edges_geometry_key] = LineString([p1, p2])
 
 
 def fill_length_attribute(graph: "GeoGraph", attribute_name="length", only_missing=True):
