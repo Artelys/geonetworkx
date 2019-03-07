@@ -21,7 +21,7 @@ class GeoGraph(nx.Graph):
         self.check_nodes_validity()
 
     def check_nodes_validity(self):
-        """Check that all nodes have x and y coordinates."""
+        """Check that all nodes have geometries."""
         for n, node_data in self.nodes(data=True):
             if self.nodes_geometry_key not in node_data:
                 raise ValueError("Unable to find geometry for node: '%s'" % str(n))
