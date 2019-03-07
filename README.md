@@ -11,14 +11,23 @@ GeoNetworkX is a project to add support for geographic graphs to NetworkX (in th
 geographic data to Pandas). It currently implements four data structures that extends the networkx graph classes (Graph,
  MultiGraph, DiGraph, MultiDiGraph).
 
-TODO
 
 Install
 --------
 
 **Requirements**
 
-TODO
+* pyproj>=1.9.6
+* geopy>=1.12.0
+* geopandas>=0.4.0
+* networkx>=2.2
+* numpy>=1.15.4
+* shapely>=1.2.18
+* scipy>=1.0.1
+
+**Installation**
+
+``pip install geonetworkx``
 
 Examples
 --------
