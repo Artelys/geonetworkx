@@ -53,7 +53,8 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
 	'sphinx.ext.autosummary',
     'sphinx.ext.inheritance_diagram',
-    'sphinx_autodoc_typehints']
+    'sphinx_autodoc_typehints',
+    'sphinx.ext.intersphinx']
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -100,6 +101,10 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
+
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
+                       "geopandas": ("http://geopandas.org/", None),
+                       "networkx": ("https://networkx.github.io/", None)}
 
 # -- Options for HTML output ----------------------------------------------
 

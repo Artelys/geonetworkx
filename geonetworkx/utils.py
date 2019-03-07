@@ -5,6 +5,7 @@ from shapely.geometry import Point, LineString
 from geopy.distance import vincenty
 import pyproj
 from geonetworkx.geometry_operations import coordinates_almost_equal, insert_point_in_line
+from geonetworkx.geograph import GeoGraph
 import geonetworkx.settings as settings
 from typing import Iterable
 
@@ -107,7 +108,7 @@ def euclidian_distance(p1: Point, p2: Point) -> float:
     return euclidian_distance_coordinates((p1.x, p1.y), (p2.x, p2.y))
 
 
-def fill_edges_missing_geometry_attributes(graph: "GeoGraph"):
+def fill_edges_missing_geometry_attributes(graph: GeoGraph):
     """
     Add a geometry attribute to the edges that don't have any. The created geometry is a straight line between the
     two nodes.
@@ -124,7 +125,7 @@ def fill_edges_missing_geometry_attributes(graph: "GeoGraph"):
                 graph.edges[s][graph.edges_geometry_key] = LineString([p1, p2])
 
 
-def fill_length_attribute(graph: "GeoGraph", attribute_name="length", only_missing=True):
+def fill_length_attribute(graph: GeoGraph, attribute_name="length", only_missing=True):
     """
     Fill the ``'length'`` attribute of the given networkX Graph. The length is computed in meters using the vincenty
     formula. Method won't be consistent if the graph crs is not WGS84.
@@ -144,7 +145,7 @@ def fill_length_attribute(graph: "GeoGraph", attribute_name="length", only_missi
             edge_data[attribute_name] = measure_line_distance(edges_geometry[e])
 
 
-def join_lines_extremity_to_nodes_coordinates(graph: "GeoGraph"):
+def join_lines_extremity_to_nodes_coordinates(graph: GeoGraph):
     """
     Modify the edges geometry attribute so that lines extremities match with nodes coordinates.
 
@@ -166,7 +167,7 @@ def join_lines_extremity_to_nodes_coordinates(graph: "GeoGraph"):
             graph.edges[e][graph.edges_geometry_key] = line
 
 
-def get_line_start(graph, e, line):
+def get_line_start(graph: GeoGraph, e, line):
     """For a given edge, return the node constituting the line start with a closest node rule."""
     uxy = graph.get_node_coordinates(e[0])
     vxy = graph.get_node_coordinates(e[1])
@@ -188,7 +189,7 @@ def get_line_start(graph, e, line):
         return e[0]
 
 
-def get_line_ordered_edge(graph, e, line):
+def get_line_ordered_edge(graph: GeoGraph, e, line):
     """Return the given edge with the first node of the edge representing the first line point and the second node
     the last edge point. The closest node rule is applied."""
     if get_line_start(graph, e, line) != e[0]:
@@ -197,11 +198,12 @@ def get_line_ordered_edge(graph, e, line):
         return e
 
 
-def order_well_lines(graph: "GeoGraph"):
+def order_well_lines(graph: GeoGraph):
     """
     Try to order well each geometry attribute of edges so that the first coordinates of the line string are the
     coordinates of the first vertex of the edge. The closest node rule is applied. If the graph is not oriented, the
-    modification will be inconsistent (nodes declaration in edges views are not ordered).
+    modification will be inconsistent (nodes declaration in edges views are not ordered). Euclidian distance is used
+    here.
 
     :param graph: Graph on which to apply the ordering step. Modification is inplace.
     :return: None
@@ -212,7 +214,7 @@ def order_well_lines(graph: "GeoGraph"):
             graph.edges[e][graph.edges_geometry_key] = LineString(reversed(line.coords))
 
 
-def stringify_nodes(graph, copy=True):
+def stringify_nodes(graph: nx.Graph, copy=True):
     """Modify the graph node names into strings."""
     nx.relabel_nodes(graph, {n: str(n) for n in graph.nodes}, copy)
 
@@ -220,14 +222,14 @@ def stringify_nodes(graph, copy=True):
 def is_nan(val):
     return val is np.nan or val != val
 
-def rename_nodes_attribute(graph, old_name, new_name):
+def rename_nodes_attribute(graph: nx.Graph, old_name, new_name):
     """Rename nodes attribute defined by its old name to a new name."""
     for n, d in graph.nodes(data=True):
         if old_name in d:
             d[new_name] = d.pop(old_name)
 
 
-def rename_edges_attribute(graph, old_name, new_name):
+def rename_edges_attribute(graph: nx.Graph, old_name, new_name):
     """Rename edges attribute defined by its old name to a new name."""
     for u, v, d in graph.edges(data=True):
         if old_name in d:

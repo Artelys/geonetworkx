@@ -86,6 +86,7 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
     :param points_gdf: A list of point describing new nodes to add.
     :param inplace: If True, do operation inplace and return None.
     :param merge_direction: For directed graphs only:
+
          * ``'both'``: 2 edges are added: graph -> new node and new node -> graph
          * ``'in'``: 1 edge is added: new_node -> graph
          * ``'out'``: 1 edge is added: graph -> new_node
