@@ -28,8 +28,8 @@ class GeoGraph(nx.Graph):
 
     @property
     def nodes_geometry_key(self):
-        """Attribute name for the edges geometry attributes. This graph attribute appears in the attribute dict G.graph
-         keyed by the string `"edges_geometry_key"` as well as an attribute `G.edges_geometry_key`"""
+        """Attribute name for the edges geometry attributes. This graph attribute appears in the attribute dict `G.graph`
+         keyed by the string ``"edges_geometry_key"`` as well as an attribute ``G.nodes_geometry_key``"""
         return self.graph.get('nodes_geometry_key', settings.NODES_GEOMETRY_DEFAULT_KEY)
 
     @nodes_geometry_key.setter
@@ -38,8 +38,8 @@ class GeoGraph(nx.Graph):
 
     @property
     def edges_geometry_key(self):
-        """Attribute name for the edges geometry attributes. This graph attribute appears in the attribute dict G.graph
-         keyed by the string `"edges_geometry_key"` as well as an attribute `G.edges_geometry_key`"""
+        """Attribute name for the edges geometry attributes. This graph attribute appears in the attribute dict `G.graph`
+         keyed by the string ``"edges_geometry_key"`` as well as an attribute ``G.edges_geometry_key``"""
         return self.graph.get('edges_geometry_key', settings.EDGES_GEOMETRY_DEFAULT_KEY)
 
     @edges_geometry_key.setter
@@ -48,8 +48,8 @@ class GeoGraph(nx.Graph):
 
     @property
     def crs(self):
-        """Coordinate Reference System of the graph. This graph attribute appears in the attribute dict G.graph keyed
-        by the string `"crs"` as well as an attribute `G.crs`"""
+        """Coordinate Reference System of the graph. This graph attribute appears in the attribute dict `G.graph` keyed
+        by the string ``"crs"`` as well as an attribute ``G.crs``"""
         return self.graph.get('crs', gnx.DEFAULT_CRS)
 
     @crs.setter
@@ -66,23 +66,23 @@ class GeoGraph(nx.Graph):
         return {n: self.get_node_coordinates(n) for n in self.nodes}
 
     def get_node_as_point(self, node_name):
-        """Return a node as a `shapely.geometry.Point` object."""
+        """Return a node as a ``shapely.geometry.Point`` object."""
         node_data = self.nodes[node_name]
         return node_data[self.nodes_geometry_key]
 
     def get_nodes_as_points(self):
-        """Return all nodes as `shapely.geometry.Point` objects within a dictionary."""
+        """Return all nodes as ``shapely.geometry.Point`` objects within a dictionary."""
         return {n: self.get_node_as_point(n) for n in self.nodes}
 
     def get_nodes_as_point_series(self):
-        """Return the nodes as a `geopandas.GeoSeries` of `shapely.geometry.Point`."""
+        """Return the nodes as a ``geopandas.GeoSeries`` of ``shapely.geometry.Point``."""
         nodes_as_points = self.get_nodes_as_points()
         point_series = gpd.GeoSeries(nodes_as_points)
         point_series.crs = self.crs
         return point_series
 
     def get_edges_as_line_series(self):
-        """Return the edges as a `geopandas.GeoSeries` of `shapely.geometry.LineString`."""
+        """Return the edges as a ``geopandas.GeoSeries`` of ``shapely.geometry.LineString``."""
         lines = nx.get_edge_attributes(self, self.edges_geometry_key)
         line_series = gpd.GeoSeries(lines)
         line_series.crs = self.crs
@@ -105,13 +105,13 @@ class GeoGraph(nx.Graph):
         return nx.Graph
 
     def copy(self, as_view=False):
-        """Return a copy of the graph (see `networkx.Graph.copy`)."""
+        """Return a copy of the graph (see ``networkx.Graph.copy``)."""
         nx_graph_class = self.to_nx_class()
         graph = nx_graph_class.copy(self, as_view)
         return self.__class__(graph)
 
     def to_directed(self, as_view=False):
-        """Return a directed representation of the graph (see `networkx.Graph.to_directed`)."""
+        """Return a directed representation of the graph (see ``networkx.Graph.to_directed``)."""
         if as_view:
             return nx.Graph.to_directed(self, as_view)
         else:
@@ -120,11 +120,11 @@ class GeoGraph(nx.Graph):
             return graph_class(directed_graph)
 
     def to_directed_class(self):
-        """Returns the class to use for empty directed copies (see `networkx.Graph.to_directed_class`)."""
+        """Returns the class to use for empty directed copies (see ``networkx.Graph.to_directed_class``)."""
         return gnx.GeoDiGraph
 
     def to_undirected(self, as_view=False):
-        """Return an undirected copy of the graph (see `networkx.Graph.to_undirected`)."""
+        """Return an undirected copy of the graph (see ``networkx.Graph.to_undirected``)."""
         if as_view:
             return nx.Graph.to_undirected(self, as_view)
         else:
@@ -133,7 +133,7 @@ class GeoGraph(nx.Graph):
             return graph_class(undirected_graph)
 
     def to_undirected_class(self):
-        """Returns the class to use for empty undirected copies (see `networkx.Graph.to_undirected_class`)."""
+        """Returns the class to use for empty undirected copies (see ``networkx.Graph.to_undirected_class``)."""
         return gnx.GeoGraph
 
     def to_crs(self, crs=None, epsg=None, inplace=False):
