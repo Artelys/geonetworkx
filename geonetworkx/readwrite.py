@@ -67,7 +67,7 @@ def stringify_crs(graph: GeoGraph):
 def read_gpickle(path, **attr):
     """Read graph object in Python pickle format."""
     graph = nx.read_gpickle(path)
-    if isinstance(graph, (nx.Graph, nx.DiGraph, nx.MultiDiGraph, nx.MultiGraph)):
+    if type(graph) in [nx.Graph, nx.DiGraph, nx.MultiDiGraph, nx.MultiGraph]:
         return parse_graph_as_geograph(graph, **attr)
     else:
         return graph
