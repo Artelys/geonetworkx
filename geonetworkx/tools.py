@@ -104,12 +104,12 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
     if len(edges_as_lines) == 0:
         raise ValueError("No edge geometry has been found in the given merging edges, at least one edge geometry is"
                          " required for a merge operation")
-    points = points_gdf[settings.GPD_GEOMETRY_KEY]
+    points = points_gdf.geometry
     points_coords = np.array([[p.x, p.y] for p in points])
     lines_indexes = get_closest_line_from_points(points_coords, edges_as_lines.values())
     edges_to_split = defaultdict(dict)
     # Add node, intersection node and edge (node, intersection node)
-    for p, p_index, point in zip(range(len(points_gdf)), points_gdf.index, points_gdf[settings.GPD_GEOMETRY_KEY]):
+    for p, p_index, point in zip(range(len(points_gdf)), points_gdf.index, points):
         # 1.1 Add given node
         if p_index in graph.nodes:
             if coordinates_almost_equal([point.x, point.y], graph.get_node_coordinates(p_index)):

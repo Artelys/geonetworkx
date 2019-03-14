@@ -175,7 +175,7 @@ def stringify_unwritable_columns(gdf: gpd.GeoDataFrame):
     """Transform elements which have type bool or list to string"""
     valid_columns_types = ("int64", "float64")
     for c in gdf.columns:
-        if not gdf[c].dtype in valid_columns_types and c != settings.GPD_GEOMETRY_KEY:
+        if not gdf[c].dtype in valid_columns_types and c != gdf._geometry_column_name:
             gdf[c] = list(map(str, gdf[c]))
 
 

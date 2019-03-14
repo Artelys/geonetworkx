@@ -6,9 +6,6 @@ DEFAULT_CRS = None
 # default discretization parameter for extended projection methods
 DISCRETIZATION_TOLERANCE = 1e-4
 
-# Geopandas "geometry" attribute
-GPD_GEOMETRY_KEY = "geometry"
-
 # Graph default spatial keys
 NODES_GEOMETRY_DEFAULT_KEY = "geometry"
 EDGES_GEOMETRY_DEFAULT_KEY = "geometry"
