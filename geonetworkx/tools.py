@@ -197,7 +197,8 @@ def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
                         inplace=False, merge_direction="both", node_filter=None, intersection_nodes_attr=None):
     """
     Operates spatial merge between two graphs. Spatial edge projection is used on merging nodes (see
-    ``spatial_points_merge``).
+    ``spatial_points_merge``). The ``base_graph`` attributes have higher priority than the ``other_graph`` attributes (
+    i.e. if graphs have common graph attributes, nodes or edges, the ``base_graph`` attributes will be kept).
 
     :param base_graph: Base graph on which the merge operation is done.
     :param other_graph: Input graph to merge. Modified graph if operation is done inplace.
@@ -225,7 +226,7 @@ def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
     else:
         merged_graph = spatial_points_merge(base_graph, nodes_gdf, inplace=inplace, merge_direction=merge_direction,
                                             intersection_nodes_attr=intersection_nodes_attr)
-    merged_graph = nx.compose(merged_graph, other_graph)
+    merged_graph = nx.compose(other_graph, merged_graph)
     if not inplace:
         return merged_graph
 
