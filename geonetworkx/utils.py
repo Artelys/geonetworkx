@@ -239,3 +239,10 @@ def rename_edges_attribute(graph: nx.Graph, old_name, new_name):
     for u, v, d in graph.edges(data=True):
         if old_name in d:
             d[new_name] = d.pop(old_name)
+
+
+def hard_write_spatial_keys(graph: GeoGraph):
+    """Write spatial keys in the graph attribute, so that if the default keys are used, they are propagated for
+    special operations (e.g. composing graphs)."""
+    for k, v in graph.get_spatial_keys().items():
+        setattr(graph, k, v)
