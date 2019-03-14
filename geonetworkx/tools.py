@@ -12,8 +12,7 @@ from shapely.geometry import Point, LineString
 from geonetworkx.geograph import GeoGraph
 import geonetworkx.settings as settings
 from geonetworkx.geometry_operations import get_closest_line_from_points, split_line, coordinates_almost_equal
-from geonetworkx.utils import get_new_node_unique_name, euclidian_distance, get_line_ordered_edge, is_nan,\
-    hard_write_spatial_keys
+from geonetworkx.utils import get_new_node_unique_name, euclidian_distance, get_line_ordered_edge, is_nan, compose
 from collections import defaultdict
 
 
@@ -171,8 +170,7 @@ def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
     else:
         merged_graph = spatial_points_merge(base_graph, nodes_gdf, inplace=inplace, merge_direction=merge_direction,
                                             intersection_nodes_attr=intersection_nodes_attr)
-    hard_write_spatial_keys(merged_graph)
-    merged_graph = nx.compose(other_graph, merged_graph)
+    merged_graph = compose(other_graph, merged_graph)
     if not inplace:
         return merged_graph
 

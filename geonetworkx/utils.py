@@ -246,3 +246,19 @@ def hard_write_spatial_keys(graph: GeoGraph):
     special operations (e.g. composing graphs)."""
     for k, v in graph.get_spatial_keys().items():
         setattr(graph, k, v)
+
+
+def compose(G: GeoGraph, H: GeoGraph):
+    """Return a new graph of G composed with H. Makes sure the returned graph is consistent with respect to the spatial
+    keys. (See ``nx.compose``). According to the priority rule in networkX, attributes from ``H`` take precedent over
+    attributes from G."""
+    hard_write_spatial_keys(G)
+    hard_write_spatial_keys(H)
+    R = nx.compose(G, H)
+    if G.nodes_geometry_key != H.nodes_geometry_key:
+        rename_nodes_attribute(R, G.nodes_geometry_key, H.nodes_geometry_key)
+    if G.edges_geometry_key != H.edges_geometry_key:
+        rename_edges_attribute(R, G.edges_geometry_key, H.edges_geometry_key)
+    return R
+
+
