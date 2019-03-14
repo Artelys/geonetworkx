@@ -17,61 +17,6 @@ from geonetworkx.readwrite import graph_nodes_to_gdf
 from collections import defaultdict
 
 
-""" 
-======================================= PROTOTYPE ======================================================================
-def _add_merging_edge(graph: GeoGraph, node_name, intersection_node_name, merge_direction):
-    in_edge_data = {graph.edges_geometry_key: LineString([graph.get_node_coordinates(node_name),
-                                                          graph.get_node_coordinates(intersection_node_name)])}
-    if graph.is_directed():
-        out_edge_data = {graph.edges_geometry_key: LineString([graph.get_node_coordinates(intersection_node_name),
-                                                               graph.get_node_coordinates(node_name)])}
-        if merge_direction == "both":
-            graph.add_edge(node_name, intersection_node_name, **in_edge_data)
-            graph.add_edge(intersection_node_name, node_name, **out_edge_data)
-        elif merge_direction == "in":
-            graph.add_edge(node_name, intersection_node_name, **in_edge_data)
-        else:  # "out"
-            graph.add_edge(intersection_node_name, node_name, **out_edge_data)
-    else:
-        graph.add_edge(node_name, intersection_node_name, **in_edge_data)
-
-
-
-def _check_for_same_projected_points(graph, sorted_intersection_nodes, distances_on_initial_line, merge_direction):
-    # If, for different nodes, projected points are the same, it must only create one projected node.
-    nodes_groups = []
-    nb_nodes = len(sorted_intersection_nodes)
-    i = 0
-    while i < (nb_nodes - 1):
-        if distances_on_initial_line[i + 1] - distances_on_initial_line[i] < 1e-8:
-            group = []
-            group.append(i)
-            while i < (nb_nodes - 1) and distances_on_initial_line[i + 1] - distances_on_initial_line[i] < 1e-8:
-                group.append(i + 1)
-                i += 1
-            nodes_groups.append(group)
-        i += 1
-    for group in nodes_groups:
-        # remove all nodes intersecting nodes
-        import networkx as nx
-        projected_nodes = []
-        intersection_node_info = graph.nodes[sorted_intersection_nodes[group[0]]]
-        for i in group:
-            projected_nodes.append(next(graph.neighbors(sorted_intersection_nodes[i])))
-            graph.remove_node(sorted_intersection_nodes[i])
-        projected_nodes_as_str = map(str, projected_nodes)
-        new_intersection_node_name = get_new_node_unique_name(graph,
-                                                              settings.INTERSECTION_PREFIX + "_".join(projected_nodes_as_str))
-        graph.add_node(new_intersection_node_name, **intersection_node_info)
-        for node_name in projected_nodes:
-            in_edge_data = {graph.edges_geometry_key: LineString([graph.get_node_coordinates(node_name),
-                                                                  graph.get_node_coordinates(
-                                                                      new_intersection_node_name)])}
-            _add_merging_edge(graph, node_name, new_intersection_node_name, merge_direction)
-======================================= PROTOTYPE ======================================================================
-"""
-
-
 def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=False, merge_direction="both",
                          node_filter=no_filter, edge_filter=no_filter, intersection_nodes_attr=None) -> GeoGraph:
     """
