@@ -43,6 +43,8 @@ def approx_map_unit_factor(points_coordinates, tolerance=1e-7):
     upper_bound = centroid + initial_gap
     unit_point = (lower_bound + upper_bound) / 2
     distance = compute_vincenty(centroid, unit_point)
+    iteration = 0
+    max_iterations = 10000
     while np.abs(distance - 1.0) > tolerance:
         if distance > 1.0:
             upper_bound = unit_point
@@ -50,6 +52,9 @@ def approx_map_unit_factor(points_coordinates, tolerance=1e-7):
             lower_bound = unit_point
         unit_point = (lower_bound + upper_bound) / 2
         distance = compute_vincenty(centroid, unit_point)
+        iteration += 1
+        if iteration > max_iterations:
+            break
     return np.linalg.norm(centroid - unit_point)
 
 
