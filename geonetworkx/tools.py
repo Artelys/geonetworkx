@@ -13,7 +13,6 @@ from geonetworkx.geograph import GeoGraph
 import geonetworkx.settings as settings
 from geonetworkx.geometry_operations import get_closest_line_from_points, split_line, coordinates_almost_equal
 from geonetworkx.utils import get_new_node_unique_name, euclidian_distance, get_line_ordered_edge, is_nan
-from geonetworkx.readwrite import graph_nodes_to_gdf
 from collections import defaultdict
 
 
