@@ -57,3 +57,20 @@ class TestReadWrite(unittest.TestCase):
                 g = get_random_geograph_subclass(NB_VERTICES, graph_type)
                 gnx.write_geofile(g, self.results_dir, driver="GPKG")
 
+
+    def test_write_read_geofile(self):
+        for i, graph_type in enumerate(ALL_CLASSES):
+            with self.subTest(graph_type=graph_type, SEED=gnx_tu.SEED):
+                g_write = get_random_geograph_subclass(NB_VERTICES, graph_type)
+                g_write.name = "test_%d" % i
+                gnx.write_geofile(g_write, self.results_dir, driver="GPKG")
+                nodes_file_path = os.path.join(self.results_dir, g_write.name + "_nodes.gpkg")
+                edges_file_path = os.path.join(self.results_dir, g_write.name + "_edges.gpkg")
+                g_read = gnx.read_geofiles(nodes_file_path, edges_file_path,
+                                           directed=g_write.is_directed(), multigraph=g_write.is_multigraph())
+
+                from geonetworkx.testing import assert_graphs_have_same_geonodes
+                assert_graphs_have_same_geonodes(g_write, g_read, "Written and read graph have different nodes.")
+                assert_graphs_have_same_edges_geometry(g_write, g_read, "Written and read graph have different edge geometries")
+                # This test may not pass for multigraphs with multi-edges because edges may be read in a different order
+                # that the are written (to be investigated).

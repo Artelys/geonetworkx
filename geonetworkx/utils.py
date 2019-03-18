@@ -16,9 +16,20 @@ def get_crs_as_str(crs):
     return proj.definition_string()
 
 
+def is_null_crs(crs):
+    """Test for null crs values."""
+    if crs is None:
+        return True
+    if crs == dict():
+        return True
+    if crs == '':
+        return True
+    return False
+
+
 def crs_equals(crs1, crs2):
     """Compare CRS using ``pyproj.Proj`` objects."""
-    if crs1 is None or crs2 is None:
+    if is_null_crs(crs1) or is_null_crs(crs1):
         return False
     return get_crs_as_str(crs1) == get_crs_as_str(crs2)
 

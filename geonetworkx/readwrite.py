@@ -262,3 +262,45 @@ def read_geograph_with_coordinates_attributes(graph: nx.Graph, x_key='x', y_key=
     graph.edges_geometry_key = edges_geometry_key
     return parse_graph_as_geograph(graph, **attr)
 
+
+def read_geofiles(nodes_file_path: str, edges_file_path: str,
+                  directed=True, multigraph=False,
+                  node_index_attr=settings.NODE_ID_COLUMN_NAME,
+                  edge_first_node_attr=settings.EDGE_FIRST_NODE_COLUMN_NAME,
+                  edge_second_node_attr=settings.EDGE_SECOND_NODE_COLUMN_NAME):
+    """Read geofiles to create a ``GeoGraph``. Geofiles are read with ``geopandas.read_file`` method. See
+    ``GeoGraph.add_nodes_from_gdf`` and ``GeoGraph.add_edges_from_gdf``.
+
+    :param nodes_file_path: File path of nodes.
+    :param edges_file_path: File path of edges.
+    :param directed: If ``True``, returns a directed graph.
+    :param multigraph: If ``True``, returns a multigraph.
+    :param node_index_attr: Node id attribute in the geofile for nodes labeling.
+    :param edge_first_node_attr: Edge first node attribute in the geofile.
+    :param edge_second_node_attr: Edge second node attribute in the geofile.
+    :return: A parsed ``Geograph``.
+    """
+    if directed:
+        if multigraph:
+            graph = GeoMultiDiGraph()
+        else:
+            graph = GeoDiGraph()
+    else:
+        if multigraph:
+            graph = GeoMultiGraph()
+        else:
+            graph = GeoGraph()
+    if nodes_file_path is not None:
+        nodes_gdf = gpd.read_file(nodes_file_path)
+        graph.nodes_geometry_key = nodes_gdf._geometry_column_name
+        graph.crs = nodes_gdf.crs
+        graph.add_nodes_from_gdf(nodes_gdf, node_index_attr)
+    if edges_file_path is not None:
+        edges_gdf = gpd.read_file(edges_file_path)
+        if graph.crs is None and edges_gdf.crs is not None:
+            graph.crs = edges_gdf.crs
+        graph.add_edges_from_gdf(edges_gdf, edge_first_node_attr, edge_second_node_attr)
+    return graph
+
+
+

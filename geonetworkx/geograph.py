@@ -199,3 +199,39 @@ class GeoGraph(nx.Graph):
         gdf_edges.set_geometry(self.edges_geometry_key, inplace=True)
         gdf_edges.crs = self.crs
         return gdf_edges
+
+    def add_nodes_from_gdf(self, gdf: gpd.GeoDataFrame, node_index_attr=None):
+        """Add nodes with the given `GeoDataFrame`.
+
+        :param gdf: GeoDataFrame representing nodes to add (one row for one node).
+        :param node_index_attr: Node index attribute for labeling nodes. If ``None``, the dataframe index is used, else
+        the given column is used.
+        """
+        if not (gnx.is_null_crs(self.crs) or gnx.is_null_crs(gdf.crs) or gnx.crs_equals(gdf.crs, self.crs)):
+            gdf = gdf.to_crs(self.crs, inplace=False)
+        if node_index_attr is not None:
+            gdf = gdf.set_index(node_index_attr, drop=True, inplace=False)
+        if gdf._geometry_column_name != self.nodes_geometry_key:
+            gdf = gdf.rename(columns={gdf._geometry_column_name: self.nodes_geometry_key}, inplace=False)
+            gdf.set_geometry(self.nodes_geometry_key, inplace=True)
+        self.add_nodes_from(gdf.iterrows())
+        self.check_nodes_validity()
+
+    def add_edges_from_gdf(self, gdf: gpd.GeoDataFrame, edge_first_node_attr=None, edge_second_node_attr=None):
+        """Add edges with the given `GeoDataFrame`. If no dataframe columns are specified for first and second node,
+        the dataframe index must be a multi-index `(u, v)`.
+
+        :param gdf: GeoDataFrame representing edges to add (one row for one edge).
+        :param edge_first_node_attr: Edge first node attribute. If ``None``, the dataframe index is used, else the given
+        column is used. Must be used with ``edge_second_node_attr``.
+        :param edge_second_node_attr: Edge second node attribute. If ``None``, the dataframe index is used, else the
+        given column is used. Must be used with ``edge_first_node_attr``.
+        """
+        if not (gnx.is_null_crs(self.crs) or gnx.is_null_crs(gdf.crs) or gnx.crs_equals(gdf.crs, self.crs)):
+            gdf = gdf.to_crs(self.crs, inplace=False)
+        if edge_first_node_attr is not None and edge_second_node_attr is not None:
+            gdf = gdf.set_index([edge_first_node_attr, edge_second_node_attr], drop=True, inplace=False)
+        if gdf._geometry_column_name != self.edges_geometry_key:
+            gdf = gdf.rename(columns={gdf._geometry_column_name: self.edges_geometry_key}, inplace=False)
+            gdf.set_geometry(self.edges_geometry_key, inplace=True)
+        self.add_edges_from((*r[0], r[1]) for r in gdf.iterrows())
