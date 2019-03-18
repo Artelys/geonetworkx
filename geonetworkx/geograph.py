@@ -205,7 +205,7 @@ class GeoGraph(nx.Graph):
 
         :param gdf: GeoDataFrame representing nodes to add (one row for one node).
         :param node_index_attr: Node index attribute for labeling nodes. If ``None``, the dataframe index is used, else
-        the given column is used.
+            the given column is used.
         """
         if not (gnx.is_null_crs(self.crs) or gnx.is_null_crs(gdf.crs) or gnx.crs_equals(gdf.crs, self.crs)):
             gdf = gdf.to_crs(self.crs, inplace=False)
@@ -223,9 +223,9 @@ class GeoGraph(nx.Graph):
 
         :param gdf: GeoDataFrame representing edges to add (one row for one edge).
         :param edge_first_node_attr: Edge first node attribute. If ``None``, the dataframe index is used, else the given
-        column is used. Must be used with ``edge_second_node_attr``.
+            column is used. Must be used with ``edge_second_node_attr``.
         :param edge_second_node_attr: Edge second node attribute. If ``None``, the dataframe index is used, else the
-        given column is used. Must be used with ``edge_first_node_attr``.
+            given column is used. Must be used with ``edge_first_node_attr``.
         """
         if not (gnx.is_null_crs(self.crs) or gnx.is_null_crs(gdf.crs) or gnx.crs_equals(gdf.crs, self.crs)):
             gdf = gdf.to_crs(self.crs, inplace=False)
