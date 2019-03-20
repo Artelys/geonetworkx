@@ -25,6 +25,9 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
     (``settings.DISCRETIZATION_TOLERANCE``) is used for edges lines and is set by default to a constant matching the
     WGS84 crs. If another crs is used, results may be inconsistent (high computational time or inaccuracy). New nodes
     created from the geodataframe have attributes described by other columns (except if an attribute value is `nan`).
+    When a point is projected on an edge, this edge is removed and replaced by two others that connect the extremities
+    to the intersection node. A reference to the original edge is kept on theses new edges with the attribute
+    ``settings.ORIGINAL_EDGE_KEY``.
 
     :param graph: A GeoGraph or derived class describing a spatial graph.
     :param points_gdf: A list of point describing new nodes to add.
@@ -126,12 +129,13 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
             split_lines.append(cut_lines[1])
             # 2.2 add intermediary edges
             oriented_edge = get_line_ordered_edge(graph, e, initial_line)
-            first_edge_data = {graph.edges_geometry_key: split_lines[0]}
+            original_edge_data = {settings.ORIGINAL_EDGE_KEY: e}
+            first_edge_data = {graph.edges_geometry_key: split_lines[0], **original_edge_data}
             graph.add_edge(oriented_edge[0], sorted_intersection_nodes[0], **first_edge_data)
-            last_edge_data = {graph.edges_geometry_key: split_lines[-1]}
+            last_edge_data = {graph.edges_geometry_key: split_lines[-1], **original_edge_data}
             graph.add_edge(sorted_intersection_nodes[-1], oriented_edge[1], **last_edge_data)
             for i in range(len(sorted_intersection_nodes) - 1):
-                edge_data = {graph.edges_geometry_key: split_lines[i + 1]}
+                edge_data = {graph.edges_geometry_key: split_lines[i + 1], **original_edge_data}
                 graph.add_edge(sorted_intersection_nodes[i], sorted_intersection_nodes[i + 1], **edge_data)
     if not inplace:
         return graph

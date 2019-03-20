@@ -13,6 +13,7 @@ EDGES_GEOMETRY_DEFAULT_KEY = "geometry"
 
 # Intersection prefix for spatial merges
 INTERSECTION_PREFIX = "intersect_"
+ORIGINAL_EDGE_KEY = "original_edge"
 
 # read/write convention
 EDGE_FIRST_NODE_COLUMN_NAME = "u"
