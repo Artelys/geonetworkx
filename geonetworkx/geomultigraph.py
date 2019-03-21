@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import networkx as nx
 from .geograph import GeoGraph
 import geonetworkx as gnx

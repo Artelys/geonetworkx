@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
     File name: utils
     Author: Artelys
@@ -19,13 +20,16 @@ SEED = 70595
 def assert_almost_intersect(shape1, shape2, msg='', tol=1e-4):
     assert_true(shape1.buffer(tol).intersects(shape2), msg)
 
+
 def assert_coordinates_almost_equals(coordinates1, coordinates2, msg='', tol=1e-4):
     assert_true(gnx.coordinates_almost_equal(coordinates1, coordinates2, tol), msg)
+
 
 def assert_lines_almost_equals(line1, line2, msg='', tol=1e-4):
     assert_equal(len(line1.coords), len(line2.coords), msg)
     for c1, c2 in zip(line1.coords, line2.coords):
         assert_coordinates_almost_equals(c1, c2, msg, tol)
+
 
 def assert_graphs_have_same_edges_geometry(graph1, graph2, msg='', tol=1e-4):
     assert_equal(len(graph1.edges), len(graph2.edges), msg)
@@ -35,11 +39,13 @@ def assert_graphs_have_same_edges_geometry(graph1, graph2, msg='', tol=1e-4):
         assert_in(e, lines2, msg)
         assert_lines_almost_equals(lines1[e], lines2[e], msg, tol)
 
+
 def assert_is_subgraph(base_graph, sub_graph, msg=''):
     for n in sub_graph.nodes:
         assert_in(n, base_graph.nodes, msg)
     for e in sub_graph.edges:
         assert_in(e, base_graph.edges, msg)
+
 
 def assert_graphs_have_same_geonodes(graph1, graph2, msg='', tol=1e-4):
     assert_equal(len(graph1.nodes), len(graph2.nodes), msg)
@@ -50,6 +56,7 @@ def assert_graphs_have_same_geonodes(graph1, graph2, msg='', tol=1e-4):
         assert_in(n, coordinates2)
         assert_coordinates_almost_equals(coordinates1[n], coordinates2[n], msg, tol)
 
+
 def assert_graphs_have_same_spatial_keys(graph1, graph2, msg=''):
     keys1 = graph1.get_spatial_keys()
     keys2 = graph2.get_spatial_keys()
@@ -59,6 +66,7 @@ def assert_graphs_have_same_spatial_keys(graph1, graph2, msg=''):
             assert_equal(keys1[k], keys2[k], msg)
         else:
             assert_true(crs_equals(keys1[k], keys2[k]), msg)
+
 
 def get_random_geograph(nb_nodes):
     global SEED
@@ -72,6 +80,7 @@ def get_random_geograph(nb_nodes):
     gnx.fill_edges_missing_geometry_attributes(graph)
     return graph
 
+
 def get_random_geodigraph(nb_nodes):
     global SEED
     edge_creation_prob = 0.1
@@ -83,6 +92,7 @@ def get_random_geodigraph(nb_nodes):
     graph = gnx.GeoDiGraph(g, nodes_geometry_key=geometry_attr, edges_geometry_key=geometry_attr)
     gnx.fill_edges_missing_geometry_attributes(graph)
     return graph
+
 
 def get_random_geomultigraph(nb_nodes):
     global SEED
@@ -97,6 +107,7 @@ def get_random_geomultigraph(nb_nodes):
     gnx.fill_edges_missing_geometry_attributes(multigraph)
     return multigraph
 
+
 def get_random_geomultidigraph(nb_nodes):
     global SEED
     edge_creation_prob = 0.1
@@ -110,6 +121,7 @@ def get_random_geomultidigraph(nb_nodes):
     gnx.fill_edges_missing_geometry_attributes(multidigraph)
     return multidigraph
 
+
 def get_random_geograph_subclass(nb_nodes, graph_type=gnx.GeoGraph):
     graph_generation_methods = {gnx.GeoGraph: get_random_geograph,
                                 gnx.GeoMultiGraph: get_random_geomultigraph,
@@ -117,6 +129,7 @@ def get_random_geograph_subclass(nb_nodes, graph_type=gnx.GeoGraph):
                                 gnx.GeoMultiDiGraph: get_random_geomultidigraph}
     g = graph_generation_methods[graph_type](nb_nodes)
     return g
+
 
 def get_random_geograph_with_wgs84_scale(nb_nodes, graph_type=gnx.GeoGraph):
     g = get_random_geograph_subclass(nb_nodes, graph_type)

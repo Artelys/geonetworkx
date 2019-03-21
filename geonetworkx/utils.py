@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import math
 import numpy as np
 import networkx as nx
@@ -238,6 +239,7 @@ def stringify_nodes(graph: nx.Graph, copy=True):
 def is_nan(val):
     return val is np.nan or val != val
 
+
 def rename_nodes_attribute(graph: nx.Graph, old_name, new_name):
     """Rename nodes attribute defined by its old name to a new name."""
     for n, d in graph.nodes(data=True):
@@ -271,5 +273,3 @@ def compose(G: GeoGraph, H: GeoGraph):
     if G.edges_geometry_key != H.edges_geometry_key:
         rename_edges_attribute(R, G.edges_geometry_key, H.edges_geometry_key)
     return R
-
-

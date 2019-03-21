@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import networkx as nx
 from .geomultigraph import GeoMultiGraph
 from .geodigraph import GeoDiGraph

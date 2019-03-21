@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
     File name: setup.py
     Author: Artelys

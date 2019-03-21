@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
     File name: test_readwrite.py
     Author: Artelys

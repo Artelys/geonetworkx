@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
     File name: tools
     Author: Artelys
@@ -8,7 +9,7 @@ import numpy as np
 import networkx as nx
 from networkx.classes.filters import no_filter
 import geopandas as gpd
-from shapely.geometry import Point, LineString
+from shapely.geometry import LineString
 from geonetworkx.geograph import GeoGraph
 import geonetworkx.settings as settings
 from geonetworkx.geometry_operations import get_closest_line_from_points, split_line, coordinates_almost_equal
@@ -177,5 +178,3 @@ def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
     merged_graph = compose(other_graph, merged_graph)
     if not inplace:
         return merged_graph
-
-

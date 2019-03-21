@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
     File name: test_classes
     Author: Artelys
@@ -15,8 +16,10 @@ from nose.tools import assert_is_instance, assert_equal
 from nose.plugins.attrib import attr
 import unittest
 
+
 gnx_tu.SEED = 70595
 NB_POINTS = 100
+
 
 @attr('classes')
 class TestClasses(unittest.TestCase):
@@ -30,7 +33,6 @@ class TestClasses(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.results_dir)
 
-    # GeoGraph
     def test_graph_to_directed(self):
         graphs_directed_match = {gnx.GeoGraph: gnx.GeoDiGraph, gnx.GeoMultiGraph: gnx.GeoMultiDiGraph,
                                  gnx.GeoDiGraph: gnx.GeoDiGraph, gnx.GeoMultiDiGraph: gnx.GeoMultiDiGraph}
@@ -107,4 +109,3 @@ class TestClasses(unittest.TestCase):
                     g2_nb_distinct_edges = len([e for e in g2.edges if e not in initial_edges])
                     assert_equal(g.number_of_edges(), g2_nb_distinct_edges + nb_initial_edges,
                                  "Resulting graph have not the right number of edges.")
-

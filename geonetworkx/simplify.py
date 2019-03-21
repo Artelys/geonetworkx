@@ -1,4 +1,4 @@
-import numpy as np
+# -*- coding: utf-8 -*-
 import networkx as nx
 from shapely.geometry import Polygon, MultiPolygon
 from geonetworkx import GeoGraph

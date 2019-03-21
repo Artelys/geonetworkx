@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 import networkx as nx
 import geopandas as gpd
@@ -371,4 +372,3 @@ def insert_point_in_line(line: LineString, point_coords: list, position: int):
     new_line_coordinates.append((point_coords[0], point_coords[1]))
     new_line_coordinates.extend(line.coords[position:])
     return LineString(new_line_coordinates)
-

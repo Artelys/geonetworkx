@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
     File name: test_simplify
     Author: Artelys

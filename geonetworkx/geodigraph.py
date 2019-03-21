@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import networkx as nx
 from .geograph import GeoGraph
 import geonetworkx as gnx
@@ -43,7 +44,7 @@ class GeoDiGraph(GeoGraph, nx.DiGraph):
         """Returns the class to use for empty directed copies (see ``networkx.DiGraph.to_directed_class``)."""
         return GeoDiGraph
 
-    """ 
+    """
     TODO
     def reverse():
         call nx.DiGraph reverse

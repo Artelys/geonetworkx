@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
     File name: test_tools
     Author: Artelys
@@ -107,7 +108,7 @@ class TestTools(unittest.TestCase):
         nb_points = 200
         points = np.random.rand(nb_points, 2)
         points_gdf = gpd.GeoDataFrame(columns=["geometry"])
-        points_gdf["geometry"] = [Point([x,y]) for x,y in points]
+        points_gdf["geometry"] = [Point([x, y]) for x, y in points]
         points_gdf.index = range(nb_nodes, nb_nodes + nb_points)
         # node filter
         node_filter = lambda n: n > 5
@@ -145,5 +146,3 @@ class TestTools(unittest.TestCase):
                 edges = [e for e in graph.edges if n in e]
                 for e in edges:
                     assert_in(e, merged_graph.edges)
-
-

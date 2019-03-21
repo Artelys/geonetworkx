@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Base class for geographic graphs"""
 import networkx as nx
 import geopandas as gpd

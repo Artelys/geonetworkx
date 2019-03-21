@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import geonetworkx.geograph
 from geonetworkx.geograph import *
 

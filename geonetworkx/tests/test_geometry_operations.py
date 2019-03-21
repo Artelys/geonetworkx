@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
     File name: test_geometry_operations.py
     Author: Artelys
@@ -11,11 +12,12 @@ import unittest
 from geonetworkx.geometry_operations import discretize_lines
 from geonetworkx.testing.utils import assert_almost_intersect
 import geonetworkx.testing.utils as gnx_tu
-import geonetworkx as gnx
 import geonetworkx.settings as settings
+
 
 gnx_tu.SEED = 70595
 np.random.seed(gnx_tu.SEED)
+
 
 @attr('geometry_operations')
 class TestGeometryOperations(unittest.TestCase):

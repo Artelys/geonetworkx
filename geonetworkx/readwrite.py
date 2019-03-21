@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import pickle
 import numpy as np
@@ -85,7 +86,7 @@ def read_graphml(path, node_type=str, edge_key_type=int, **attr):
     :param node_type: See ``nx.read_graphml``
     :param edge_key_type: See ``nx.read_graphml``
     :param attr: GeoGraph spatial keys specification
-    :return: 
+    :return: Parsed Geograph
     """
     graph = nx.read_graphml(path, node_type, edge_key_type)
     nodes_geometry_attr = attr.get("nodes_geometry_key",
@@ -301,6 +302,3 @@ def read_geofiles(nodes_file_path: str, edges_file_path: str,
             graph.crs = edges_gdf.crs
         graph.add_edges_from_gdf(edges_gdf, edge_first_node_attr, edge_second_node_attr)
     return graph
-
-
-
