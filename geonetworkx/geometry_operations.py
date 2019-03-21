@@ -3,7 +3,7 @@ import numpy as np
 import networkx as nx
 import geopandas as gpd
 from shapely.geometry import Point, MultiPoint, LineString, MultiLineString
-from scipy.spatial import KDTree
+from scipy.spatial import cKDTree
 from collections import defaultdict
 from typing import Union, Iterable
 import geonetworkx.settings as settings
@@ -179,7 +179,7 @@ def discretize_lines(lines: Iterable[LineString]):
     return all_points_as_mp, points_line_association
 
 
-def get_closest_point_from_points(points_from: PointsCoordinatesLike, points_to: list = None, kd_tree: KDTree = None):
+def get_closest_point_from_points(points_from: PointsCoordinatesLike, points_to: list = None, kd_tree: cKDTree = None):
     """
     Compute the closest point among the ``points_from`` list for each point in the ``points_to`` list.
 
@@ -191,11 +191,11 @@ def get_closest_point_from_points(points_from: PointsCoordinatesLike, points_to:
     if points_to is None and kd_tree is None:
         raise ValueError("Must provide at least argument 'points_to' or 'kd_tree'")
     if kd_tree is None:
-        kd_tree = KDTree(points_to)
+        kd_tree = cKDTree(points_to)
     return kd_tree.query(points_from)
 
 
-def get_closest_point_from_line(line_from: LineString, points_to: list = None, kd_tree: KDTree = None):
+def get_closest_point_from_line(line_from: LineString, points_to: list = None, kd_tree: cKDTree = None):
     """
     Return the closest point from a given line and its distance.
 
@@ -209,7 +209,7 @@ def get_closest_point_from_line(line_from: LineString, points_to: list = None, k
     if points_to is None and kd_tree is None:
         raise ValueError("Must provide at least argument 'points_to' or 'kd_tree'")
     if kd_tree is None:
-        kd_tree = KDTree(points_to)
+        kd_tree = cKDTree(points_to)
     discretized_points = discretize_line(line_from)
     distances, closest_points_indexes = kd_tree.query(MultiPoint(discretized_points))
     smallest_distance_index = np.argmin(distances)
@@ -242,7 +242,7 @@ def get_closest_point_from_multi_shape(multi_shape, points_to=None, kd_tree=None
 
 def get_closest_point_from_shape(shape: Union[Point, LineString, MultiPoint, MultiLineString],
                                  points_to: Union[MultiPoint, np.ndarray, list] = None,
-                                 kd_tree: KDTree = None):
+                                 kd_tree: cKDTree = None):
     """
     Compute the closest point to the given shape.
 
@@ -273,7 +273,7 @@ def get_closest_point_from_shapes(shapes_from, points_to):
     :return: A list of couple containing the distance and the index of the closest point
     """
     results = []
-    kd_tree = KDTree(points_to)
+    kd_tree = cKDTree(points_to)
     for shape in shapes_from:
         distance, closest_points_index = get_closest_point_from_shape(shape, kd_tree=kd_tree)
         results.append((distance, closest_points_index))
@@ -300,7 +300,7 @@ def get_closest_line_from_point(point_from: PointCoordinatesLike,
         raise ValueError("If a kd-tree is given, a point line association dictionary must provided")
     if kd_tree is None:
         points_to, points_line_association = discretize_lines(lines_to)
-        kd_tree = KDTree(points_to)
+        kd_tree = cKDTree(points_to)
     distance, closest_point_index = get_closest_point_from_points([point_from], kd_tree=kd_tree)
     for line_index in points_line_association:
         if closest_point_index in points_line_association[line_index]:
@@ -317,7 +317,7 @@ def get_closest_line_from_points(points_from, lines_to):
     :return: A list of closest lines indexes.
     """
     points_to, points_line_association = discretize_lines(lines_to)
-    kd_tree = KDTree(points_to)
+    kd_tree = cKDTree(points_to)
     lines_indexes = []
     for point in points_from:
         result = get_closest_line_from_point(point, kd_tree=kd_tree, points_line_association=points_line_association)
