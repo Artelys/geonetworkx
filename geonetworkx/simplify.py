@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import networkx as nx
-from shapely.geometry import Polygon, MultiPolygon
-from geonetworkx import GeoGraph
+from shapely.geometry import Polygon, MultiPolygon, LineString
+from geonetworkx import GeoGraph, GeoDiGraph
 from geonetworkx.utils import is_nan
+from geonetworkx.geometry_operations import merge_two_lines_with_closest_extremities
 from typing import Union
+from networkx.classes.filters import no_filter
 
 
 def remove_isolates(graph: nx.Graph) -> int:
@@ -117,3 +119,172 @@ def remove_nan_attributes(graph: nx.Graph, remove_nan=True, remove_none=True, co
         return used_graph
 
 
+def get_dead_ends(graph: nx.Graph, node_filter=no_filter, only_strict=False):
+    """Return the list of dead end in the given graph. A dead end is defined as a node having only one neighbor. For
+    directed graphs, a strict dead end is a node having a unique predecessor and no successors. A weak dead end is a
+    node having a unique predecessor that is also its unique successor.
+
+    :param graph: Graph to parse.
+    :param node_filter: Evaluates to true if a node can be considered as dead end, false otherwise.
+    :param only_strict: If true, remove only strict dead ends. Used only for directed graphs.
+    """
+    if graph.is_directed():
+        dead_ends = []
+        for n in graph.nodes():
+            if not node_filter(n):
+                continue
+            nb_predecessors = len(graph.pred[n])
+            if nb_predecessors != 1:
+                continue
+            nb_successors = len(graph.succ[n])
+            if nb_successors == 0:
+                dead_ends.append(n)
+            elif not only_strict and nb_successors == 1:
+                pred = next(iter(graph.pred[n]))
+                if pred in graph.successors(n):
+                    dead_ends.append(n)
+        return dead_ends
+    else:
+        return [n for n in graph.nodes() if node_filter(n) and len(graph.neighbors(n)) == 1]
+
+
+def remove_dead_ends(graph: nx.Graph, node_filter=no_filter, only_strict=False):
+    """Remove dead ends from a given graph. A dead end is defined as a node having only one neighbor. For
+    directed graphs, a strict dead end is a node having a unique predecessor and no successors. A weak dead end is a
+    node having a unique predecessor that is also its unique successor.
+
+    :param graph: Graph to simplify
+    :param node_filter: Evaluates to true if a node can be removed, false otherwise.
+    :param only_strict: If true, remove only strict dead ends. Used only for directed graphs.
+    """
+    nodes_to_remove = get_dead_ends(graph, node_filter, only_strict)
+    while nodes_to_remove:
+        graph.remove_nodes_from(nodes_to_remove)
+        nodes_to_remove = get_dead_ends(graph, node_filter, only_strict)
+
+
+def two_degree_node_merge_for_directed_graphs(graph: GeoDiGraph, node_filter=no_filter) -> dict:
+    """Merge edges that connects two nodes with a unique third node. A potential node to merge `n` must have exactly two
+     different neighbors `u` and `v` with one of the following set of edges:
+        * `(u, n)` and `(n, v)`
+        * `(u, n)`, `(n, u)`, `(n, v)` and `(v, n)`
+    For the first case, a merging edge `(u, v)` is added. Under the latter, two edges `(u, v)` and `(v, u)` are added.
+    The added edges will have a geometry corresponding to concatenation of the two replaced edges. If a replaced edge
+    doesn't have a geometry, the added edge will not have a geometry as well. Edges geometries must be well ordered
+     (first node must match with line's first extremity), otherwise lines concatenation may not be consistent (see
+     ``order_well_lines``).
+
+    :param graph: Given graph to modify
+    :param node_filter: Evaluates to true if a given node can be merged.
+    :return: Dictionary indicating for each new edge the merged ones.
+    """
+    def _get_merging_line(graph: GeoDiGraph, e1: tuple, e2: tuple) -> Union[LineString, None]:
+        first_edge_geometry = graph.edges[e1].get(graph.edges_geometry_key, None)
+        second_edge_geometry = graph.edges[e2].get(graph.edges_geometry_key, None)
+        if first_edge_geometry is not None and second_edge_geometry is not None:
+            return LineString(list(first_edge_geometry.coords) + list(second_edge_geometry.coords))
+        else:
+            return None
+
+    merged_edges = dict()
+    nodes = list(graph.nodes)
+    for n in nodes:
+        if not node_filter(n):
+            continue
+        in_degree = graph.in_degree(n)
+        out_degree = graph.out_degree(n)
+        merging_edges = []
+        if in_degree == out_degree == 1:
+            predecessor = next(iter(graph.pred[n]))
+            successor = next(iter(graph.succ[n]))
+            if predecessor == successor:
+                continue
+            if graph.is_multigraph():
+                edges = [(predecessor, n, next(iter(graph.adj[predecessor][n]))),
+                         (n, successor, next(iter(graph.adj[n][successor])))]
+            else:
+                edges = [(predecessor, n), (n, successor)]
+            merged_line = _get_merging_line(graph, edges[0], edges[1])
+            merging_edges = [(predecessor, successor, merged_line)]
+            merged_edges[(predecessor, successor)] = edges
+        if in_degree == out_degree == 2:
+            successors = list(graph.succ[n])
+            if all(p in successors for p in graph.pred[n]):
+                if successors[1] == successors[0]:
+                    continue
+                if graph.is_multigraph():
+                    back_edges = [(successors[1], n, next(iter(graph.adj[successors[1]][n]))),
+                                  (n, successors[0], next(iter(graph.adj[n][successors[0]])))]
+                    forth_edges = [(successors[0], n, next(iter(graph.adj[successors[0]][n]))),
+                                   (n, successors[1], next(iter(graph.adj[n][successors[1]])))]
+                else:
+                    back_edges = [(successors[1], n), (n, successors[0])]
+                    forth_edges = [(successors[0], n), (n, successors[1])]
+                back_merged_line = _get_merging_line(graph, back_edges[0], back_edges[1])
+                forth_merged_line = _get_merging_line(graph, forth_edges[0], forth_edges[1])
+                merging_edges = [(successors[1], successors[0], back_merged_line),
+                                 (successors[0], successors[1], forth_merged_line)]
+                merged_edges[(successors[1], successors[0])] = back_edges
+                merged_edges[(successors[0], successors[1])] = forth_edges
+        if merging_edges:
+            # Remove node (and thus edges)
+            graph.remove_node(n)
+            # Add merging edges
+            for u, v, line in merging_edges:
+                merging_edge_attributes = {}
+                if line is not None:
+                    merging_edge_attributes[graph.edges_geometry_key] = line
+                graph.add_edge(u, v, **merging_edge_attributes)
+    return merged_edges
+
+
+def two_degree_node_merge_for_undirected_graphs(graph: GeoGraph, node_filter=no_filter) -> dict:
+    """Merge edges that connects two nodes with a unique third node for undirected graphs. Potential nodes to merge are
+    nodes with two edges connecting two different nodes. If a replaced edge doesn't have a geometry, the added edge will
+     not have a geometry as well.
+
+    :param graph: Graph to modify
+    :param node_filter: Evaluates to true if a given node can be merged.
+    :return: Dictionary indicating for each new edge the merged ones.
+    """
+    merged_edges = dict()
+    two_degree_nodes = [n for n in graph.nodes() if graph.degree(n) == 2 and node_filter(n)]
+    for n in two_degree_nodes:
+        if graph.is_multigraph():
+            edges = list(graph.edges(n, keys=True))
+        else:
+            edges = list(graph.edges(n))
+        assert (len(edges) == 2)
+        first_node = edges[0][1] if edges[0][1] != n else edges[0][0]
+        second_node = edges[1][1] if edges[1][1] != n else edges[1][0]
+        if first_node == second_node:
+            continue
+        first_edge_geometry = graph.edges[edges[0]].get(graph.edges_geometry_key, None)
+        second_edge_geometry = graph.edges[edges[1]].get(graph.edges_geometry_key, None)
+        if first_edge_geometry is not None and second_edge_geometry is not None:
+            merged_line = merge_two_lines_with_closest_extremities(first_edge_geometry, second_edge_geometry)
+        else:
+            merged_line = None
+        merged_edges[(first_node, second_node)] = edges
+        # Remove node (and thus edges)
+        graph.remove_node(n)
+        # Add merging edge
+        merging_edge_attributes = {}
+        if merged_line is not None:
+            merging_edge_attributes[graph.edges_geometry_key] = merged_line
+        graph.add_edge(first_node, second_node, **merging_edge_attributes)
+    return merged_edges
+
+
+def two_degree_node_merge(graph: GeoGraph, node_filter=no_filter) -> dict:
+    """Merge edges that connects two nodes with a unique third node. See ``two_degree_node_merge_for_directed_graphs``
+    or ``two_degree_node_merge_for_undirected_graphs`` for more details.
+
+    :param graph: Graph to modify
+    :param node_filter: Evaluates to true if a given node can be merged.
+    :return: Dictionary indicating for each new edge the merged ones.
+    """
+    if graph.is_directed():
+        return two_degree_node_merge_for_directed_graphs(graph, node_filter)
+    else:
+        return two_degree_node_merge_for_undirected_graphs(graph, node_filter)

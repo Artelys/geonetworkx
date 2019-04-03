@@ -56,52 +56,28 @@ def merge_two_shape(e1: Extremity, e2: Extremity, line1: LineString, line2: Line
     return new_line
 
 
-def merge_two_shapes_with_closest_extremities(shape1: LineString, shape2: LineString) -> LineString:
+def merge_two_lines_with_closest_extremities(first_line: LineString, second_line: LineString) -> LineString:
     """
-    Merge two lines with their closest extremities
+    Merge two lines with their closest extremities. Euclidian distance is used here.
 
-    :param shape1: first line
-    :param shape2: second line
-    :return: merged shape
+    :param first_line: first line to merge
+    :param second_line: second line
+    :return: merged line
     """
     combinations = [(0, 0), (-1, 0), (0, -1), (-1, -1)]
-    extremities = [(np.array(shape1.coords[i1]), np.array(shape2.coords[i2])) for (i1, i2) in combinations]
-    distances = [np.linalg.norm(e1 - e2) for (e1, e2) in extremities]
-    merge_couple = int(np.argmin(distances))
-    e1 = Extremity(None, combinations[merge_couple][0], shape1.coords[combinations[merge_couple][0]])
-    e2 = Extremity(None, combinations[merge_couple][1], shape1.coords[combinations[merge_couple][1]])
-    return merge_two_shape(e1, e2, shape1, shape2)
-
-
-def merge_edges_connected_with_two_degree_node(graph: nx.Graph, filter=None) -> int:
-    """
-    Merge all nodes with one incoming edge and one outgoing edge.
-
-    :param graph: The graph to modify
-    :param filter: A lambda function indicating if a given node is has to be potentially merge
-    :return: The number of merged nodes
-    """
-    if filter is None:
-        two_degree_nodes = [x for x in graph.nodes() if graph.degree(x) == 2]
-    else:
-        two_degree_nodes = [x for x in graph.nodes() if graph.degree(x) == 2 and filter(x)]
-    nb_two_degree_nodes_merged = 0
-    for n in two_degree_nodes:
-        edges = [e for e in graph.edges if n in [e[0], e[1]]]
-        # Skip if edges are parallel edges for MultiGraph
-        if (edges[0][0], edges[0][1]) == (edges[1][0], edges[1][1]):
-            continue
-        # merge with closest extremities
-        shape1 = graph.edges[edges[0]]['geometry']
-        shape2 = graph.edges[edges[1]]['geometry']
-        new_line = merge_two_shapes_with_closest_extremities(shape1, shape2)
-        # Remove node from graph and add one replacing edge
-        graph.remove_node(n)
-        u = edges[0][0] if edges[0][0] != n else edges[0][1]
-        v = edges[1][0] if edges[1][0] != n else edges[1][1]
-        graph.add_edge(u, v, geometry=new_line)
-        nb_two_degree_nodes_merged += 1
-    return nb_two_degree_nodes_merged
+    extremities = np.array([[first_line.coords[i1], second_line.coords[i2]] for (i1, i2) in combinations])
+    distances = np.linalg.norm(extremities[:, 0, :] - extremities[:, 1, :], axis=1)
+    merge_couple_index = int(np.argmin(distances))
+    merge_couple = combinations[merge_couple_index]
+    if merge_couple == (-1, 0):
+        merged_line = LineString(list(first_line.coords) + list(second_line.coords))
+    elif merge_couple == (0, 0):
+        merged_line = LineString(list(reversed(first_line.coords)) + list(second_line.coords))
+    elif merge_couple == (0, -1):
+        merged_line = LineString(list(reversed(first_line.coords)) + list(reversed(second_line.coords)))
+    else:  # merge_couple == (-1, -1)
+        merged_line = LineString(list(first_line.coords) + list(reversed(second_line.coords)))
+    return merged_line
 
 
 def get_shape_extremities(shape: LineString, shape_id: int):
@@ -138,7 +114,7 @@ def convert_multilinestring_to_linestring(gdf: gpd.GeoDataFrame) -> int:
             all_lines = gdf.at[s, 'geometry'].geoms
             new_line = all_lines[0]
             for i in range(1, len(all_lines)):
-                new_line = merge_two_shapes_with_closest_extremities(new_line, all_lines[i])
+                new_line = merge_two_lines_with_closest_extremities(new_line, all_lines[i])
             gdf.at[s, 'geometry'] = new_line
             nb_converted_multilinestring += 1
         else:
