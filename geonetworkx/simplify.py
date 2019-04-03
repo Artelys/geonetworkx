@@ -165,14 +165,15 @@ def remove_dead_ends(graph: nx.Graph, node_filter=no_filter, only_strict=False):
 
 def two_degree_node_merge_for_directed_graphs(graph: GeoDiGraph, node_filter=no_filter) -> dict:
     """Merge edges that connects two nodes with a unique third node. A potential node to merge `n` must have exactly two
-     different neighbors `u` and `v` with one of the following set of edges:
+    different neighbors `u` and `v` with one of the following set of edges:
         * `(u, n)` and `(n, v)`
         * `(u, n)`, `(n, u)`, `(n, v)` and `(v, n)`
+
     For the first case, a merging edge `(u, v)` is added. Under the latter, two edges `(u, v)` and `(v, u)` are added.
     The added edges will have a geometry corresponding to concatenation of the two replaced edges. If a replaced edge
     doesn't have a geometry, the added edge will not have a geometry as well. Edges geometries must be well ordered
-     (first node must match with line's first extremity), otherwise lines concatenation may not be consistent (see
-     ``order_well_lines``).
+    (first node must match with line's first extremity), otherwise lines concatenation may not be consistent (see
+    ``order_well_lines``).
 
     :param graph: Given graph to modify
     :param node_filter: Evaluates to true if a given node can be merged.
@@ -241,7 +242,7 @@ def two_degree_node_merge_for_directed_graphs(graph: GeoDiGraph, node_filter=no_
 def two_degree_node_merge_for_undirected_graphs(graph: GeoGraph, node_filter=no_filter) -> dict:
     """Merge edges that connects two nodes with a unique third node for undirected graphs. Potential nodes to merge are
     nodes with two edges connecting two different nodes. If a replaced edge doesn't have a geometry, the added edge will
-     not have a geometry as well.
+    not have a geometry as well.
 
     :param graph: Graph to modify
     :param node_filter: Evaluates to true if a given node can be merged.
