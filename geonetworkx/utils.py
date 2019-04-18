@@ -9,15 +9,19 @@ from geonetworkx.geometry_operations import coordinates_almost_equal, insert_poi
 from geonetworkx.geograph import GeoGraph
 import geonetworkx.settings as settings
 from typing import Iterable
+try:
+    import srtm
+except ImportError:
+    srtm = None
 
 
-def get_crs_as_str(crs):
+def get_crs_as_str(crs) -> str:
     """Return the given CRS as string ``pyproj.Proj`` methods."""
     proj = pyproj.Proj(crs)
     return proj.definition_string()
 
 
-def is_null_crs(crs):
+def is_null_crs(crs) -> bool:
     """Test for null crs values."""
     if crs is None:
         return True
@@ -28,24 +32,24 @@ def is_null_crs(crs):
     return False
 
 
-def crs_equals(crs1, crs2):
+def crs_equals(crs1, crs2) -> bool:
     """Compare CRS using ``pyproj.Proj`` objects."""
     if is_null_crs(crs1) or is_null_crs(crs1):
         return False
     return get_crs_as_str(crs1) == get_crs_as_str(crs2)
 
 
-def compute_vincenty(p1, p2):
+def compute_vincenty(p1, p2) -> float:
     """Returns the vincenty distance in meters given points with the format (longitude, latitude) in the WGS84
     crs."""
     return vincenty((p1[1], p1[0]), (p2[1], p2[0])).meters
 
 
-def compute_vincenty_from_points(p1: Point, p2: Point):
+def compute_vincenty_from_points(p1: Point, p2: Point) -> float:
     return compute_vincenty([p1.x, p1.y], [p2.x, p2.y])
 
 
-def approx_map_unit_factor(points_coordinates, tolerance=1e-7):
+def approx_map_unit_factor(points_coordinates, tolerance=1e-7) -> float:
     """Compute a linear approximation of the map unit factor for 1 meter. Works only for the WGS84 CRS."""
     centroid = np.array(points_coordinates)
     lower_bound = centroid
@@ -162,6 +166,26 @@ def fill_length_attribute(graph: GeoGraph, attribute_name="length", only_missing
             edge_data[attribute_name] = measure_line_distance(edges_geometry[e])
 
 
+def fill_elevation_attribute(graph:GeoGraph, attribute_name="elevation[m]", only_missing=True):
+    """
+    Fill the ``elevation[m]`` attribute on nodes of the given geograph. The elevation is found with the `srtm` package.
+    Graph crs has to be WGS84 standard, otherwise elevation data won't be consistent.
+
+    :param graph: GeoGraph to modify
+    :param attribute_name: Attribute to fill
+    :param only_missing: Get the elevation and set it only if the node attribute is missing.
+    """
+    if srtm is None:
+        raise ImportError("Impossible to get elevation data, `srtm` package not found.")
+    elevation_data = srtm.get_data()
+    for n, data in graph.nodes(data=True):
+        if (not only_missing) or attribute_name not in data:
+            longitude, latitude  = tuple(*data[graph.nodes_geometry_key].coords)
+            elevation = elevation_data.get_elevation(latitude, longitude)
+            if elevation is not None:
+                data[attribute_name] = elevation
+
+
 def join_lines_extremity_to_nodes_coordinates(graph: GeoGraph):
     """
     Modify the edges geometry attribute so that lines extremities match with nodes coordinates.
@@ -236,7 +260,7 @@ def stringify_nodes(graph: nx.Graph, copy=True):
     nx.relabel_nodes(graph, {n: str(n) for n in graph.nodes}, copy)
 
 
-def is_nan(val):
+def is_nan(val) -> bool:
     return val is np.nan or val != val
 
 
@@ -261,7 +285,7 @@ def hard_write_spatial_keys(graph: GeoGraph):
         setattr(graph, k, v)
 
 
-def compose(G: GeoGraph, H: GeoGraph):
+def compose(G: GeoGraph, H: GeoGraph) -> GeoGraph:
     """Return a new graph of G composed with H. Makes sure the returned graph is consistent with respect to the spatial
     keys. (See ``nx.compose``). According to the priority rule in networkX, attributes from ``H`` take precedent over
     attributes from G."""
@@ -273,3 +297,22 @@ def compose(G: GeoGraph, H: GeoGraph):
     if G.edges_geometry_key != H.edges_geometry_key:
         rename_edges_attribute(R, G.edges_geometry_key, H.edges_geometry_key)
     return R
+
+
+def geographical_distance(graph: GeoGraph, node1, node2, method="vincenty") -> float:
+    """Return the geographical distance between the two given nodes.
+
+    :param graph: Geograph
+    :param node1: First node label
+    :param node2: Second node label
+    :param method: "vincenty", "euclidian", "great_circle"
+    :return: Distance between nodes, unit depends on the method.
+    """
+    point1 = graph.nodes[node1][graph.nodes_geometry_key]
+    point2 = graph.nodes[node2][graph.nodes_geometry_key]
+    if method == "vincenty":
+        return compute_vincenty_from_points(point1, point2)
+    elif method == "euclidian":
+        return euclidian_distance(point1, point2)
+    else:
+        raise ValueError("Unknown distance method: '%s'" % str(method))
