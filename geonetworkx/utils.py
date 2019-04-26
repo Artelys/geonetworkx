@@ -2,7 +2,7 @@
 import math
 import numpy as np
 import networkx as nx
-from shapely.geometry import Point, LineString
+from shapely.geometry import Point, LineString, MultiPoint
 from geopy.distance import vincenty
 import pyproj
 from geonetworkx.geometry_operations import coordinates_almost_equal, insert_point_in_line
@@ -316,3 +316,24 @@ def geographical_distance(graph: GeoGraph, node1, node2, method="vincenty") -> f
         return euclidian_distance(point1, point2)
     else:
         raise ValueError("Unknown distance method: '%s'" % str(method))
+
+
+def get_graph_bounding_box(graph: GeoGraph):
+    """Return the bounding box coordinates of the given GeoGraph. It takes into account nodes and edges geometries."""
+    nodes = graph.get_nodes_as_point_series()
+    x_min, y_min, x_max, y_max = MultiPoint(nodes).bounds
+    bb = [[x_min, y_min], [x_max, y_max]]
+    edges = graph.get_edges_as_line_series()
+    if len(edges) > 0:
+        edges_bounds = edges.bounds
+        x_e_min, y_e_min = edges_bounds["minx"].min(), edges_bounds["miny"].min()
+        x_e_max, y_e_max = edges_bounds["maxx"].max(), edges_bounds["maxy"].max()
+        if x_min > x_e_min:
+            bb[0][0]= x_e_min
+        if y_min > y_e_min:
+            bb[0][1] = y_e_min
+        if x_max < x_e_max:
+            bb[1][0] = x_e_max
+        if y_max < y_e_max:
+            bb[1][1] = y_e_max
+    return bb
