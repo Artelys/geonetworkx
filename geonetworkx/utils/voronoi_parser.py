@@ -6,10 +6,12 @@
 """
 import numpy as np
 from scipy.spatial import Voronoi, ConvexHull
-from shapely.geometry import Polygon, box, Point, MultiLineString, LineString, MultiPoint
+from shapely.geometry import MultiLineString, LineString, MultiPoint, Point, box, Polygon
+from shapely.ops import linemerge
 import geopandas as gpd
-from itertools import chain
 from typing import Union
+from collections import defaultdict
+import pyvoronoi
 
 
 GenericLine = Union[LineString, MultiLineString]
@@ -121,9 +123,7 @@ class VoronoiParser:
         return voronoi_cells_gdf
 
 
-import pyvoronoi
-from shapely.geometry import LineString
-from shapely.ops import split, linemerge
+
 
 class PyVoronoiHelper:
     """Add-on for the pyvoronoi (boost voronoi) tool. It computes the voronoi cells within a bounding box."""
@@ -142,180 +142,6 @@ class PyVoronoiHelper:
         self.bounding_box_coords = bounding_box_coords
 
     # TODO: map input lines with their sublines, do union of polygons in output
-
-    @staticmethod
-    def split_linestring_as_simple_linestrings(line: GenericLine) -> list:
-        """Split a linestring if it is not simple (i.e. it crosses itself)."""
-        if not line.is_simple:
-            mls = line.intersection(line)
-            if line.geom_type == 'LineString' and mls.geom_type == 'MultiLineString':
-                mls = linemerge(mls)
-            return list(mls)
-        else:
-            return [line]
-
-    @staticmethod
-    def split_as_simple_segments(lines: list, tol=1e-6) -> dict:
-        from collections import defaultdict
-        split_lines = defaultdict(list)
-        all_split_lines = PyVoronoiHelper.split_linestring_as_simple_linestrings(MultiLineString(lines))
-        lines_stack = lines.copy()
-        for sub_line in all_split_lines:
-            for i, line in enumerate(lines_stack):
-                if line.buffer(tol, 1).contains(sub_line):
-                    split_lines[i].append(sub_line)
-                    del lines_stack[i]
-                    lines_stack.insert(0, line)
-                    break
-        return split_lines
-
-
-    @staticmethod
-    def split_intersected_linestrings(lines: list) -> dict:
-        """Split a list of linestrings to a list of non crossing lines."""
-        split_lines = {i: [l] for i, l in enumerate(lines)}
-        # Make simple one by one (self intersection)
-        # TODO
-        # Split intersections
-        treated_lines = set()
-        treated_couples = set()
-        while True:
-            to_break = False
-            for i1, sub_lines1 in split_lines.items():
-                if i1 in treated_lines:
-                    continue
-                mls1 = MultiLineString(sub_lines1)
-                for i2, sub_lines2 in split_lines.items():
-                    if i1 != i2 and (i1, i2) not in treated_couples:
-                        mls2 = MultiLineString(sub_lines2)
-                        if mls1.intersects(mls2):
-                            new_sub_lines1, new_sub_lines2 = PyVoronoiHelper.split_linestrings_at_intersection(mls1, mls2)
-                            if len(new_sub_lines1) != 1:
-                                split_lines[i1] = PyVoronoiHelper.get_as_list_of_linestrings(new_sub_lines1)
-                                to_break = True
-                            if len(new_sub_lines2) != 1:
-                                split_lines[i2] = PyVoronoiHelper.get_as_list_of_linestrings(new_sub_lines2)
-                                to_break = True
-                            treated_couples.add((i1, i2))
-                            if to_break:
-                                print("found", i1, i2)
-                                break
-                if to_break:
-                    break
-                else:
-                    print("treated", i1)
-                    treated_lines.add(i1)
-                    treated_couples = set()
-            if not to_break:
-                break
-        return split_lines
-        #lines_as_multilinestring = MultiLineString(lines)
-        #return self.split_linestring_as_simple_linestrings(lines_as_multilinestring)
-
-    @staticmethod
-    def get_as_list_of_linestrings(obj:list) -> list:
-        grown_obj = []
-        for i in obj:
-            if isinstance(i, MultiLineString):
-                grown_obj.extend(list(i))
-            else:
-                grown_obj.append(i)
-        return grown_obj
-
-
-
-    @staticmethod
-    def split_linestrings_at_intersection(line1: GenericLine, line2: GenericLine) -> tuple:
-        """Split two linestrings at their intersection point(s). Returns two geometry collections containing the set of
-        split linestrings."""
-        intersection = line1.intersection(line2)
-        if isinstance(intersection, (Point, MultiPoint)):
-            line1_split = PyVoronoiHelper.split(line1, intersection)
-            line2_split = PyVoronoiHelper.split(line2, intersection)
-        elif isinstance(intersection, (LineString, MultiLineString)):
-            line1_split = line1.difference(intersection)
-            line2_split = line2
-        else:
-            line1_split = []  # It can happen if the lines intersects at a point and at a line
-            line2_split = line2
-        return (line1_split, line2_split)
-
-    @staticmethod
-    def split_linestring(line: LineString) -> list:
-        """Split a linestring into a list of segments (trivial linestring)."""
-        split_lines = []
-        for i in range(len(line.coords) - 1):
-            split_lines.append(LineString([line.coords[i], line.coords[i + 1]]))
-        return split_lines
-
-    @staticmethod
-    def split(line: GenericLine, points: Union[Point, MultiPoint]) -> list:
-        if isinstance(line, LineString):
-            cut = PyVoronoiHelper.cut
-        else:
-            cut = PyVoronoiHelper.cut_multilinestring
-        if isinstance(points, Point):
-            distance = line.project(points)
-            return cut(line, distance)
-        else:
-            current_line = line
-            split_lines = []
-            distances = [(line.project(p), p) for p in points]
-            sorted_distances = sorted(distances, key=lambda x: x[0])
-            cut_result = None
-            for d, p in sorted_distances:
-                if d <= 0 or d >= line.length:
-                    continue
-                cut_result = cut(current_line, current_line.project(p))
-                split_lines.append(cut_result[0])
-                current_line = cut_result[1]
-            if cut_result is None:
-                return [line]
-            else:
-                split_lines.append(cut_result[1])
-                return split_lines
-
-    @staticmethod
-    def cut_multilinestring(line: MultiLineString, distance: float) -> list:
-        # Cuts a line in two at a distance from its starting point
-        if distance <= 0.0 or distance >= line.length:
-            return [line]
-        length_counter = 0.0
-        for l, sub_line in enumerate(line):
-            line_length = sub_line.length
-            length_counter += line_length
-            if distance > length_counter:
-                continue
-            coords = list(sub_line.coords)
-            for i, p in enumerate(coords):
-                pd = line.project(Point(p))
-                if pd == distance:
-                    return [line[:(l + 1)], line[l:]]
-                if pd > distance:
-                    cp = line.interpolate(distance)
-                    first_cut_part = LineString(coords[:i] + [(cp.x, cp.y)])
-                    second_cut_part = LineString([(cp.x, cp.y)] + coords[i:])
-                    first_part = MultiLineString(list(line[:l]) + [first_cut_part])
-                    second_part = MultiLineString([second_cut_part] + list(line[(l+1):]))
-                    return [first_part, second_part]
-
-    @staticmethod
-    def cut(line: LineString, distance: float) -> list:
-        # Cuts a line in two at a distance from its starting point
-        if distance <= 0.0 or distance >= line.length:
-            return [line]
-        coords = list(line.coords)
-        for i, p in enumerate(coords):
-            pd = line.project(Point(p))
-            if pd == distance:
-                return [
-                    LineString(coords[:i + 1]),
-                    LineString(coords[i:])]
-            if pd > distance:
-                cp = line.interpolate(distance)
-                return [
-                    LineString(coords[:i] + [(cp.x, cp.y)]),
-                    LineString([(cp.x, cp.y)] + coords[i:])]
 
     def get_cells_as_gdf(self) -> gpd.GeoDataFrame:
         gdf = gpd.GeoDataFrame(columns=["id", "geometry"])
@@ -361,7 +187,7 @@ class PyVoronoiHelper:
                             ridge_vertex = start_vertex
                         ridge_point = np.array([ridge_vertex.X, ridge_vertex.Y])
                         twin_cell = cells[edges[edge.twin].cell]
-                        if c .site == twin_cell.site:
+                        if c.site == twin_cell.site:
                             if c.source_category == 3:
                                  segment = np.array(self.pv.RetriveScaledSegment(cells[edge.cell]))
                                  if start_is_infinite:
@@ -399,8 +225,14 @@ class PyVoronoiHelper:
                             self.add_polygon_coordinates(cell_coords, [ridge_vertex.X, ridge_vertex.Y])
                             self.add_polygon_coordinates(cell_coords, [ridge_limit_point[0], ridge_limit_point[1]])
                 else:
-                    for p in self.pv.DiscretizeCurvedEdge(e, discretization_tolerance):
-                        cell_coords.append(p)
+                    try:
+                        coords_to_add = []
+                        for p in self.pv.DiscretizeCurvedEdge(e, discretization_tolerance):
+                            coords_to_add.append(p)
+                        cell_coords.extend(coords_to_add)
+                    except pyvoronoi.UnsolvableParabolaEquation:
+                        self.add_polygon_coordinates(cell_coords, [start_vertex.X, start_vertex.Y])
+                        self.add_polygon_coordinates(cell_coords, [end_vertex.X, end_vertex.Y])
             cells_coordinates[c.cell_identifier] = cell_coords
         return cells_coordinates
 
@@ -417,6 +249,45 @@ class PyVoronoiHelper:
             if last_point[0] == point[0] and last_point[1] == point[1]:
                 return
         coordinates.append(point)
+
+
+
+def split_linestring_as_simple_linestrings(line: GenericLine) -> list:
+    """Split a linestring if it is not simple (i.e. it crosses itself)."""
+    if not line.is_simple:
+        mls = line.intersection(line)
+        if line.geom_type == 'LineString' and mls.geom_type == 'MultiLineString':
+            mls = linemerge(mls)
+        return list(mls)
+    else:
+        return [line]
+
+def split_as_simple_segments(lines: list, tol=1e-6) -> dict:
+    # TODO: specify tolerance in settings
+    split_lines = defaultdict(list)
+    all_split_lines = split_linestring_as_simple_linestrings(MultiLineString(lines))
+    lines_stack = lines.copy()
+    for sub_line in all_split_lines:
+        for i, line in enumerate(lines_stack):
+            if line.buffer(tol, 1).contains(sub_line):
+                split_lines[i].append(sub_line)
+                del lines_stack[i]
+                lines_stack.insert(0, line)
+                break
+    return split_lines
+
+
+def compute_voronoi_cells_from_lines(lines: list):
+    simple_segments_mapping = split_as_simple_segments(lines)
+    all_segments = [list(s.coords) for segments in simple_segments_mapping.values() for s in segments]
+    bounds = MultiLineString(lines).bounds
+    bb = [[bounds[0], bounds[1]], [bounds[2], bounds[3]]]
+    pvh = PyVoronoiHelper([], segments=all_segments, bounding_box_coords=bb, scaling_factor=1e6)
+    gdf = pvh.get_cells_as_gdf()
+    gdf = gdf[list(map(lambda i: isinstance(i, Polygon), gdf["geometry"]))]
+    gdf.to_file(r"C:\Users\hchareyre\Documents\trash\Nouveau dossier (8)\test.shp")
+
+
 
 
 if __name__ == "__main__":
