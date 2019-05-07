@@ -219,7 +219,7 @@ class PyVoronoiHelper:
                                     centroid_direction = first_point - self.convex_hull_centroid
                                     ridge_direction *= np.sign(np.dot(centroid_direction, ridge_direction))
                         else:
-                            first_point = self.pv.RetrieveScaledPoint(c)
+                            first_point = self.pv.RetrieveScaledPoint(c)  # TODO : what if first_point == second_point == ridge_point
                             second_point = self.pv.RetrieveScaledPoint(twin_cell)
                             midpoint = np.array([(first_point[0] + second_point[0]) / 2.0,
                                                  (first_point[1] + second_point[1]) / 2.0])
