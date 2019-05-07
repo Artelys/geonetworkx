@@ -6,7 +6,7 @@
 """
 import numpy as np
 from scipy.spatial import Voronoi, ConvexHull
-from shapely.geometry import MultiLineString, LineString, MultiPoint, Point, box, Polygon
+from shapely.geometry import MultiLineString, LineString, MultiPoint, Point, box, Polygon, MultiPolygon
 from shapely.ops import linemerge
 import geopandas as gpd
 from typing import Union
@@ -128,7 +128,7 @@ class VoronoiParser:
 class PyVoronoiHelper:
     """Add-on for the pyvoronoi (boost voronoi) tool. It computes the voronoi cells within a bounding box."""
 
-    def __init__(self, points: list, segments: list, bounding_box_coords: list, scaling_factor=10000,
+    def __init__(self, points: list, segments: list, bounding_box_coords: list, scaling_factor=100000.0,
                  discretization_tolerance=0.05):
         self.pv = pyvoronoi.Pyvoronoi(scaling_factor)
         for p in points:
@@ -160,6 +160,8 @@ class PyVoronoiHelper:
         for i, coords in cells_coordinates.items():
             if len(coords) > 2:
                 polygon = Polygon(coords)
+                if not polygon.is_valid:
+                    polygon = polygon.buffer(0.0)
                 trimmed_polygon = polygon.intersection(bounding_box)
                 cells_as_polygons[i] = trimmed_polygon
         return cells_as_polygons
@@ -266,74 +268,41 @@ def split_as_simple_segments(lines: list, tol=1e-6) -> dict:
     # TODO: specify tolerance in settings
     split_lines = defaultdict(list)
     all_split_lines = split_linestring_as_simple_linestrings(MultiLineString(lines))
-    lines_stack = lines.copy()
+    lines_stack = [(i, l) for i, l in enumerate(lines)]
     for sub_line in all_split_lines:
-        for i, line in enumerate(lines_stack):
+        for j, (i, line) in enumerate(lines_stack):
             if line.buffer(tol, 1).contains(sub_line):
                 split_lines[i].append(sub_line)
-                del lines_stack[i]
-                lines_stack.insert(0, line)
+                del lines_stack[j]
+                lines_stack.insert(0, (i, line))
                 break
     return split_lines
 
 
-def compute_voronoi_cells_from_lines(lines: list):
+def compute_voronoi_cells_from_lines(lines: list) -> gpd.GeoDataFrame:
     simple_segments_mapping = split_as_simple_segments(lines)
-    all_segments = [list(s.coords) for segments in simple_segments_mapping.values() for s in segments]
+    all_segments = [list(s.coords) for i in range(len(lines)) for s in simple_segments_mapping[i]]
     bounds = MultiLineString(lines).bounds
     bb = [[bounds[0], bounds[1]], [bounds[2], bounds[3]]]
     pvh = PyVoronoiHelper([], segments=all_segments, bounding_box_coords=bb, scaling_factor=1e6)
     gdf = pvh.get_cells_as_gdf()
-    gdf = gdf[list(map(lambda i: isinstance(i, Polygon), gdf["geometry"]))]
-    gdf.to_file(r"C:\Users\hchareyre\Documents\trash\Nouveau dossier (8)\test.shp")
-
-
-
-
-if __name__ == "__main__":
-
-    import geopandas as gpd
-
-
-    import numpy as np
-    from shapely.geometry import *
-
-
-    points = [[0.1, 1.0], [0.8, 0.8], [0.5, 0.3]]
-
-    lines = [[[0.1,0.8],[0.3,0.6]],
-    [[0.3,0.6],[0.4,0.6]],
-    [[0.4,0.6],[0.4,0.5]],
-    [[0.4,0.6],[0.4,0.7]],
-    [[0.4,0.7],[0.5,0.8]],
-    [[0.4,0.7],[0.5,0.6]],
-    [[0.5,0.6],[0.7,0.7]],
-    [[0.2, 0.3], [0.5, 0.3]]]
-
-    path = r"C:\Users\hchareyre\Documents\trash\Nouveau dossier (5)"
-
-    lines_df = gpd.GeoDataFrame(columns=["geometry"])
-    for l in lines:
-        lines_df.loc[len(lines_df)] = [LineString(l)]
-    lines_df.to_file(path + r"\lines.shp")
-
-    points_df = gpd.GeoDataFrame(columns=["geometry"])
-    for p in points:
-        points_df.loc[len(points_df)] = [Point(p)]
-    points_df.to_file(path + r"\points.shp")
-
-    points_and_lines = points + [p for l in lines for p in l]
-
-
-    convex_hull = MultiPoint(points_and_lines).convex_hull
-
-    convex_hull = convex_hull.buffer(1/100.0)
-    convex_hull.to_wkt()
-
-    self = PyVoronoiHelper(points, lines, [[-2, -2], [2, 2]])
-
-
-    gdf= self.get_cells_as_gdf()
-    gdf.drop(index=[i for i in gdf.index if isinstance(gdf.at[i, "geometry"], GeometryCollection)], inplace=True)
-    gdf.to_file(path + r"\test22.shp")
+    gdf = gdf[list(map(lambda i: isinstance(i, Polygon), gdf["geometry"]))].copy()
+    gdf["site"] = [pvh.pv.GetCell(c).site for c in gdf["id"]]
+    gdf_lines = gpd.GeoDataFrame(columns=["id", "geometry"])
+    from shapely.ops import cascaded_union
+    from shapely.geometry import GeometryCollection
+    ct = 0
+    for i, line in enumerate(lines):
+        line_polygons = []
+        for s in simple_segments_mapping[i]:
+            for p in gdf[gdf["site"] == ct]["geometry"]:
+                line_polygons.append(p)
+            ct += 1
+        merged_polygon = cascaded_union(line_polygons)
+        if isinstance(merged_polygon, GeometryCollection):
+            if len(merged_polygon) == 0:
+                continue
+            merged_polygon = MultiPolygon(merged_polygon)
+        gdf_lines.loc[len(gdf_lines)] = [i, merged_polygon]
+    return gdf_lines
 
