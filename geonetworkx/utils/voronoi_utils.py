@@ -162,7 +162,7 @@ class PyVoronoiHelper:
             if len(coords) > 2:
                 polygon = Polygon(coords)
                 if not polygon.is_valid:
-                    polygon = polygon.buffer(0.0)  # TODO: doesn't fix bowtie case
+                    polygon = polygon.buffer(0.0)  # TODO: this doesn't fix bowtie case
                 trimmed_polygon = polygon.intersection(bounding_box)
                 cells_as_polygons[i] = trimmed_polygon
         return cells_as_polygons
