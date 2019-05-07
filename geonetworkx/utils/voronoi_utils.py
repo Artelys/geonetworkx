@@ -128,8 +128,7 @@ class VoronoiParser:
 class PyVoronoiHelper:
     """Add-on for the pyvoronoi (boost voronoi) tool. It computes the voronoi cells within a bounding box."""
 
-    def __init__(self, points: list, segments: list, bounding_box_coords: list, scaling_factor=100000.0,
-                 discretization_tolerance=0.05):
+    def __init__(self, points: list, segments: list, bounding_box_coords: list, scaling_factor=100000.0):
         self.pv = pyvoronoi.Pyvoronoi(scaling_factor)
         for p in points:
             self.pv.AddPoint(p)
@@ -137,13 +136,14 @@ class PyVoronoiHelper:
             self.pv.AddSegment(s)
         points_and_lines = points + [p for l in segments for p in l]
         self.convex_hull = MultiPoint(points_and_lines).convex_hull
+        self.convex_hull_centroid = np.array([i for i in self.convex_hull.centroid.coords])
         self.pv.Construct()
-        self.discretization_tolerance = discretization_tolerance
+        self.discretization_tolerance = 10 / scaling_factor
         self.bounding_box_coords = bounding_box_coords
 
-    # TODO: map input lines with their sublines, do union of polygons in output
-
     def get_cells_as_gdf(self) -> gpd.GeoDataFrame:
+        """Returns the voronoi cells in `geodataframe` with a column named `id` referencing the index of the associated
+         input geometry."""
         gdf = gpd.GeoDataFrame(columns=["id", "geometry"])
         cells_geometries = self.get_cells_as_polygons()
         gdf["geometry"] = list(cells_geometries.values())
@@ -151,6 +151,7 @@ class PyVoronoiHelper:
         return gdf
 
     def get_cells_as_polygons(self) -> dict:
+        """Return the voronoi cells as polygons trimmed with the bounding box."""
         diagonal_length = np.linalg.norm(np.array(self.bounding_box_coords[0]) - np.array(self.bounding_box_coords[1]))
         cells_coordinates = self.get_cells_coordiates(eta=diagonal_length,
                                                       discretization_tolerance=self.discretization_tolerance)
@@ -161,12 +162,19 @@ class PyVoronoiHelper:
             if len(coords) > 2:
                 polygon = Polygon(coords)
                 if not polygon.is_valid:
-                    polygon = polygon.buffer(0.0)
+                    polygon = polygon.buffer(0.0)  # TODO: doesn't fix bowtie case
                 trimmed_polygon = polygon.intersection(bounding_box)
                 cells_as_polygons[i] = trimmed_polygon
         return cells_as_polygons
 
     def get_cells_coordiates(self, eta=1.0, discretization_tolerance=0.05) -> dict:
+        """"Parse the results of ``pyvoronoi`` to compute the voronoi cells coordinates. The infinite ridges are
+        projected at a ``eta`` distance in the ridge direction.
+
+        :param eta: Distance for infinite ridges projection.
+        :param discretization_tolerance: Discretization distance for curved edges.
+        :return: A dictionary mapping the cells ids and their coordinates.
+        """
         vertices = self.pv.GetVertices()
         cells = self.pv.GetCells()
         edges = self.pv.GetEdges()
@@ -208,6 +216,8 @@ class PyVoronoiHelper:
                                 if np.linalg.norm(ridge_direction) == 0.0:
                                     segment = np.array(self.pv.RetriveScaledSegment(c))
                                     ridge_direction = - self.get_orthogonal_direction(segment[1] - segment[0])
+                                    centroid_direction = first_point - self.convex_hull_centroid
+                                    ridge_direction *= np.sign(np.dot(centroid_direction, ridge_direction))
                         else:
                             first_point = self.pv.RetrieveScaledPoint(c)
                             second_point = self.pv.RetrieveScaledPoint(twin_cell)
@@ -240,18 +250,19 @@ class PyVoronoiHelper:
 
     @staticmethod
     def get_orthogonal_direction(dir: np.array) -> np.array:
+        """Return the orthogonal direction of the given direction (2D)."""
         if dir[1] == 0.0:
             return np.array([0.0, 1.0])
         return np.array([1.0, - dir[0] / dir[1]])
 
     @staticmethod
     def add_polygon_coordinates(coordinates: list, point: list):
+        """Add given point to given coordinates list if is not the equal to the last coordinates."""
         if coordinates:
             last_point = coordinates[-1]
             if last_point[0] == point[0] and last_point[1] == point[1]:
                 return
         coordinates.append(point)
-
 
 
 def split_linestring_as_simple_linestrings(line: GenericLine) -> list:
@@ -264,8 +275,14 @@ def split_linestring_as_simple_linestrings(line: GenericLine) -> list:
     else:
         return [line]
 
-def split_as_simple_segments(lines: list, tol=1e-6) -> dict:
-    # TODO: specify tolerance in settings
+def split_as_simple_segments(lines: list, tol=1e-6) -> defaultdict:
+    """Split a list of lines to simple segments (linestring composed by two points). All returned segments do not
+    crosses except at extremities.
+
+    :param lines: List of lines to split
+    :param tol: Tolerance to test if a line is a sub line of another one.
+    :return: A dictionary mapping for each input line index, the list of simple segments.
+    """
     split_lines = defaultdict(list)
     all_split_lines = split_linestring_as_simple_linestrings(MultiLineString(lines))
     lines_stack = [(i, l) for i, l in enumerate(lines)]
@@ -279,12 +296,20 @@ def split_as_simple_segments(lines: list, tol=1e-6) -> dict:
     return split_lines
 
 
-def compute_voronoi_cells_from_lines(lines: list) -> gpd.GeoDataFrame:
-    simple_segments_mapping = split_as_simple_segments(lines)
+def compute_voronoi_cells_from_lines(lines: list, scaling_factor=1e6) -> gpd.GeoDataFrame:
+    """Compute the voronoi cells of given generic lines. Input linestrings can be not simple.
+
+    :param lines: List of ``LineString``
+    :param scaling_factor: Resolution for the voronoi cells computation (Two points will be considered equal if their
+        coordinates are equal when rounded at ``1/scaling_factor``).
+    :return: A `GeoDataFrame` with cells geometries. A column named `id` referencing the index of the associated
+        input geometry.
+    """
+    simple_segments_mapping = split_as_simple_segments(lines, 1 / scaling_factor)
     all_segments = [list(s.coords) for i in range(len(lines)) for s in simple_segments_mapping[i]]
     bounds = MultiLineString(lines).bounds
     bb = [[bounds[0], bounds[1]], [bounds[2], bounds[3]]]
-    pvh = PyVoronoiHelper([], segments=all_segments, bounding_box_coords=bb, scaling_factor=1e6)
+    pvh = PyVoronoiHelper([], segments=all_segments, bounding_box_coords=bb, scaling_factor=scaling_factor)
     gdf = pvh.get_cells_as_gdf()
     gdf = gdf[list(map(lambda i: isinstance(i, Polygon), gdf["geometry"]))].copy()
     gdf["site"] = [pvh.pv.GetCell(c).site for c in gdf["id"]]

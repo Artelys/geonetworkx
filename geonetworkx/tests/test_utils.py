@@ -11,7 +11,7 @@ import geonetworkx as gnx
 import unittest
 from nose.plugins.attrib import attr
 import geonetworkx.testing.utils as gnx_tu
-from geonetworkx.utils import voronoi_parser
+from geonetworkx.utils.voronoi_utils import *
 import os
 
 
@@ -32,14 +32,14 @@ class TestUtils(unittest.TestCase):
     def test_edges_lines_splitting(self):
         g = gnx_tu.get_random_geograph_with_wgs84_scale(NB_POINTS, gnx.GeoMultiDiGraph)
         lines = list(g.get_edges_as_line_series())
-        res = voronoi_parser.compute_voronoi_cells_from_lines(lines)
+        res = compute_voronoi_cells_from_lines(lines)
 
     def test_voronoi_edges(self):
         mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_mdg.gpickle"))
         mg = mdg.to_undirected()
         gmg = gnx.read_geograph_with_coordinates_attributes(mg)
         lines = list(gmg.get_edges_as_line_series())
-        res = compute_voronoi_cells_from_lines(lines)
-        res.to_file(r"C:\Users\hchareyre\Documents\trash\Nouveau dossier (8)\test_gre.shp")
+        res = compute_voronoi_cells_from_lines(lines, scaling_factor=1e7)
+        res.to_file(r"C:\Users\hchareyre\Documents\trash\Nouveau dossier (8)\test_gre3.shp")
 
 
