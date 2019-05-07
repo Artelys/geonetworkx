@@ -146,3 +146,15 @@ class TestTools(unittest.TestCase):
                 edges = [e for e in graph.edges if n in e]
                 for e in edges:
                     assert_in(e, merged_graph.edges)
+
+    """
+    def test_get_nodes_cells(self):
+        import os, sys
+        os.chdir("geonetworkx")
+        sys.path.append(os.getcwd())
+        from geonetworkx import settings
+        #settings.DISCRETIZATION_TOLERANCE = 5e-4
+        graph = gnx_tu.get_random_geograph_with_wgs84_scale(50, graph_type=gnx.GeoMultiDiGraph)
+        from geonetworkx.tools import get_nodes_cells
+        get_nodes_cells(graph)
+    """

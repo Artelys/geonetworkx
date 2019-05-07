@@ -178,3 +178,24 @@ def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
     merged_graph = compose(other_graph, merged_graph)
     if not inplace:
         return merged_graph
+
+"""
+def isochrone_nodes(graph:GeoGraph, source, limit=500, weight_attr="length"):
+    import networkx as nx
+    dist, paths = nx.single_source_dijkstra(graph, source, cutoff=limit, weight=weight_attr)
+
+from typing import Iterable
+from geonetworkx.geometry_operations import discretize_lines
+from geonetworkx.utils.voronoi_parser import VoronoiParser
+from geonetworkx.utils import get_graph_bounding_box
+
+def get_nodes_cells(graph:GeoGraph):
+    edges_as_lines = nx.get_edge_attributes(graph, graph.edges_geometry_key)
+    points, points_line_association = discretize_lines(edges_as_lines.values())
+    points_np = np.array(points)
+    points_np.shape
+    bb = get_graph_bounding_box(graph)
+    vp = VoronoiParser(points_np, bb)
+    vp.get_regions_as_gdf()
+
+"""
