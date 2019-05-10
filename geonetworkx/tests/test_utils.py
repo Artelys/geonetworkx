@@ -40,7 +40,8 @@ class TestUtils(unittest.TestCase):
         gmg = gnx.read_geograph_with_coordinates_attributes(mg)
         gnx.fill_edges_missing_geometry_attributes(gmg)
         lines = list(gmg.get_edges_as_line_series())
+        scaling_factor = 1e7
         res = compute_voronoi_cells_from_lines(lines, scaling_factor=1e7)
-        res.to_file(r"C:\Users\hchareyre\Documents\trash\Nouveau dossier (8)\test_gre10.shp")
+        res.to_file(r"C:\Users\hchareyre\Documents\trash\Nouveau dossier (8)\test_gre101.shp")
 
 
