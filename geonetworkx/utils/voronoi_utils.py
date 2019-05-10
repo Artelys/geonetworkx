@@ -263,9 +263,9 @@ def split_linestring_as_simple_linestrings(line: GenericLine) -> list:
     else:
         return [line]
 
-def split_as_simple_segments(lines: list, tol=1e-6) -> defaultdict:
+def split_as_simple_segments(lines: list, tol=1e-7) -> defaultdict:
     """Split a list of lines to simple segments (linestring composed by two points). All returned segments do not
-    crosses except at extremities.
+    cross themselves except at extremities.
 
     :param lines: List of lines to split
     :param tol: Tolerance to test if a line is a sub line of another one.
