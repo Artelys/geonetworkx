@@ -9,6 +9,7 @@
 import networkx as nx
 import geonetworkx as gnx
 import unittest
+from nose.tools import assert_true
 from nose.plugins.attrib import attr
 import geonetworkx.testing.utils as gnx_tu
 from geonetworkx.utils.voronoi_utils import *
@@ -29,19 +30,23 @@ class TestUtils(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_edges_lines_splitting(self):
-        g = gnx_tu.get_random_geograph_with_wgs84_scale(NB_POINTS, gnx.GeoMultiDiGraph)
-        lines = list(g.get_edges_as_line_series())
-        res = compute_voronoi_cells_from_lines(lines)
-
     def test_voronoi_edges(self):
         mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_mdg.gpickle"))
         mg = mdg.to_undirected()
         gmg = gnx.read_geograph_with_coordinates_attributes(mg)
         gnx.fill_edges_missing_geometry_attributes(gmg)
-        lines = list(gmg.get_edges_as_line_series())
-        scaling_factor = 1e7
-        res = compute_voronoi_cells_from_lines(lines, scaling_factor=1e7)
-        res.to_file(r"C:\Users\hchareyre\Documents\trash\Nouveau dossier (8)\test_gre101.shp")
+        edge_as_lines = gmg.get_edges_as_line_series()
+        lines = list(edge_as_lines)
+        tolerance = 1e-7
+        res = compute_voronoi_cells_from_lines(lines, scaling_factor=1/tolerance)
+        for e, line in edge_as_lines.items():
+            cell_found = False
+            for p in res["geometry"]:
+                if p.buffer(10 * tolerance).contains(line):
+                    cell_found = True
+                    break
+            if not cell_found:
+                assert_true(False, "A edge geometry '%s' is not in any voronoi cells" % str(e))
+
 
 
