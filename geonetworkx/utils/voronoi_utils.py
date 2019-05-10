@@ -5,8 +5,7 @@
     Python Version: 3.6
 """
 import numpy as np
-from scipy.spatial import Voronoi, ConvexHull
-from shapely.geometry import MultiLineString, LineString, MultiPoint, Point, box, Polygon, MultiPolygon
+from shapely.geometry import MultiLineString, LineString, box, Polygon, MultiPolygon
 from shapely.ops import linemerge
 import geopandas as gpd
 from typing import Union
@@ -15,114 +14,6 @@ import pyvoronoi
 
 
 GenericLine = Union[LineString, MultiLineString]
-
-
-class VoronoiParser:
-    """Add-on for the scipy.spatial Voronoi tool. It computes the voronoi cells within a bounding box."""
-
-    def __init__(self, points, bounding_box_coords):
-        """Constructor of the voronoi parser. It takes the points to compute and a bounding box representing the study
-        area."""
-        convex_hull = ConvexHull(points)
-        self.hull_polygon = Polygon(
-            [(x, y) for x, y in zip(points[convex_hull.vertices, 0], points[convex_hull.vertices, 1])])
-        self.voronoi_obj = Voronoi(points)
-        self.ridges_coords = None
-        self.all_regions_coords = None
-        self.compute_ridges_coords()
-        diagonal_length = np.linalg.norm(np.array(bounding_box_coords[0]) - np.array(bounding_box_coords[1]))
-        self.parse_regions(eta=diagonal_length)
-        self.bounding_box = box(bounding_box_coords[0][0], bounding_box_coords[0][1],
-                                bounding_box_coords[1][0], bounding_box_coords[1][1])
-
-    def compute_ridges_coords(self):
-        """Computes the coordinates of the voronoi ridges. It uses the midpoint and the ridge vertex as vector basis. If
-        the ridge vertex is not in the convex hull, then we reverse the vector direction so that the cell has the right
-        shape."""
-        self.ridges_coords = {}
-        for p1, p2 in self.voronoi_obj.ridge_dict:
-            ridge_vertices = self.voronoi_obj.ridge_dict[(p1, p2)]
-            if ridge_vertices[0] < 0 <= ridge_vertices[1]:
-                c1 = self.voronoi_obj.vertices[ridge_vertices[1]]
-                c2 = (self.voronoi_obj.points[p1] + self.voronoi_obj.points[p2]) / 2.0
-            elif ridge_vertices[1] < 0 <= ridge_vertices[0]:
-                c1 = self.voronoi_obj.vertices[ridge_vertices[0]]
-                c2 = (self.voronoi_obj.points[p1] + self.voronoi_obj.points[p2]) / 2.0
-            else:
-                continue
-            ridge_coords = c2 - c1
-            if not self.hull_polygon.intersects(Point(c1)):
-                ridge_coords *= -1
-            ridge_coords /= np.linalg.norm(ridge_coords)
-            self.ridges_coords[(p1, p2)] = ridge_coords
-
-    def parse_regions(self, eta=1.0):
-        """Parsing of the voronoi regions using the coordinates of the voronoi ridges. It sets an extremity point at
-        infinity (represented by eta) along the ridge. In case of duplicate points, one of the cell will be empty and
-        the other won't be."""
-        nb_points = len(self.voronoi_obj.points)
-        self.all_regions_coords = []
-        for p in range(nb_points):
-            region = self.voronoi_obj.regions[self.voronoi_obj.point_region[p]]
-            region_coords = []
-            for ix in range(len(region)):
-                v1 = region[ix]
-                if v1 >= 0:
-                    region_coords.append([self.voronoi_obj.vertices[v1][0], self.voronoi_obj.vertices[v1][1]])
-                    continue
-                if (ix + 1) < len(region):
-                    v2 = region[ix + 1]
-                else:
-                    v2 = region[0]
-                if (ix - 1) >= 0:
-                    v0 = region[ix - 1]
-                else:
-                    v0 = region[-1]
-                if v0 != v2:
-                    first_ridge_candidates = [(p1, p2) for (p1, p2), vs in self.voronoi_obj.ridge_dict.items()
-                                              if (p in (p1, p2)) and (vs == [v0, -1] or vs == [-1, v0])]
-                    second_ridge_candidates = [(p1, p2) for (p1, p2), vs in self.voronoi_obj.ridge_dict.items()
-                                              if (p in (p1, p2)) and (vs == [v2, -1] or vs == [-1, v2])]
-                    if len(first_ridge_candidates) == 0 or len(second_ridge_candidates) == 0:
-                        # It means there is a duplicate in points
-                        region_coords = []  # This point region will be empty, but the duplicate region won't.
-                        break
-                    first_ridge = first_ridge_candidates[0]
-                    second_ridge = second_ridge_candidates[0]
-                else:
-                    matching_ridges = [(p1, p2) for p1, p2 in self.voronoi_obj.ridge_dict if (p1 == p or p2 == p) and
-                                       (self.voronoi_obj.ridge_dict[(p1, p2)] == [v0, -1] or
-                                        self.voronoi_obj.ridge_dict[(p1, p2)] == [-1, v0])]
-                    first_ridge = matching_ridges[0]
-                    second_ridge = matching_ridges[1]
-                first_interpolated_coord = self.voronoi_obj.vertices[v0] + self.ridges_coords[first_ridge] * eta
-                second_interpolated_coord = self.voronoi_obj.vertices[v2] + self.ridges_coords[second_ridge] * eta
-                region_coords.append([first_interpolated_coord[0], first_interpolated_coord[1]])
-                region_coords.append([second_interpolated_coord[0], second_interpolated_coord[1]])
-            self.all_regions_coords.append(np.array(region_coords))
-
-    def get_regions_as_polygons(self) -> list:
-        """Collection of all the voronoi cells coordinates and creation of shapely polygon with a bounding box trimming
-        step."""
-        all_polygons = []
-        for region in self.all_regions_coords:
-            if len(region) > 0:
-                polygon = Polygon(region)
-                trimmed_polygon = polygon.intersection(self.bounding_box)
-                all_polygons.append(trimmed_polygon)
-            else:
-                all_polygons.append(Polygon())
-        return all_polygons
-
-    def get_regions_as_gdf(self, crs=None) -> gpd.GeoDataFrame:
-        """Collect all the voronoi cells as shapely polygons and return them as a GeoDataFrame."""
-        voronoi_cells_gdf = gpd.GeoDataFrame(columns=['PointId', 'geometry'], crs=crs)
-        all_polygons = self.get_regions_as_polygons()
-        for point_id, polygon in enumerate(all_polygons):
-            voronoi_cells_gdf.loc[len(voronoi_cells_gdf)] = [point_id, polygon]
-        return voronoi_cells_gdf
-
-
 
 
 class PyVoronoiHelper:
@@ -134,7 +25,6 @@ class PyVoronoiHelper:
             self.pv.AddPoint(p)
         for s in segments:
             self.pv.AddSegment(s)
-        points_and_lines = points + [p for l in segments for p in l]
         self.pv.Construct()
         self.discretization_tolerance = 10 / scaling_factor
         self.bounding_box_coords = bounding_box_coords
