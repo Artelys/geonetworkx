@@ -50,14 +50,19 @@ class PyVoronoiHelper:
             if len(coords) > 2:
                 polygon = Polygon(coords)
                 if not polygon.is_valid:
-                    repaired_polygon = self.repair_bowtie_polygon(polygon)
-                    if not repaired_polygon.is_valid:
-                        polygon = polygon.buffer(0.0)
-                    else:
-                        polygon = repaired_polygon
+                    polygon = self.repair_polygon(polygon)
                 trimmed_polygon = polygon.intersection(bounding_box)
                 cells_as_polygons[i] = trimmed_polygon
         return cells_as_polygons
+
+    @staticmethod
+    def repair_polygon(polygon: Union[Polygon, MultiPolygon]) -> Union[Polygon, MultiPolygon]:
+        """Repair an invalid polygon. It works in most cases but it has no guarantee of success."""
+        bowtie_repaired_polygon = PyVoronoiHelper.repair_bowtie_polygon(polygon)
+        if not bowtie_repaired_polygon.is_valid:
+            return polygon.buffer(0.0)
+        else:
+            return bowtie_repaired_polygon
 
     @staticmethod
     def repair_bowtie_polygon(polygon: Union[Polygon, MultiPolygon]) -> MultiPolygon:
