@@ -6,7 +6,7 @@
 """
 import numpy as np
 from shapely.geometry import MultiLineString, LineString, box, Polygon, MultiPolygon
-from shapely.ops import linemerge
+from shapely.ops import linemerge, polygonize
 import geopandas as gpd
 from typing import Union
 from collections import defaultdict
@@ -26,7 +26,7 @@ class PyVoronoiHelper:
         for s in segments:
             self.pv.AddSegment(s)
         self.pv.Construct()
-        self.discretization_tolerance = 10 / scaling_factor
+        self.discretization_tolerance = 10000 / scaling_factor
         self.bounding_box_coords = bounding_box_coords
 
     def get_cells_as_gdf(self) -> gpd.GeoDataFrame:
@@ -50,10 +50,22 @@ class PyVoronoiHelper:
             if len(coords) > 2:
                 polygon = Polygon(coords)
                 if not polygon.is_valid:
-                    polygon = polygon.buffer(0.0)  # TODO: this doesn't fix bowtie case
+                    repaired_polygon = self.repair_bowtie_polygon(polygon)
+                    if not repaired_polygon.is_valid:
+                        polygon = polygon.buffer(0.0)
+                    else:
+                        polygon = repaired_polygon
                 trimmed_polygon = polygon.intersection(bounding_box)
                 cells_as_polygons[i] = trimmed_polygon
         return cells_as_polygons
+
+    @staticmethod
+    def repair_bowtie_polygon(polygon: Union[Polygon, MultiPolygon]) -> MultiPolygon:
+        """Repair an invalid polygon for the 'bowtie' case."""
+        p_ext = polygon.exterior
+        self_intersection = p_ext.intersection(p_ext)
+        mp = MultiPolygon(polygonize(self_intersection))
+        return mp
 
     def get_cells_coordiates(self, eta=1.0, discretization_tolerance=0.05) -> dict:
         """"Parse the results of ``pyvoronoi`` to compute the voronoi cells coordinates. The infinite ridges are
@@ -161,17 +173,23 @@ def split_as_simple_segments(lines: list, tol=1e-7) -> defaultdict:
     :param tol: Tolerance to test if a line is a sub line of another one.
     :return: A dictionary mapping for each input line index, the list of simple segments.
     """
-    split_lines = defaultdict(list)
+    split_lines_mapping = defaultdict(list)
     all_split_lines = split_linestring_as_simple_linestrings(MultiLineString(lines))
-    lines_stack = [(i, l) for i, l in enumerate(lines)]
-    for sub_line in all_split_lines:
-        for j, (i, line) in enumerate(lines_stack):
-            if line.buffer(tol, 1).contains(sub_line):
-                split_lines[i].append(sub_line)
-                del lines_stack[j]
-                lines_stack.insert(0, (i, line))
+    j = 0
+    sub_line = all_split_lines[j]
+    nb_simple_segments = len(all_split_lines)
+    end_mapping = False
+    for i, line in enumerate(lines):
+        while line.buffer(tol, 1).contains(sub_line):
+            split_lines_mapping[i].append(sub_line)
+            j += 1
+            if j >= nb_simple_segments:
+                end_mapping = True
                 break
-    return split_lines
+            sub_line = all_split_lines[j]
+        if end_mapping:
+            break
+    return split_lines_mapping
 
 
 def compute_voronoi_cells_from_lines(lines: list, scaling_factor=1e7) -> gpd.GeoDataFrame:
