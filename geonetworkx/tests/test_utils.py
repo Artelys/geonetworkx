@@ -63,6 +63,3 @@ class TestUtils(unittest.TestCase):
         path_lengths = nx.single_source_dijkstra_path_length(ego_graph, source, weight="length")
         for n, length in path_lengths.items():
             assert_less_equal(length, limit, "A path in the ego graph is too long: %f > %f" % (length, limit))
-
-
-
