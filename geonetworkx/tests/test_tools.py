@@ -147,14 +147,36 @@ class TestTools(unittest.TestCase):
                 for e in edges:
                     assert_in(e, merged_graph.edges)
 
-    """
-    def test_get_nodes_cells(self):
-        import os, sys
-        os.chdir("geonetworkx")
-        sys.path.append(os.getcwd())
-        from geonetworkx import settings
-        #settings.DISCRETIZATION_TOLERANCE = 5e-4
-        graph = gnx_tu.get_random_geograph_with_wgs84_scale(50, graph_type=gnx.GeoMultiDiGraph)
-        from geonetworkx.tools import get_nodes_cells
-        get_nodes_cells(graph)
-    """
+
+    def test_isochrone(self):
+        # Read data
+        mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_mdg.gpickle"))
+        mg = mdg.to_undirected()
+        gmg = gnx.read_geograph_with_coordinates_attributes(mg)
+        gnx.fill_edges_missing_geometry_attributes(gmg)
+        # Compute the ego graph
+        source = 312173744
+        limit = 100 # meters
+        gnx.add_ego_boundary_nodes(gmg, source, limit, distance="length")
+        ego_gmg = gnx.extended_ego_graph(gmg, source, limit, distance="length")
+        edge_as_lines = gmg.get_edges_as_line_series()
+        lines = list(edge_as_lines)
+        tolerance = 1e-7
+        edge_voronoi_cells = gnx.compute_voronoi_cells_from_lines(lines, scaling_factor=1/tolerance)
+        edge_voronoi_cells.set_index("id", inplace=True)
+        isochrone_polygons = []
+        for e, edge in enumerate(edge_as_lines.index):
+            if ego_gmg.has_edge(*edge):
+                isochrone_polygons.append(edge_voronoi_cells.at[e, "geometry"])
+        from shapely.ops import cascaded_union
+        isochrone_polygon = cascaded_union(isochrone_polygons)
+        isochrone_polygon.to_wkt()
+        # TODO: compute edges buffer with "triangle", then intersect it
+
+
+
+
+
+
+
+
