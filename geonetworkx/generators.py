@@ -27,6 +27,9 @@ def extended_ego_graph(G: GeoGraph, n, radius=1, center=True, undirected=False, 
 
     .. math::
         d(u, b) =  \\frac{\\text{radius} - d(n, u)}{d(u, v)}
+
+    Furthermore, the original edge (the one that have been interpolated) id can be retrieved in the ego graph through
+    the ``settings.ORIGINAL_EDGE_KEY`` attribute that is set on boundary edges.
     """
     ego_graph = nx.ego_graph(G, n, radius, center, undirected, distance)
     if undirected:
@@ -66,7 +69,8 @@ def extended_ego_graph(G: GeoGraph, n, radius=1, center=True, undirected=False, 
             b_node_name = settings.BOUNDARY_NODE_PREFIX + str(u) + '_' + str(e[1])
             nodes_to_add.append((b_node_name, {G.nodes_geometry_key: b_node_point}))
             new_edge_geometry = split_line(edge_geometry, interpolation_distance)[line_part_index]
-            edges_to_add.append((u, b_node_name, {G.edges_geometry_key: new_edge_geometry}))
+            edges_to_add.append((u, b_node_name, {G.edges_geometry_key: new_edge_geometry,
+                                                  settings.ORIGINAL_EDGE_KEY: e}))
     # Adding nodes and edges at the end
     ego_graph.add_nodes_from(nodes_to_add)
     ego_graph.add_edges_from(edges_to_add)
