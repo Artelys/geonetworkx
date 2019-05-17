@@ -28,3 +28,6 @@ from geonetworkx.settings import *
 
 import geonetworkx.tools
 from geonetworkx.tools import *
+
+import geonetworkx.generators
+from geonetworkx.generators import *
