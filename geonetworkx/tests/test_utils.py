@@ -9,10 +9,11 @@
 import networkx as nx
 import geonetworkx as gnx
 import unittest
-from nose.tools import assert_true
+from nose.tools import assert_true, assert_equals, assert_less_equal
 from nose.plugins.attrib import attr
 import geonetworkx.testing.utils as gnx_tu
 from geonetworkx.utils.voronoi_utils import *
+from geonetworkx.generators import extended_ego_graph
 import os
 
 
@@ -47,6 +48,21 @@ class TestUtils(unittest.TestCase):
                     break
             if not cell_found:
                 assert_true(False, "A edge geometry '%s' is not in any voronoi cells" % str(e))
+
+    def test_extented_ego_graph(self):
+        mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_mdg.gpickle"))
+        mg = mdg.to_undirected()
+        gmg = gnx.read_geograph_with_coordinates_attributes(mg)
+        gnx.fill_edges_missing_geometry_attributes(gmg)
+        gnx.fill_length_attribute(gmg, "length", only_missing=True)
+        source = 312173744
+        limit = 100 # meters
+        ego_graph = extended_ego_graph(gmg, source, radius=limit, center=True, undirected=False, distance="length")
+        ccs = list(nx.connected_components(ego_graph))
+        assert_equals(len(ccs), 1, "The ego graph has several connected components")
+        path_lengths = nx.single_source_dijkstra_path_length(ego_graph, source, weight="length")
+        for n, length in path_lengths.items():
+            assert_less_equal(length, limit, "A path in the ego graph is too long: %f > %f" % (length, limit))
 
 
 
