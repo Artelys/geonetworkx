@@ -65,10 +65,10 @@ def extended_ego_graph(G: GeoGraph, n, radius=1, center=True, undirected=False, 
     :return: The resulting graph with node, edge, and graph attributes copied. Note that the returned graph is not a
         subgraph of the input graph because it will have boundary nodes in addition.
 
-    It means that a node is added on each edge leaving the ego-graph to represent the furthest
-    reachable point on this edge. The boundary node is added at given node using a linear interpolation. A boundary
-    node :math:`b` will be added on the edge :math:`(u, v)` if :math:`d(n, u) < radius < d(n, v)`. The boundary will be
-    placed along the edge geometry at the following distance:
+    It means that a node is added on each edge leaving the ego-graph to represent the furthest reachable point on this
+    edge. The boundary node is added at given node using a linear interpolation. A boundary node :math:`b` will be
+    added on the edge :math:`(u, v)` if :math:`d(n, u) < radius < d(n, v)`. The boundary will be placed along the edge
+    geometry at the following distance:
 
     .. math::
         d(u, b) =  \\frac{\\text{radius} - d(n, u)}{d(u, v)}
@@ -94,8 +94,8 @@ def extended_ego_graph(G: GeoGraph, n, radius=1, center=True, undirected=False, 
 
 def add_ego_boundary_nodes(graph: GeoGraph, n, radius, distance, undirected=False):
     """Modify the given graph to add boundary nodes at exact radius distance. An edge :math:`(u, v)` is a boundary edge
-     if :math:`(u, v)` if :math:`d(n, u) < radius < d(n, v)`. A boundary node is added on the edge to represent the ego-
-     graph limit. See ``gnx.extended_ego_graph`` for more info.
+    if :math:`(u, v)` if :math:`d(n, u) < radius < d(n, v)`. A boundary node is added on the edge to represent the ego-
+    graph limit. See ``gnx.extended_ego_graph`` for more info.
 
     :param graph: Input graph to modify
     :param n: A single source node
@@ -117,9 +117,3 @@ def add_ego_boundary_nodes(graph: GeoGraph, n, radius, distance, undirected=Fals
         edges_to_add.extend(ego_edges)
         graph.remove_edge(*e)
     graph.add_edges_from(edges_to_add)
-
-
-
-
-
-
