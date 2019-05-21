@@ -150,13 +150,20 @@ class TestTools(unittest.TestCase):
 
     def test_isochrone(self):
         # Read data
-        mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_mdg.gpickle"))
+        import osmnx as ox
+        from shapely.wkt import loads
+        from geonetworkx.utils import get_line_start
+        # p = loads("Polygon ((5.73294613547621612 45.19383977073096048, 5.73294613547621612 45.20657728923688978, 5.74594209638661457 45.20657728923688978, 5.74594209638661457 45.19383977073096048, 5.73294613547621612 45.19383977073096048))")
+        # mdg = ox.graph_from_polygon(p)
+        mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble500_mdg.gpickle"))
         mg = mdg.to_undirected()
         gmg = gnx.read_geograph_with_coordinates_attributes(mg)
         gnx.fill_edges_missing_geometry_attributes(gmg)
+        gnx.remove_self_loop_edges(gmg)
         # Compute the ego graph
+        # source = 2192254241
         source = 312173744
-        limit = 100 # meters
+        limit = 400 # meters
         gnx.add_ego_boundary_nodes(gmg, source, limit, distance="length")
         ego_gmg = gnx.extended_ego_graph(gmg, source, limit, distance="length")
         edge_as_lines = gmg.get_edges_as_line_series()
@@ -167,9 +174,19 @@ class TestTools(unittest.TestCase):
         isochrone_polygons = []
         for e, edge in enumerate(edge_as_lines.index):
             if ego_gmg.has_edge(*edge):
-                isochrone_polygons.append(edge_voronoi_cells.at[e, "geometry"])
+                p = edge_voronoi_cells.at[e, "geometry"]
+                if any("boundary" in str(n) for n in edge):
+                    boundary_line = edge_as_lines[edge]
+                    if get_line_start(gmg, edge, boundary_line) != edge[0]:
+                        boundary_line = LineString(reversed(boundary_line.coords))
+                    edge_buffer_pol = boundary_edge_buffer(boundary_line)
+                    isochrone_polygons.append(p.intersection(edge_buffer_pol))
+                else:
+                    isochrone_polygons.append(p)
         from shapely.ops import cascaded_union
         isochrone_polygon = cascaded_union(isochrone_polygons)
+        tolerance = 1e-8  # TODO: as param
+        isochrone_polygon = isochrone_polygon.buffer(tolerance)
         isochrone_polygon.to_wkt()
         # TODO: compute edges buffer with "triangle", then intersect it
 
