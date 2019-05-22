@@ -158,6 +158,7 @@ def isochrone_polygon_with_alpha_shape(graph: GeoGraph, source, limit,
                                        weight="length",
                                        alpha_quantile=95,
                                        tolerance=1e-7) -> GenericPolygon:
+    """TODO: docstring"""
     # Compute the ego-graph
     ego_graph = gnx.extended_ego_graph(graph, source, limit, distance=weight)
     edge_as_lines = ego_graph.get_edges_as_line_series()
