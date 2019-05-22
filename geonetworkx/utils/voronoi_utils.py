@@ -228,7 +228,7 @@ def compute_voronoi_cells_from_lines(lines: list, scaling_factor=1e7) -> gpd.Geo
                 continue
             merged_polygon = MultiPolygon(merged_polygon)
         lines_cells[i] = merged_polygon
-    return gpd.GeoSeries(lines_cells)
+    return gpd.GeoSeries(lines_cells)  # TODO: return a dict because we cannot set CRS
 
 
 

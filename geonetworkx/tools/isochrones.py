@@ -23,18 +23,17 @@ def isochrone_polygon(graph: GeoGraph, source, limit, weight="length", tolerance
     working_graph = graph.copy()
     # Compute the ego-graph
     gnx.add_ego_boundary_nodes(working_graph, source, limit, distance=weight)
-    ego_gmg = gnx.extended_ego_graph(working_graph, source, limit, distance=weight)
+    ego_graph = gnx.extended_ego_graph(working_graph, source, limit, distance=weight)
     # Compute edges voronoi cells
     edge_as_lines = working_graph.get_edges_as_line_series()
     lines = list(edge_as_lines)
     edge_voronoi_cells = gnx.compute_voronoi_cells_from_lines(lines, scaling_factor=1 / tolerance)
-    edge_voronoi_cells.set_index("id", inplace=True)
     # Set ego-graph edges cells
     isochrone_polygons = []
     for e, edge in enumerate(edge_as_lines.index):
-        if ego_gmg.has_edge(*edge):
+        if ego_graph.has_edge(*edge):
             p = edge_voronoi_cells.at[e]
-            if any("boundary" in str(n) for n in edge):  # TODO: find a clean way to do this
+            if not graph.has_edge(*edge):  # For boundary edges
                 boundary_line = edge_as_lines[edge]
                 if get_line_start(working_graph, edge, boundary_line) != edge[0]:
                     boundary_line = LineString(reversed(boundary_line.coords))
@@ -79,8 +78,6 @@ def get_point_boundary_buffer_polygon(point_coords: list, radius: float, segment
         coords.append(point_coords + radius * np.array([math.cos(angle), math.sin(angle)]))
         angle -= theta
     return Polygon(coords)
-
-
 
 
 

@@ -188,7 +188,6 @@ class TestTools(unittest.TestCase):
         tolerance = 1e-8  # TODO: as param
         isochrone_polygon = isochrone_polygon.buffer(tolerance)
         isochrone_polygon.to_wkt()
-        # TODO: compute edges buffer with "triangle", then intersect it
 
 
 
