@@ -178,4 +178,3 @@ def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
     merged_graph = compose(other_graph, merged_graph)
     if not inplace:
         return merged_graph
-
