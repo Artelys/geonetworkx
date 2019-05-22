@@ -215,7 +215,7 @@ def write_nodes_to_geofile(graph: GeoGraph, file_name, driver="GPKG", fiona_cast
     gdf_nodes.to_file(file_name, driver=driver)
 
 
-def write_geofile(graph: GeoGraph, path='./', nodes=True, edges=True, driver="GPKG", fiona_cast=False):
+def write_geofile(graph: GeoGraph, path='./', nodes=True, edges=True, driver="GPKG", fiona_cast=True):
     """
     Export a networkx graph as a geographic file.
 
