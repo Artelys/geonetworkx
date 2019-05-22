@@ -5,8 +5,8 @@
     Python Version: 3.6
 """
 import numpy as np
-from shapely.geometry import MultiLineString, LineString, box, Polygon, MultiPolygon
-from shapely.ops import linemerge, polygonize
+from shapely.geometry import MultiLineString, LineString, box, Polygon, MultiPolygon, GeometryCollection
+from shapely.ops import linemerge, polygonize, cascaded_union
 import geopandas as gpd
 from typing import Union
 from collections import defaultdict
@@ -197,7 +197,7 @@ def split_as_simple_segments(lines: list, tol=1e-7) -> defaultdict:
     return split_lines_mapping
 
 
-def compute_voronoi_cells_from_lines(lines: list, scaling_factor=1e7) -> gpd.GeoDataFrame:
+def compute_voronoi_cells_from_lines(lines: list, scaling_factor=1e7) -> gpd.GeoSeries:
     """Compute the voronoi cells of given generic lines. Input linestrings can be not simple.
 
     :param lines: List of ``LineString``
@@ -214,9 +214,7 @@ def compute_voronoi_cells_from_lines(lines: list, scaling_factor=1e7) -> gpd.Geo
     gdf = pvh.get_cells_as_gdf()
     gdf = gdf[list(map(lambda i: isinstance(i, Polygon), gdf["geometry"]))].copy()
     gdf["site"] = [pvh.pv.GetCell(c).site for c in gdf["id"]]
-    gdf_lines = gpd.GeoDataFrame(columns=["id", "geometry"])
-    from shapely.ops import cascaded_union
-    from shapely.geometry import GeometryCollection
+    lines_cells = dict()
     ct = 0
     for i, line in enumerate(lines):
         line_polygons = []
@@ -229,8 +227,8 @@ def compute_voronoi_cells_from_lines(lines: list, scaling_factor=1e7) -> gpd.Geo
             if len(merged_polygon) == 0:
                 continue
             merged_polygon = MultiPolygon(merged_polygon)
-        gdf_lines.loc[len(gdf_lines)] = [i, merged_polygon]
-    return gdf_lines
+        lines_cells[i] = merged_polygon
+    return gpd.GeoSeries(lines_cells)
 
 
 def get_segment_boundary_buffer_polygon(segment_coords: list, radius: float, residual_radius: float) -> Polygon:

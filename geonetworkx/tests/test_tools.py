@@ -174,7 +174,7 @@ class TestTools(unittest.TestCase):
         isochrone_polygons = []
         for e, edge in enumerate(edge_as_lines.index):
             if ego_gmg.has_edge(*edge):
-                p = edge_voronoi_cells.at[e, "geometry"]
+                p = edge_voronoi_cells.at[e]
                 if any("boundary" in str(n) for n in edge):
                     boundary_line = edge_as_lines[edge]
                     if get_line_start(gmg, edge, boundary_line) != edge[0]:
