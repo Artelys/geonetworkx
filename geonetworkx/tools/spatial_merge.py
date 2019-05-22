@@ -179,7 +179,3 @@ def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
     if not inplace:
         return merged_graph
 
-
-def isochrone_subgraph(graph:GeoGraph, source, limit=500, weight_attr="length"):
-    import networkx as nx
-    dist, paths = nx.single_source_dijkstra(graph, source, cutoff=limit, weight=weight_attr)
