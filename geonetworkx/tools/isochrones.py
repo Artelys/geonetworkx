@@ -25,7 +25,7 @@ def get_edges_voronoi_cells(graph: GeoGraph, tolerance=1e-7) -> gpd.GeoSeries:
     edge_as_lines = graph.get_edges_as_line_series()
     lines = list(edge_as_lines)
     edge_cells = gnx.compute_voronoi_cells_from_lines(lines, tolerance)
-    edge_cells_as_series = gpd.GeoSeries({e: cell for e, cell in zip(edge_as_lines.index), edge_cells})
+    edge_cells_as_series = gpd.GeoSeries({e: cell for e, cell in zip(edge_as_lines.index, edge_cells)})
     edge_cells_as_series.crs = graph.crs
     return edge_cells_as_series
 
@@ -126,7 +126,8 @@ def get_alpha_shape_polygon(points: list, quantile: int) -> GenericPolygon:
     should be added to the returned polygon.
     This is adapted from Sean Gillies code (https://sgillies.net/2012/10/13/the-fading-shape-of-alpha.html).
     """
-    tri = Delaunay(np.array(points))
+    points = np.asarray(points)
+    tri = Delaunay(points)
     polygons = []
     # loop over triangles:
     # ia, ib, ic = indices of corner points of the triangle
@@ -142,10 +143,25 @@ def get_alpha_shape_polygon(points: list, quantile: int) -> GenericPolygon:
         # Semiperimeter of triangle
         s = (a + b + c) / 2.0
         # Area of triangle by Heron's formula
-        area = math.sqrt(s * (s - a) * (s - b) * (s - c))
+        area = math.sqrt(np.clip(s * (s - a) * (s - b) * (s - c), 0.0, float("inf")))
+        if area <= 0.0:
+            continue
         circum_r = a * b * c / (4.0 * area)
         circum_radius.append(circum_r)
         polygons.append(Polygon([pa, pb, pc]))
     inv_alpha = np.percentile(circum_radius, quantile)
     filtered_polygons = [p for i, p in enumerate(polygons) if circum_radius[i] <= inv_alpha]
     return cascaded_union(filtered_polygons)
+
+
+def isochrone_polygon_with_alpha_shape(graph: GeoGraph, source, limit,
+                                       weight="length",
+                                       alpha_quantile=95,
+                                       tolerance=1e-7) -> GenericPolygon:
+    # Compute the ego-graph
+    ego_graph = gnx.extended_ego_graph(graph, source, limit, distance=weight)
+    edge_as_lines = ego_graph.get_edges_as_line_series()
+    discretized_lines, _ = gnx.discretize_lines(edge_as_lines)
+    alpha_shape = get_alpha_shape_polygon(discretized_lines, alpha_quantile)
+    alpha_shape = alpha_shape.buffer(tolerance)
+    return alpha_shape
