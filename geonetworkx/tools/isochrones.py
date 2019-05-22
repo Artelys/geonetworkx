@@ -7,6 +7,7 @@
 """
 import numpy as np
 from geonetworkx.geograph import GeoGraph
+from geonetworkx.utils import get_line_start
 import geonetworkx as gnx
 from shapely.geometry import Polygon, LineString, MultiPolygon
 from shapely.ops import cascaded_union
@@ -15,10 +16,36 @@ from typing import Union
 from scipy.spatial import Delaunay
 
 
-def isochrone_subgraph(graph:GeoGraph, source, limit=500, weight_attr="length"):
-    import networkx as nx
-    dist, paths = nx.single_source_dijkstra(graph, source, cutoff=limit, weight=weight_attr)
+GenericPolygon = Union[Polygon, MultiPolygon]
 
+
+def isochrone_polygon(graph: GeoGraph, source, limit, weight="length", tolerance=1e-7) -> GenericPolygon:
+    working_graph = graph.copy()
+    # Compute the ego-graph
+    gnx.add_ego_boundary_nodes(working_graph, source, limit, distance=weight)
+    ego_gmg = gnx.extended_ego_graph(working_graph, source, limit, distance=weight)
+    # Compute edges voronoi cells
+    edge_as_lines = working_graph.get_edges_as_line_series()
+    lines = list(edge_as_lines)
+    edge_voronoi_cells = gnx.compute_voronoi_cells_from_lines(lines, scaling_factor=1 / tolerance)
+    edge_voronoi_cells.set_index("id", inplace=True)
+    # Set ego-graph edges cells
+    isochrone_polygons = []
+    for e, edge in enumerate(edge_as_lines.index):
+        if ego_gmg.has_edge(*edge):
+            p = edge_voronoi_cells.at[e]
+            if any("boundary" in str(n) for n in edge):  # TODO: find a clean way to do this
+                boundary_line = edge_as_lines[edge]
+                if get_line_start(working_graph, edge, boundary_line) != edge[0]:
+                    boundary_line = LineString(reversed(boundary_line.coords))
+                edge_buffer_pol = boundary_edge_buffer(boundary_line)
+                isochrone_polygons.append(p.intersection(edge_buffer_pol))
+            else:
+                isochrone_polygons.append(p)
+    # Merge as ischrone polygon
+    isochrone_polygon = cascaded_union(isochrone_polygons)
+    isochrone_polygon = isochrone_polygon.buffer(tolerance)
+    return isochrone_polygon
 
 
 
@@ -57,7 +84,7 @@ def get_point_boundary_buffer_polygon(point_coords: list, radius: float, segment
 
 
 
-def boundary_edge_buffer(line: LineString) -> Union[Polygon, MultiPolygon]:
+def boundary_edge_buffer(line: LineString) -> GenericPolygon:
     """ Return the edge buffer polygon on the oriented line. This represented the area where all points are reachable
     starting from the line first extremity and using the closest edge projection rule."""
     radius = line.length
@@ -75,9 +102,18 @@ def boundary_edge_buffer(line: LineString) -> Union[Polygon, MultiPolygon]:
 
 
 
+def get_alpha_shape_polygon(points: list, quantile: int) -> GenericPolygon:
+    """Return the alpha-shape polygon formed by the given points. Alpha parameter is determined using a quantile of
+    circumradius of Delaunay triangles.
 
+    :param points: List of input points (2D)
+    :param quantile: Quantile on circumradius to determine alpha (100 returns the convex hull,
+        0 returns an empty polygon). ``0 <= quantile <= 100``.
+    :return: The polygon formed by all triangles having a circumradius inferior or equal to :math:`1/\\alpha`.
 
-def get_alpha_shape_polygon(points: list, quantile: int) -> Union[Polygon, MultiPolygon]:
+    Note that this does not return the exhaustive alpha-shape for low quantiles, the minimum spanning tree LineString
+    should be added to the returned polygon.
+    """
     tri = Delaunay(np.array(points))
     polygons = []
     # loop over triangles:
@@ -88,9 +124,9 @@ def get_alpha_shape_polygon(points: list, quantile: int) -> Union[Polygon, Multi
         pb = points[ib]
         pc = points[ic]
         # Lengths of sides of triangle
-        a = math.sqrt((pa[0] - pb[0]) ** 2 + (pa[1] - pb[1]) ** 2)
-        b = math.sqrt((pb[0] - pc[0]) ** 2 + (pb[1] - pc[1]) ** 2)
-        c = math.sqrt((pc[0] - pa[0]) ** 2 + (pc[1] - pa[1]) ** 2)
+        a = gnx.euclidian_distance_coordinates(pa, pb)
+        b = gnx.euclidian_distance_coordinates(pb, pc)
+        c = gnx.euclidian_distance_coordinates(pc, pa)
         # Semiperimeter of triangle
         s = (a + b + c) / 2.0
         # Area of triangle by Heron's formula
@@ -98,6 +134,6 @@ def get_alpha_shape_polygon(points: list, quantile: int) -> Union[Polygon, Multi
         circum_r = a * b * c / (4.0 * area)
         circum_radius.append(circum_r)
         polygons.append(Polygon([pa, pb, pc]))
-    alpha = np.percentile(circum_radius, quantile)
-    filtered_polygons = [p for i, p in enumerate(polygons) if circum_radius[i] <= alpha]
+    inv_alpha = np.percentile(circum_radius, quantile)
+    filtered_polygons = [p for i, p in enumerate(polygons) if circum_radius[i] <= inv_alpha]
     return cascaded_union(filtered_polygons)
