@@ -39,7 +39,7 @@ class TestUtils(unittest.TestCase):
         edge_as_lines = gmg.get_edges_as_line_series()
         lines = list(edge_as_lines)
         tolerance = 1e-7
-        res = compute_voronoi_cells_from_lines(lines, scaling_factor=1/tolerance)
+        res = compute_voronoi_cells_from_lines(lines, tolerance)
         for e, line in edge_as_lines.items():
             cell_found = False
             for p in res["geometry"]:

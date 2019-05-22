@@ -14,52 +14,31 @@ from shapely.ops import cascaded_union
 import math
 from typing import Union
 from scipy.spatial import Delaunay
+import geopandas as gpd
 
 
 GenericPolygon = Union[Polygon, MultiPolygon]
 
 
-def isochrone_polygon(graph: GeoGraph, source, limit, weight="length", tolerance=1e-7) -> GenericPolygon:
-    working_graph = graph.copy()
-    # Compute the ego-graph
-    gnx.add_ego_boundary_nodes(working_graph, source, limit, distance=weight)
-    ego_graph = gnx.extended_ego_graph(working_graph, source, limit, distance=weight)
-    # Compute edges voronoi cells
-    edge_as_lines = working_graph.get_edges_as_line_series()
+def get_edges_voronoi_cells(graph: GeoGraph, tolerance=1e-7) -> gpd.GeoSeries:
+    """Return edge voronoi cells as `GeoSeries`."""
+    edge_as_lines = graph.get_edges_as_line_series()
     lines = list(edge_as_lines)
-    edge_voronoi_cells = gnx.compute_voronoi_cells_from_lines(lines, scaling_factor=1 / tolerance)
-    # Set ego-graph edges cells
-    isochrone_polygons = []
-    for e, edge in enumerate(edge_as_lines.index):
-        if ego_graph.has_edge(*edge):
-            p = edge_voronoi_cells.at[e]
-            if not graph.has_edge(*edge):  # For boundary edges
-                boundary_line = edge_as_lines[edge]
-                if get_line_start(working_graph, edge, boundary_line) != edge[0]:
-                    boundary_line = LineString(reversed(boundary_line.coords))
-                edge_buffer_pol = boundary_edge_buffer(boundary_line)
-                isochrone_polygons.append(p.intersection(edge_buffer_pol))
-            else:
-                isochrone_polygons.append(p)
-    # Merge as ischrone polygon
-    isochrone_polygon = cascaded_union(isochrone_polygons)
-    isochrone_polygon = isochrone_polygon.buffer(tolerance)
-    return isochrone_polygon
-
-
-
-
+    edge_cells = gnx.compute_voronoi_cells_from_lines(lines, tolerance)
+    edge_cells_as_series = gpd.GeoSeries({e: cell for e, cell in zip(edge_as_lines.index), edge_cells})
+    edge_cells_as_series.crs = graph.crs
+    return edge_cells_as_series
 
 
 def get_segment_boundary_buffer_polygon(segment_coords: list, radius: float, residual_radius: float) -> Polygon:
+    """Return a segment boundary polygon using given radius. It represents all reachable points from the first
+    extremity of the segment. The returned polygon is a trapeze."""
     segment_direction = [segment_coords[1][0] - segment_coords[0][0], segment_coords[1][1] - segment_coords[0][1]]
     orthogonal_dir = np.array([- segment_direction[1], segment_direction[0]])
     orthogonal_dir /= np.linalg.norm(orthogonal_dir)
     top_points = [segment_coords[0] + orthogonal_dir * radius, segment_coords[1] + orthogonal_dir * residual_radius]
     bottom_points = [segment_coords[0] - orthogonal_dir * radius, segment_coords[1] - orthogonal_dir * residual_radius]
     return Polygon(top_points + list(reversed(bottom_points)))
-
-
 
 
 def get_point_boundary_buffer_polygon(point_coords: list, radius: float, segment_direction: list, resolution=16) -> Polygon:
@@ -80,7 +59,6 @@ def get_point_boundary_buffer_polygon(point_coords: list, radius: float, segment
     return Polygon(coords)
 
 
-
 def boundary_edge_buffer(line: LineString) -> GenericPolygon:
     """ Return the edge buffer polygon on the oriented line. This represented the area where all points are reachable
     starting from the line first extremity and using the closest edge projection rule."""
@@ -96,6 +74,42 @@ def boundary_edge_buffer(line: LineString) -> GenericPolygon:
         boundary_polygons.append(get_point_boundary_buffer_polygon(segment_coords[0], radius, segment_direction))
         radius = residual_radius
     return cascaded_union(boundary_polygons)
+
+
+def isochrone_polygon(graph: GeoGraph, source, limit, weight="length", tolerance=1e-7) -> GenericPolygon:
+    """Return a polygon approximating the isochrone set in the geograph.
+
+    :param graph: Graph representing possible routes.
+    :param source: Source node from where distance is computed
+    :param limit: Isochrone limit (e.g. 100 meters, 5 minutes, depending on ``weight`` unit).
+    :param weight: Weight attribute on edges to compute distances (edge weights should be non-negative).
+    :param tolerance: Tolerance to compute Voronoi cells.
+    :return: A polygon representing all reachable points within the given limit from the source node.
+    """
+    working_graph = graph.copy()
+    # Compute the ego-graph
+    gnx.add_ego_boundary_nodes(working_graph, source, limit, distance=weight)
+    ego_graph = gnx.extended_ego_graph(working_graph, source, limit, distance=weight)
+    # Compute edges voronoi cells
+    edge_voronoi_cells = get_edges_voronoi_cells(working_graph, tolerance)
+    # Set ego-graph edges cells
+    isochrone_polygons = []
+    for e, edge in enumerate(edge_voronoi_cells.index):
+        if ego_graph.has_edge(*edge):
+            p = edge_voronoi_cells.at[e]
+            if not graph.has_edge(*edge):  # For boundary edges
+                boundary_line = working_graph.edges[edge][working_graph.edges_geometry_key]
+                if get_line_start(working_graph, edge, boundary_line) != edge[0]:
+                    boundary_line = LineString(reversed(boundary_line.coords))
+                edge_buffer_pol = boundary_edge_buffer(boundary_line)
+                isochrone_polygons.append(p.intersection(edge_buffer_pol))
+            else:
+                isochrone_polygons.append(p)
+    # Merge as ischrone polygon
+    isochrone_polygon = cascaded_union(isochrone_polygons)
+    isochrone_polygon = isochrone_polygon.buffer(tolerance)
+    return isochrone_polygon
+
 
 
 

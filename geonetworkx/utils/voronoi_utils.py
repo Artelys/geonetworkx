@@ -197,24 +197,24 @@ def split_as_simple_segments(lines: list, tol=1e-7) -> defaultdict:
     return split_lines_mapping
 
 
-def compute_voronoi_cells_from_lines(lines: list, scaling_factor=1e7) -> gpd.GeoSeries:
+def compute_voronoi_cells_from_lines(lines: list, tolerance=1e-7) -> list:
     """Compute the voronoi cells of given generic lines. Input linestrings can be not simple.
 
     :param lines: List of ``LineString``
-    :param scaling_factor: Resolution for the voronoi cells computation (Two points will be considered equal if their
-        coordinates are equal when rounded at ``1/scaling_factor``).
+    :param tolerance: Tolerance for the voronoi cells computation (Two points will be considered equal if their
+        coordinates are equal when rounded at ``tolerance``).
     :return: A `GeoDataFrame` with cells geometries. A column named `id` referencing the index of the associated
         input geometry.
     """
-    simple_segments_mapping = split_as_simple_segments(lines, 1 / scaling_factor)
+    simple_segments_mapping = split_as_simple_segments(lines, tolerance) # TODO: replace scaling factor by tolerance
     all_segments = [list(s.coords) for i in range(len(lines)) for s in simple_segments_mapping[i]]
     bounds = MultiLineString(lines).bounds
     bb = [[bounds[0], bounds[1]], [bounds[2], bounds[3]]]
-    pvh = PyVoronoiHelper([], segments=all_segments, bounding_box_coords=bb, scaling_factor=scaling_factor)
+    pvh = PyVoronoiHelper([], segments=all_segments, bounding_box_coords=bb, scaling_factor=1 / tolerance)
     gdf = pvh.get_cells_as_gdf()
     gdf = gdf[list(map(lambda i: isinstance(i, Polygon), gdf["geometry"]))].copy()
     gdf["site"] = [pvh.pv.GetCell(c).site for c in gdf["id"]]
-    lines_cells = dict()
+    lines_cells = []
     ct = 0
     for i, line in enumerate(lines):
         line_polygons = []
@@ -227,8 +227,8 @@ def compute_voronoi_cells_from_lines(lines: list, scaling_factor=1e7) -> gpd.Geo
             if len(merged_polygon) == 0:
                 continue
             merged_polygon = MultiPolygon(merged_polygon)
-        lines_cells[i] = merged_polygon
-    return gpd.GeoSeries(lines_cells)  # TODO: return a dict because we cannot set CRS
+        lines_cells.append(merged_polygon)
+    return lines_cells
 
 
 
