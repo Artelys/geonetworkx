@@ -30,9 +30,10 @@ def get_edges_voronoi_cells(graph: GeoGraph, tolerance=1e-7) -> gpd.GeoSeries:
     return edge_cells_as_series
 
 
-def get_segment_boundary_buffer_polygon(segment_coords: list, radius: float, residual_radius: float) -> Polygon:
+def get_segment_boundary_buffer_polygon(segment_coords: Union[list, np.array],
+                                        radius: float, residual_radius: float) -> Polygon:
     """Return a segment boundary polygon using given radius. It represents all reachable points from the first
-    extremity of the segment. The returned polygon is a trapeze."""
+    extremity of the segment. The returned polygon is a trapeze. See ``boundary_edge_buffer``."""
     segment_direction = [segment_coords[1][0] - segment_coords[0][0], segment_coords[1][1] - segment_coords[0][1]]
     orthogonal_dir = np.array([- segment_direction[1], segment_direction[0]])
     orthogonal_dir /= np.linalg.norm(orthogonal_dir)
@@ -41,7 +42,8 @@ def get_segment_boundary_buffer_polygon(segment_coords: list, radius: float, res
     return Polygon(top_points + list(reversed(bottom_points)))
 
 
-def get_point_boundary_buffer_polygon(point_coords: list, radius: float, segment_direction: list, resolution=16) -> Polygon:
+def get_point_boundary_buffer_polygon(point_coords: list, radius: float,
+                                      segment_direction: list, resolution=16) -> Polygon:
     """Returns a half-disk centered on the given point, with the given radius and having the boundary edge orthogonal to
     the given segment direction. See ``boundary_edge_buffer``."""
     # Segment angle with system coordinates
@@ -60,7 +62,7 @@ def get_point_boundary_buffer_polygon(point_coords: list, radius: float, segment
 
 
 def boundary_edge_buffer(line: LineString) -> GenericPolygon:
-    """ Return the edge buffer polygon on the oriented line. This represented the area where all points are reachable
+    """Return the edge buffer polygon on the oriented line. This represented the area where all points are reachable
     starting from the line first extremity and using the closest edge projection rule."""
     radius = line.length
     residual_radius = radius
@@ -105,12 +107,10 @@ def isochrone_polygon(graph: GeoGraph, source, limit, weight="length", tolerance
                 isochrone_polygons.append(p.intersection(edge_buffer_pol))
             else:
                 isochrone_polygons.append(p)
-    # Merge as ischrone polygon
-    isochrone_polygon = cascaded_union(isochrone_polygons)
-    isochrone_polygon = isochrone_polygon.buffer(tolerance)
-    return isochrone_polygon
-
-
+    # Merge as isochrone polygon
+    final_polygon = cascaded_union(isochrone_polygons)
+    final_polygon = final_polygon.buffer(tolerance)
+    return final_polygon
 
 
 def get_alpha_shape_polygon(points: list, quantile: int) -> GenericPolygon:
@@ -124,6 +124,7 @@ def get_alpha_shape_polygon(points: list, quantile: int) -> GenericPolygon:
 
     Note that this does not return the exhaustive alpha-shape for low quantiles, the minimum spanning tree LineString
     should be added to the returned polygon.
+    This is adapted from Sean Gillies code (https://sgillies.net/2012/10/13/the-fading-shape-of-alpha.html).
     """
     tri = Delaunay(np.array(points))
     polygons = []
