@@ -157,6 +157,7 @@ def get_alpha_shape_polygon(points: list, quantile: float) -> GenericPolygon:
 def isochrone_polygon_with_alpha_shape(graph: GeoGraph, source, limit,
                                        weight="length",
                                        alpha_quantile=99.0,
+                                       remove_holes=True,
                                        tolerance=1e-7) -> GenericPolygon:
     """Returns an approximation of the isochrone polygon using an alpha-shape of the Shortest Path Tree.
 
@@ -166,6 +167,7 @@ def isochrone_polygon_with_alpha_shape(graph: GeoGraph, source, limit,
     :param weight: Weight attribute on edges to compute distances (edge weights should be non-negative).
     :param alpha_quantile: Quantile on circumradius to determine alpha (100 returns the convex hull,
         0 returns an empty polygon). ``0 <= quantile <= 100``.
+    :param remove_holes: If ``True`` remove holes in the returned polygon.
     :param tolerance: Buffering tolerance on polygon for rendering
     :return: A polygon approximating the isochrone.
     """
@@ -175,4 +177,9 @@ def isochrone_polygon_with_alpha_shape(graph: GeoGraph, source, limit,
     discretized_lines, _ = gnx.discretize_lines(edge_as_lines)
     alpha_shape = get_alpha_shape_polygon(discretized_lines, alpha_quantile)
     alpha_shape = alpha_shape.buffer(tolerance)
+    if remove_holes:
+        if isinstance(alpha_shape, MultiPolygon):
+            alpha_shape = MultiPolygon([Polygon(sub_p.exterior) for sub_p in alpha_shape])
+        else:
+            alpha_shape = Polygon(alpha_shape.exterior)
     return alpha_shape
