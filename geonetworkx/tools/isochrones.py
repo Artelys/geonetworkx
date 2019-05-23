@@ -113,7 +113,7 @@ def isochrone_polygon(graph: GeoGraph, source, limit, weight="length", tolerance
     return final_polygon
 
 
-def get_alpha_shape_polygon(points: list, quantile: int) -> GenericPolygon:
+def get_alpha_shape_polygon(points: list, quantile: float) -> GenericPolygon:
     """Return the alpha-shape polygon formed by the given points. Alpha parameter is determined using a quantile of
     circumradius of Delaunay triangles.
 
@@ -124,7 +124,7 @@ def get_alpha_shape_polygon(points: list, quantile: int) -> GenericPolygon:
 
     Note that this does not return the exhaustive alpha-shape for low quantiles, the minimum spanning tree LineString
     should be added to the returned polygon.
-    This is adapted from Sean Gillies code (https://sgillies.net/2012/10/13/the-fading-shape-of-alpha.html).
+    This is adapted from `Sean Gillies code <https://sgillies.net/2012/10/13/the-fading-shape-of-alpha.html>`_.
     """
     points = np.asarray(points)
     tri = Delaunay(points)
@@ -156,9 +156,19 @@ def get_alpha_shape_polygon(points: list, quantile: int) -> GenericPolygon:
 
 def isochrone_polygon_with_alpha_shape(graph: GeoGraph, source, limit,
                                        weight="length",
-                                       alpha_quantile=95,
+                                       alpha_quantile=99.0,
                                        tolerance=1e-7) -> GenericPolygon:
-    """TODO: docstring"""
+    """Returns an approximation of the isochrone polygon using an alpha-shape of the Shortest Path Tree.
+
+    :param graph: GeoGraph to browse
+    :param source: Source node from where distance is computed
+    :param limit: Isochrone limit (e.g. 100 meters, 5 minutes, depending on ``weight`` unit).
+    :param weight: Weight attribute on edges to compute distances (edge weights should be non-negative).
+    :param alpha_quantile: Quantile on circumradius to determine alpha (100 returns the convex hull,
+        0 returns an empty polygon). ``0 <= quantile <= 100``.
+    :param tolerance: Buffering tolerance on polygon for rendering
+    :return: A polygon approximating the isochrone.
+    """
     # Compute the ego-graph
     ego_graph = gnx.extended_ego_graph(graph, source, limit, distance=weight)
     edge_as_lines = ego_graph.get_edges_as_line_series()
