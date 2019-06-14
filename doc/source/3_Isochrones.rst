@@ -80,8 +80,8 @@ edge of :math:`T` than any edge of :math:`G` that is not in :math:`T`. That is t
 Edges Voronoi cells are computed in GeoNetworkX thanks to the `PyVoronoi <https://github.com/Voxel8/pyvoronoi>`_ package
 that provides an interface to the
 `boost Voronoi library <https://www.boost.org/doc/libs/1_70_0/libs/polygon/doc/voronoi_main.htm>`_. This code allows
-to compute cells for points and segments. A work has been done in GeoNetworkX to generalize this work to generic
-`linestrings`. For instance, here is an example of the edges voronoi cells of a street graph:
+to compute cells for points and disjoint segments. A work has been done in GeoNetworkX to generalize this work to
+generic `linestrings`. For instance, here is an example of the edges voronoi cells of a street graph:
 
 .. figure:: ../figures/voronoi_edges_cells.png
     :align: center

@@ -42,4 +42,17 @@ new nodes to the geograph:
 Spatial graph merge
 -------------------
 
+An additional useful feature that provides GeoNetworkX is geographs merge. That is to say, from a base graph, adding
+another graph on top of it and setting the right edges connect both.
+This feature may be very useful for multimodal transport routing. For example, a use case is to merge a street graph
+with a subway system graph to find an optimal route combining walk and subway transportation. To do so, the closest
+street of each subway station has to be found and an edge has to be added to link them. This is what is done in the
+``gnx.spatial_graph_merge`` method.
+
+Here is a use case using this method:
+
+```
+
+```
+
 
