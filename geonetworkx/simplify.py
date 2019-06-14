@@ -163,6 +163,26 @@ def remove_dead_ends(graph: nx.Graph, node_filter=no_filter, only_strict=False):
         nodes_to_remove = get_dead_ends(graph, node_filter, only_strict)
 
 
+def _clean_merge_mapping(edge_mapping: dict, new_edge: tuple, old_edges: list, directed: bool):
+    """For the two-degree node merge operation, it cleans the new-old edges mapping dictionary by reporting original
+    edges to the newest edge. It makes sure that all edges in the mapping dictionary dict are in the resulting graph."""
+    for e in old_edges:
+        old_edge = None
+        if e in edge_mapping.keys():
+            old_edge = e
+        elif not directed:
+            reversed_edge = (e[1], e[0], *e[2:])
+            if reversed_edge in edge_mapping.keys():
+                old_edge = reversed_edge
+        if old_edge is not None:
+            for original_e in edge_mapping[old_edge]:
+                edge_mapping[new_edge].append(original_e)
+            if e in edge_mapping[new_edge]:
+                edge_mapping[new_edge].remove(e)
+            del edge_mapping[old_edge]
+
+
+
 def two_degree_node_merge_for_directed_graphs(graph: GeoDiGraph, node_filter=no_filter) -> dict:
     """Merge edges that connects two nodes with a unique third node. A potential node to merge `n` must have exactly two
     different neighbors `u` and `v` with one of the following set of edges:
@@ -201,41 +221,50 @@ def two_degree_node_merge_for_directed_graphs(graph: GeoDiGraph, node_filter=no_
             if predecessor == successor:
                 continue
             if graph.is_multigraph():
+                new_edge = (predecessor, successor, graph.new_edge_key(predecessor, successor))
                 edges = [(predecessor, n, next(iter(graph.adj[predecessor][n]))),
                          (n, successor, next(iter(graph.adj[n][successor])))]
             else:
+                new_edge = (predecessor, successor)
                 edges = [(predecessor, n), (n, successor)]
             merged_line = _get_merging_line(graph, edges[0], edges[1])
-            merging_edges = [(predecessor, successor, merged_line)]
-            merged_edges[(predecessor, successor)] = edges
+            merging_edges = [(new_edge, merged_line)]
+            merged_edges[new_edge] = edges
+            _clean_merge_mapping(merged_edges, new_edge, edges, True)
         if in_degree == out_degree == 2:
             successors = list(graph.succ[n])
             if all(p in successors for p in graph.pred[n]):
                 if successors[1] == successors[0]:
                     continue
                 if graph.is_multigraph():
+                    back_new_edge = (successors[1], successors[0], graph.new_edge_key(successors[1], successors[0]))
+                    forth_new_edge = (successors[0], successors[1], graph.new_edge_key(successors[0], successors[1]))
                     back_edges = [(successors[1], n, next(iter(graph.adj[successors[1]][n]))),
                                   (n, successors[0], next(iter(graph.adj[n][successors[0]])))]
                     forth_edges = [(successors[0], n, next(iter(graph.adj[successors[0]][n]))),
                                    (n, successors[1], next(iter(graph.adj[n][successors[1]])))]
                 else:
+                    back_new_edge = (successors[1], successors[0])
+                    forth_new_edge = (successors[0], successors[1])
                     back_edges = [(successors[1], n), (n, successors[0])]
                     forth_edges = [(successors[0], n), (n, successors[1])]
                 back_merged_line = _get_merging_line(graph, back_edges[0], back_edges[1])
                 forth_merged_line = _get_merging_line(graph, forth_edges[0], forth_edges[1])
-                merging_edges = [(successors[1], successors[0], back_merged_line),
-                                 (successors[0], successors[1], forth_merged_line)]
-                merged_edges[(successors[1], successors[0])] = back_edges
-                merged_edges[(successors[0], successors[1])] = forth_edges
+                merging_edges = [(back_new_edge, back_merged_line),
+                                 (forth_new_edge, forth_merged_line)]
+                merged_edges[back_new_edge] = back_edges
+                _clean_merge_mapping(merged_edges, back_new_edge, back_edges, True)
+                merged_edges[forth_new_edge] = forth_edges
+                _clean_merge_mapping(merged_edges, forth_new_edge, forth_edges, True)
         if merging_edges:
             # Remove node (and thus edges)
             graph.remove_node(n)
             # Add merging edges
-            for u, v, line in merging_edges:
+            for new_edge, line in merging_edges:
                 merging_edge_attributes = {}
                 if line is not None:
                     merging_edge_attributes[graph.edges_geometry_key] = line
-                graph.add_edge(u, v, **merging_edge_attributes)
+                graph.add_edge(*new_edge, **merging_edge_attributes)
     return merged_edges
 
 
@@ -248,16 +277,21 @@ def two_degree_node_merge_for_undirected_graphs(graph: GeoGraph, node_filter=no_
     :param node_filter: Evaluates to true if a given node can be merged.
     :return: Dictionary indicating for each new edge the merged ones.
     """
+    if graph.is_multigraph():
+        keys_args = {"keys": True}
+    else:
+        keys_args = {}
     merged_edges = dict()
     two_degree_nodes = [n for n in graph.nodes() if graph.degree(n) == 2 and node_filter(n)]
     for n in two_degree_nodes:
-        if graph.is_multigraph():
-            edges = list(graph.edges(n, keys=True))
-        else:
-            edges = list(graph.edges(n))
+        edges = list(graph.edges(n, **keys_args))
         assert (len(edges) == 2)
         first_node = edges[0][1] if edges[0][1] != n else edges[0][0]
         second_node = edges[1][1] if edges[1][1] != n else edges[1][0]
+        if graph.is_multigraph():
+            new_edge = (first_node, second_node, graph.new_edge_key(first_node, second_node))
+        else:
+            new_edge = (first_node, second_node)
         if first_node == second_node:
             continue
         first_edge_geometry = graph.edges[edges[0]].get(graph.edges_geometry_key, None)
@@ -266,14 +300,15 @@ def two_degree_node_merge_for_undirected_graphs(graph: GeoGraph, node_filter=no_
             merged_line = merge_two_lines_with_closest_extremities(first_edge_geometry, second_edge_geometry)
         else:
             merged_line = None
-        merged_edges[(first_node, second_node)] = edges
+        merged_edges[new_edge] = edges
+        _clean_merge_mapping(merged_edges, new_edge, edges, False)
         # Remove node (and thus edges)
         graph.remove_node(n)
         # Add merging edge
         merging_edge_attributes = {}
         if merged_line is not None:
             merging_edge_attributes[graph.edges_geometry_key] = merged_line
-        graph.add_edge(first_node, second_node, **merging_edge_attributes)
+        graph.add_edge(*new_edge, **merging_edge_attributes)
     return merged_edges
 
 

@@ -78,7 +78,7 @@ class TestSimplify(unittest.TestCase):
                              (11, {"geometry": Point(3, 5)}), (12, {"geometry": Point(2, 6)}),
                              (13, {"geometry": Point(3, 6)})]
         for graph_type in ALL_CLASSES:
-            with self.subTest(graph_type=graph_type, SEED=gnx_tu.SEED):
+            with self.subTest(graph_type=graph_type):
                 g = graph_type()
                 g.add_nodes_from(nodes_coordinates)
                 g.add_path([1, 2, 3])
@@ -112,13 +112,16 @@ class TestSimplify(unittest.TestCase):
                 else:
                     e = (5, 7)
                 del g.edges[e][g.edges_geometry_key]
+                old_g = g.copy()
                 merged_edges = gnx.two_degree_node_merge(g)
                 for n in merged_nodes:
                     assert_not_in(n, g.nodes(), "A merged node is a in the simplified graph: %s" % str(n))
                 assert_equal(g.number_of_nodes(), initial_nb_nodes - len(merged_nodes))
                 for e in added_edges:
                     assert_true(g.has_edge(*e), "A normally added edge is not in the simplified graph: %s" % str(e))
-                for _, edges in merged_edges.items():
+                for new_edge, edges in merged_edges.items():
+                    assert_true(g.has_edge(*new_edge), "A new edge is not in the simplified graph: %s" % str(e))
                     for e in edges:
                         assert_false(g.has_edge(*e), "A deleted edge is in the simplified graph: %s" % str(e))
+                        assert_true(old_g.has_edge(*e), "A deleted edge is not not in the old graph: %s" % str(e))
 
