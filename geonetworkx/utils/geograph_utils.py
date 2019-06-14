@@ -320,7 +320,7 @@ def geographical_distance(graph: GeoGraph, node1, node2, method="vincenty") -> f
 
 def get_graph_bounding_box(graph: GeoGraph):
     """Return the bounding box coordinates of the given GeoGraph. It takes into account nodes and edges geometries."""
-    nodes = graph.get_nodes_as_point_series()
+    nodes = list(graph.get_nodes_as_point_series())
     x_min, y_min, x_max, y_max = MultiPoint(nodes).bounds
     bb = [[x_min, y_min], [x_max, y_max]]
     edges = graph.get_edges_as_line_series()
