@@ -175,10 +175,9 @@ def _clean_merge_mapping(edge_mapping: dict, new_edge: tuple, old_edges: list, d
             if reversed_edge in edge_mapping.keys():
                 old_edge = reversed_edge
         if old_edge is not None:
-            for original_e in edge_mapping[old_edge]:
-                edge_mapping[new_edge].append(original_e)
             if e in edge_mapping[new_edge]:
                 edge_mapping[new_edge].remove(e)
+            edge_mapping[new_edge].extend(edge_mapping[old_edge])
             del edge_mapping[old_edge]
 
 
@@ -229,7 +228,7 @@ def two_degree_node_merge_for_directed_graphs(graph: GeoDiGraph, node_filter=no_
                 edges = [(predecessor, n), (n, successor)]
             merged_line = _get_merging_line(graph, edges[0], edges[1])
             merging_edges = [(new_edge, merged_line)]
-            merged_edges[new_edge] = edges
+            merged_edges[new_edge] = edges.copy()  # copy for non destructive delete in clean merger function
             _clean_merge_mapping(merged_edges, new_edge, edges, True)
         if in_degree == out_degree == 2:
             successors = list(graph.succ[n])
@@ -252,9 +251,9 @@ def two_degree_node_merge_for_directed_graphs(graph: GeoDiGraph, node_filter=no_
                 forth_merged_line = _get_merging_line(graph, forth_edges[0], forth_edges[1])
                 merging_edges = [(back_new_edge, back_merged_line),
                                  (forth_new_edge, forth_merged_line)]
-                merged_edges[back_new_edge] = back_edges
+                merged_edges[back_new_edge] = back_edges.copy()
                 _clean_merge_mapping(merged_edges, back_new_edge, back_edges, True)
-                merged_edges[forth_new_edge] = forth_edges
+                merged_edges[forth_new_edge] = forth_edges.copy()
                 _clean_merge_mapping(merged_edges, forth_new_edge, forth_edges, True)
         if merging_edges:
             # Remove node (and thus edges)
@@ -300,7 +299,7 @@ def two_degree_node_merge_for_undirected_graphs(graph: GeoGraph, node_filter=no_
             merged_line = merge_two_lines_with_closest_extremities(first_edge_geometry, second_edge_geometry)
         else:
             merged_line = None
-        merged_edges[new_edge] = edges
+        merged_edges[new_edge] = edges.copy()
         _clean_merge_mapping(merged_edges, new_edge, edges, False)
         # Remove node (and thus edges)
         graph.remove_node(n)
