@@ -39,6 +39,27 @@ new nodes to the geograph:
     , new nodes are in green, new intersection nodes in red.
 
 
+Here is an example that merge a set of bicycle station to a street network.
+
+.. code-block:: python
+
+    import geopandas as gpd
+    import geonetworkx as gnx
+    import osmnx as ox
+
+    # Download and set up the street network (main streets_graph only)
+    streets_graph = ox.graph_from_address("Rennes, France", distance=2500,
+                                          infrastructure='way["highway"~"primary|secondary|tertiary"]')
+    streets_graph = gnx.read_geograph_with_coordinates_attributes(streets_graph)
+
+    # Getting the bicycle stations
+    bicycle_stations = gpd.read_file("geonetworkx/tests/datasets/"
+                                     "rennes_bicycle_stations_velo_star.geojson")
+
+    # Merging the stations to the street network
+    gnx.spatial_points_merge(streets_graph, bicycle_stations, inplace=True)
+
+
 Spatial graph merge
 -------------------
 
@@ -49,10 +70,31 @@ with a subway system graph to find an optimal route combining walk and subway tr
 street of each subway station has to be found and an edge has to be added to link them. This is what is done in the
 ``gnx.spatial_graph_merge`` method.
 
-Here is a use case using this method:
+Practically, this can be useful for merging two independent networks by specifying connecting nodes from one graph and
+reachable edges from the other graph. For instance, it can be used to build a multi-modal network combining streets
+network and subway network by connecting subway stations (represented as nodes) to their closest street (represented as
+edges).
 
-```
+.. code-block:: python
 
-```
+    # streets: GeoMultiDiGraph
+    # subway: GeoMultiDiGraph
+    subway_node_is_station = lambda n: subway.nodes[n].get("name", None) is None
+    streets_and_subway = gnx.spatial_graph_merge(streets,
+                                                 subway,
+                                                 node_filter=subway_node_is_station)
+
+
+Here is a visualization of the result:
+
+.. figure:: ../figures/graph_merge_example2.png
+    :align: center
+    :figclass: align-center
+
+    Illustration of work done in the ``spatial_graph_merge`` method. Street network is in blue, subway network in red,
+    and merging elements in green.
+
+
+
 
 

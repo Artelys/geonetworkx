@@ -23,7 +23,7 @@ datasets_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
 bicycle_stations = gpd.read_file(os.path.join(datasets_path,
                                               "rennes_bicycle_stations_velo_star.geojson"))
 
-# Merging the station to the street network
+# Merging the stations to the street network
 gnx.spatial_points_merge(streets_graph, bicycle_stations, inplace=True)
 
 # Setting times on the edges
