@@ -21,7 +21,7 @@ install_requires = ["pyproj>=1.9.6",
 
 setuptools.setup(
     name="geonetworkx",
-    version="0.2",
+    version="0.3",
     author="Artelys",
     author_email="hugo.chareyre@artelys.com",
     description="Python tools for geographic graphs",
