@@ -9,6 +9,7 @@
 from nose.plugins.attrib import attr
 from nose.tools import assert_less, assert_not_in, assert_in, assert_equal, assert_true, assert_false
 import unittest
+import networkx as nx
 import geonetworkx as gnx
 from geonetworkx.testing.utils import get_random_geograph_subclass, assert_is_subgraph, ALL_CLASSES
 import geonetworkx.testing.utils as gnx_tu
@@ -82,15 +83,15 @@ class TestSimplify(unittest.TestCase):
             with self.subTest(graph_type=graph_type):
                 g = graph_type()
                 g.add_nodes_from(nodes_coordinates)
-                g.add_path([1, 2, 3])
-                g.add_path([4, 2, 5])
-                g.add_path([3, 6])
-                g.add_path([5, 7, 8, 9])
-                g.add_path([11, 10, 9])
-                g.add_path([9, 12, 13])
+                nx.add_path(g, [1, 2, 3])
+                nx.add_path(g, [4, 2, 5])
+                nx.add_path(g, [3, 6])
+                nx.add_path(g, [5, 7, 8, 9])
+                nx.add_path(g, [11, 10, 9])
+                nx.add_path(g, [9, 12, 13])
                 if g.is_directed():
-                    g.add_path([6, 3])
-                    g.add_path([13, 12, 9])
+                    nx.add_path(g, [6, 3])
+                    nx.add_path(g, [13, 12, 9])
                     if g.is_multigraph():
                         g.add_edge(10, 9)
                         merged_nodes = {5, 7, 8, 12}
