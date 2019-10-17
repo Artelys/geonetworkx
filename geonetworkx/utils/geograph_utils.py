@@ -3,7 +3,7 @@ import math
 import numpy as np
 import networkx as nx
 from shapely.geometry import Point, LineString, MultiPoint
-from geopy.distance import vincenty
+import geopy.distance
 import pyproj
 from geonetworkx.geometry_operations import coordinates_almost_equal, insert_point_in_line
 from geonetworkx.geograph import GeoGraph
@@ -42,7 +42,7 @@ def crs_equals(crs1, crs2) -> bool:
 def compute_vincenty(p1, p2) -> float:
     """Returns the vincenty distance in meters given points with the format (longitude, latitude) in the WGS84
     crs."""
-    return vincenty((p1[1], p1[0]), (p2[1], p2[0])).meters
+    return geopy.distance.distance((p1[1], p1[0]), (p2[1], p2[0])).meters
 
 
 def compute_vincenty_from_points(p1: Point, p2: Point) -> float:
