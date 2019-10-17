@@ -10,8 +10,10 @@ from shapely.ops import linemerge, polygonize, cascaded_union
 import geopandas as gpd
 from typing import Union
 from collections import defaultdict
-import pyvoronoi
-
+try:
+    import pyvoronoi
+except ImportError:
+    pyvoronoi = None
 
 GenericLine = Union[LineString, MultiLineString]
 
@@ -20,6 +22,8 @@ class PyVoronoiHelper:
     """Add-on for the pyvoronoi (boost voronoi) tool. It computes the voronoi cells within a bounding box."""
 
     def __init__(self, points: list, segments: list, bounding_box_coords: list, scaling_factor=100000.0):
+        if pyvoronoi is None:
+            raise ImportError("Impossible to use Voronoi utils, `pyvoronoi` package not found.")
         self.pv = pyvoronoi.Pyvoronoi(scaling_factor)
         for p in points:
             self.pv.AddPoint(p)
@@ -109,7 +113,7 @@ class PyVoronoiHelper:
         return cells_coordinates
 
 
-    def clip_infinite_edge(self, cell_coords: list, edge: pyvoronoi.Edge, eta: float):
+    def clip_infinite_edge(self, cell_coords: list, edge: "pyvoronoi.Edge", eta: float):
         """Fill infinite edge coordinate by placing the infinite vertex to a ``eta`` distance of the known vertex."""
         cell = self.pv.GetCell(edge.cell)
         twin_edge = self.pv.GetEdge(edge.twin)

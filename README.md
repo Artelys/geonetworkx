@@ -25,6 +25,11 @@ Install
 * shapely>=1.2.18
 * scipy>=1.0.1
 
+Optional packages:
+
+* srtm (for elevation data)
+* pyvoronoi (for voronoi utils)
+
 **Installation**
 
 ``pip install geonetworkx``
