@@ -28,7 +28,8 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
     created from the geodataframe have attributes described by other columns (except if an attribute value is `nan`).
     When a point is projected on an edge, this edge is removed and replaced by two others that connect the extremities
     to the intersection node. A reference to the original edge is kept on theses new edges with the attribute
-    ``settings.ORIGINAL_EDGE_KEY``.
+    ``settings.ORIGINAL_EDGE_KEY``. The original edge is the oldest parent of the new edge, to have the direct parent, 
+    the attribute has to be cleant first.
 
     :param graph: A GeoGraph or derived class describing a spatial graph.
     :param points_gdf: A list of point describing new nodes to add.
@@ -115,7 +116,8 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
         intersection_nodes = edges_to_split[e]
         if len(intersection_nodes) > 0:
             initial_line = edges_as_lines[e]
-            # 2.1 remove initial edge
+            # 2.1 remove initial edge and keep in memory the original edge
+            original_edge_data = {settings.ORIGINAL_EDGE_KEY: graph.edges[e].get(settings.ORIGINAL_EDGE_KEY,e)}
             if graph.has_edge(*e):
                 graph.remove_edge(*e)
             # 2.2 cut the initial line
@@ -130,7 +132,6 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
             split_lines.append(cut_lines[1])
             # 2.2 add intermediary edges
             oriented_edge = get_line_ordered_edge(graph, e, initial_line)
-            original_edge_data = {settings.ORIGINAL_EDGE_KEY: e}
             first_edge_data = {graph.edges_geometry_key: split_lines[0], **original_edge_data}
             graph.add_edge(oriented_edge[0], sorted_intersection_nodes[0], **first_edge_data)
             last_edge_data = {graph.edges_geometry_key: split_lines[-1], **original_edge_data}
