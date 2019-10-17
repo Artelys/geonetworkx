@@ -46,16 +46,16 @@ def _get_ego_boundaries(graph: GeoGraph, ego_graph: GeoGraph, n, radius: float, 
             inside_edge_data = {graph.edges_geometry_key: split_edge[inside_line_part_index],
                                 distance: distance_margin}
             outside_edge_data = {graph.edges_geometry_key: split_edge[1 - inside_line_part_index],
-                                distance: edge_distance - distance_margin}
+                                 distance: edge_distance - distance_margin}
             boundary_edges[e] = [(u, b_node_name, inside_edge_data), (b_node_name, v, outside_edge_data)]
     return boundary_nodes, boundary_edges
 
 
-def extended_ego_graph(G: GeoGraph, n, radius=1, center=True, undirected=False, distance=None) -> GeoGraph:
+def extended_ego_graph(graph: GeoGraph, n, radius=1, center=True, undirected=False, distance=None) -> GeoGraph:
     """Returns induced subgraph of neighbors centered at node n within a given radius extended by interpolated nodes on
     boundary edges.
 
-    :param G: A Geograph or subclass
+    :param graph: A Geograph or subclass
     :param n: A single source node
     :param radius: Include all neighbors of distance<=radius from n.
     :param center: If False, do not include center node in graph
@@ -75,11 +75,11 @@ def extended_ego_graph(G: GeoGraph, n, radius=1, center=True, undirected=False, 
 
     Furthermore, the attribute ``distance`` is filled with the value :math:`d(u, b)`.
     """
-    ego_graph = nx.ego_graph(G, n, radius, center=True, undirected=undirected, distance=distance)
+    ego_graph = nx.ego_graph(graph, n, radius, center=True, undirected=undirected, distance=distance)
     if undirected:
-        working_graph = G.to_undirected()
+        working_graph = graph.to_undirected()
     else:
-        working_graph = G
+        working_graph = graph
     # Retrieve boundary edge and cut geometries
     boundary_nodes, boundary_edges = _get_ego_boundaries(working_graph, ego_graph, n, radius, distance)
     ego_graph.add_nodes_from(boundary_nodes)

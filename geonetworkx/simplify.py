@@ -101,15 +101,15 @@ def remove_nan_attributes(graph: nx.Graph, remove_nan=True, remove_none=True, co
     else:
         used_graph = graph
 
-    def trim_data(data):
+    def trim_data(d):
         keys_to_remove = set()
-        for k, v in data.items():
-            if remove_none and v is None:
+        for k, val in d.items():
+            if remove_none and val is None:
                 keys_to_remove.add(k)
-            if remove_nan and is_nan(v):
+            if remove_nan and is_nan(val):
                 keys_to_remove.add(k)
         for k in keys_to_remove:
-            del data[k]
+            del d[k]
 
     for n, data in used_graph.nodes(data=True):
         trim_data(data)
@@ -181,7 +181,6 @@ def _clean_merge_mapping(edge_mapping: dict, new_edge: tuple, old_edges: list, d
             del edge_mapping[old_edge]
 
 
-
 def two_degree_node_merge_for_directed_graphs(graph: GeoDiGraph, node_filter=no_filter) -> dict:
     """Merge edges that connects two nodes with a unique third node. A potential node to merge `n` must have exactly two
     different neighbors `u` and `v` with one of the following set of edges:
@@ -198,9 +197,9 @@ def two_degree_node_merge_for_directed_graphs(graph: GeoDiGraph, node_filter=no_
     :param node_filter: Evaluates to true if a given node can be merged.
     :return: Dictionary indicating for each new edge the merged ones.
     """
-    def _get_merging_line(graph: GeoDiGraph, e1: tuple, e2: tuple) -> Union[LineString, None]:
-        first_edge_geometry = graph.edges[e1].get(graph.edges_geometry_key, None)
-        second_edge_geometry = graph.edges[e2].get(graph.edges_geometry_key, None)
+    def _get_merging_line(g: GeoDiGraph, e1: tuple, e2: tuple) -> Union[LineString, None]:
+        first_edge_geometry = g.edges[e1].get(g.edges_geometry_key, None)
+        second_edge_geometry = g.edges[e2].get(g.edges_geometry_key, None)
         if first_edge_geometry is not None and second_edge_geometry is not None:
             return LineString(list(first_edge_geometry.coords) + list(second_edge_geometry.coords))
         else:

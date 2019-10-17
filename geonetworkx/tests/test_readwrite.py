@@ -5,7 +5,8 @@
     Creation date: 21/01/2019
     Python Version: 3.6
 """
-import os, shutil
+import os
+import shutil
 from nose.tools import assert_is_instance
 import unittest
 from nose.plugins.attrib import attr
@@ -51,13 +52,11 @@ class TestReadWrite(unittest.TestCase):
                 assert_is_instance(read_graph, graph_type)
                 assert_graphs_have_same_edges_geometry(g, read_graph)
 
-
     def test_write_geofile(self):
         for graph_type in ALL_CLASSES:
             with self.subTest(graph_type=graph_type, SEED=gnx_tu.SEED):
                 g = get_random_geograph_subclass(NB_VERTICES, graph_type)
                 gnx.write_geofile(g, self.results_dir, driver="GPKG")
-
 
     def test_write_read_geofile(self):
         for i, graph_type in enumerate(ALL_CLASSES):
@@ -72,6 +71,7 @@ class TestReadWrite(unittest.TestCase):
 
                 from geonetworkx.testing import assert_graphs_have_same_geonodes
                 assert_graphs_have_same_geonodes(g_write, g_read, "Written and read graph have different nodes.")
-                assert_graphs_have_same_edges_geometry(g_write, g_read, "Written and read graph have different edge geometries")
+                assert_graphs_have_same_edges_geometry(g_write, g_read,
+                                                       "Written and read graph have different edge geometries")
                 # This test may not pass for multigraphs with multi-edges because edges may be read in a different order
                 # that the are written (to be investigated).

@@ -112,7 +112,6 @@ class PyVoronoiHelper:
             cells_coordinates[c.cell_identifier] = cell_coords
         return cells_coordinates
 
-
     def clip_infinite_edge(self, cell_coords: list, edge: "pyvoronoi.Edge", eta: float):
         """Fill infinite edge coordinate by placing the infinite vertex to a ``eta`` distance of the known vertex."""
         cell = self.pv.GetCell(edge.cell)
@@ -123,7 +122,7 @@ class PyVoronoiHelper:
             first_point = self.pv.RetrieveScaledPoint(cell)
             second_point = self.pv.RetrieveScaledPoint(twin_cell)
             origin = np.array([(first_point[0] + second_point[0]) / 2.0,
-                                 (first_point[1] + second_point[1]) / 2.0])
+                               (first_point[1] + second_point[1]) / 2.0])
             ridge_direction = np.array([first_point[1] - second_point[1],
                                         second_point[0] - first_point[0]])
         else:

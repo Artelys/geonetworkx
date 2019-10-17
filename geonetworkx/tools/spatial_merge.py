@@ -117,7 +117,7 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
         if len(intersection_nodes) > 0:
             initial_line = edges_as_lines[e]
             # 2.1 remove initial edge and keep in memory the original edge
-            original_edge_data = {settings.ORIGINAL_EDGE_KEY: graph.edges[e].get(settings.ORIGINAL_EDGE_KEY,e)}
+            original_edge_data = {settings.ORIGINAL_EDGE_KEY: graph.edges[e].get(settings.ORIGINAL_EDGE_KEY, e)}
             if graph.has_edge(*e):
                 graph.remove_edge(*e)
             # 2.2 cut the initial line

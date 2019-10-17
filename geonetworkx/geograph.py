@@ -29,8 +29,8 @@ class GeoGraph(nx.Graph):
 
     @property
     def nodes_geometry_key(self):
-        """Attribute name for the edges geometry attributes. This graph attribute appears in the attribute dict `G.graph`
-         keyed by the string ``"edges_geometry_key"`` as well as an attribute ``G.nodes_geometry_key``"""
+        """Attribute name for the edges geometry attributes. This graph attribute appears in the attribute dict
+        `G.graph` keyed by the string ``"edges_geometry_key"`` as well as an attribute ``G.nodes_geometry_key``"""
         return self.graph.get('nodes_geometry_key', settings.NODES_GEOMETRY_DEFAULT_KEY)
 
     @nodes_geometry_key.setter
@@ -39,8 +39,8 @@ class GeoGraph(nx.Graph):
 
     @property
     def edges_geometry_key(self):
-        """Attribute name for the edges geometry attributes. This graph attribute appears in the attribute dict `G.graph`
-         keyed by the string ``"edges_geometry_key"`` as well as an attribute ``G.edges_geometry_key``"""
+        """Attribute name for the edges geometry attributes. This graph attribute appears in the attribute dict
+        `G.graph` keyed by the string ``"edges_geometry_key"`` as well as an attribute ``G.edges_geometry_key``"""
         return self.graph.get('edges_geometry_key', settings.EDGES_GEOMETRY_DEFAULT_KEY)
 
     @edges_geometry_key.setter

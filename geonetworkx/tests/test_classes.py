@@ -11,7 +11,8 @@ from geonetworkx.testing import assert_graphs_have_same_edges_geometry, assert_g
 import geonetworkx.testing.utils as gnx_tu
 import geonetworkx as gnx
 import geonetworkx.settings as settings
-import os, shutil
+import os
+import shutil
 from nose.tools import assert_is_instance, assert_equal
 from nose.plugins.attrib import attr
 import unittest
@@ -89,7 +90,6 @@ class TestClasses(unittest.TestCase):
                 assert_graphs_have_same_spatial_keys(g, g3)
                 g4 = g.to_directed(as_view=False)
                 assert_graphs_have_same_spatial_keys(g, g4)
-
 
     def test_add_edges_gdf(self):
         for graph_type in ALL_CLASSES:

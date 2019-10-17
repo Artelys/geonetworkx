@@ -16,7 +16,6 @@ from geonetworkx.utils.voronoi_utils import *
 from geonetworkx.generators import extended_ego_graph
 import os
 
-
 gnx_tu.SEED = 70595
 NB_POINTS = 50
 data_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), "datasets")
@@ -56,7 +55,7 @@ class TestUtils(unittest.TestCase):
         gnx.fill_edges_missing_geometry_attributes(gmg)
         gnx.fill_length_attribute(gmg, "length", only_missing=True)
         source = 312173744
-        limit = 100 # meters
+        limit = 100  # meters
         ego_graph = extended_ego_graph(gmg, source, radius=limit, center=True, undirected=False, distance="length")
         ccs = list(nx.connected_components(ego_graph))
         assert_equals(len(ccs), 1, "The ego graph has several connected components")

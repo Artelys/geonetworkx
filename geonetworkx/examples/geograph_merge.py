@@ -29,6 +29,7 @@ nx.set_edge_attributes(subway, {e: l / subway_speed for e, l in subway_lengths.i
 bb = gnx.get_graph_bounding_box(streets)
 streets_bb = box(bb[0][0], bb[0][1], bb[1][0], bb[1][1])
 
+
 def subway_node_is_reachable_from_streets(n):
     """A subway node is reachable from streets if it is a station (i.e. it has a name) and if it is in the bounding box
     of the the street network."""
@@ -37,6 +38,7 @@ def subway_node_is_reachable_from_streets(n):
     if not streets_bb.contains(subway.nodes[n][subway.nodes_geometry_key]):
         return False
     return True
+
 
 # Merging the two graphs
 streets_and_subway = gnx.spatial_graph_merge(streets, subway, node_filter=subway_node_is_reachable_from_streets)

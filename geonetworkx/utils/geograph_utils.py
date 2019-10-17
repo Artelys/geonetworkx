@@ -166,7 +166,7 @@ def fill_length_attribute(graph: GeoGraph, attribute_name="length", only_missing
             edge_data[attribute_name] = measure_line_distance(edges_geometry[e])
 
 
-def fill_elevation_attribute(graph:GeoGraph, attribute_name="elevation[m]", only_missing=True):
+def fill_elevation_attribute(graph: GeoGraph, attribute_name="elevation[m]", only_missing=True):
     """
     Fill the ``elevation[m]`` attribute on nodes of the given geograph. The elevation is found with the `srtm` package.
     Graph crs has to be WGS84 standard, otherwise elevation data won't be consistent.
@@ -180,7 +180,7 @@ def fill_elevation_attribute(graph:GeoGraph, attribute_name="elevation[m]", only
     elevation_data = srtm.get_data()
     for n, data in graph.nodes(data=True):
         if (not only_missing) or attribute_name not in data:
-            longitude, latitude  = tuple(*data[graph.nodes_geometry_key].coords)
+            longitude, latitude = tuple(*data[graph.nodes_geometry_key].coords)
             elevation = elevation_data.get_elevation(latitude, longitude)
             if elevation is not None:
                 data[attribute_name] = elevation
@@ -329,7 +329,7 @@ def get_graph_bounding_box(graph: GeoGraph):
         x_e_min, y_e_min = edges_bounds["minx"].min(), edges_bounds["miny"].min()
         x_e_max, y_e_max = edges_bounds["maxx"].max(), edges_bounds["maxy"].max()
         if x_min > x_e_min:
-            bb[0][0]= x_e_min
+            bb[0][0] = x_e_min
         if y_min > y_e_min:
             bb[0][1] = y_e_min
         if x_max < x_e_max:

@@ -18,10 +18,8 @@ streets_graph = gnx.read_geograph_with_coordinates_attributes(streets_graph)
 streets_graph.name = "Rennes_streets"
 
 # Getting the bicycle stations
-datasets_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                        "../tests/datasets/")
-bicycle_stations = gpd.read_file(os.path.join(datasets_path,
-                                              "rennes_bicycle_stations_velo_star.geojson"))
+datasets_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../tests/datasets/")
+bicycle_stations = gpd.read_file(os.path.join(datasets_path, "rennes_bicycle_stations_velo_star.geojson"))
 
 # Merging the stations to the street network
 gnx.spatial_points_merge(streets_graph, bicycle_stations, inplace=True)
@@ -34,7 +32,7 @@ nx.set_edge_attributes(streets_graph, {e: l / bicycle_speed for e, l in streets_
 
 
 # Computing all shortest path between all stations with a 15min cutoff
-cutoff = 15 * 60 # in seconds
+cutoff = 15 * 60  # in seconds
 bicycle_stations_nodes = list(bicycle_stations.index)
 
 # Creating a graph connecting all pairs of reachable stations within 15 min

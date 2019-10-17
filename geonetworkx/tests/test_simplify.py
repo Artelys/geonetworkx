@@ -20,6 +20,7 @@ import numpy as np
 NB_VERTICES = 50
 gnx_tu.SEED = 70595
 
+
 @attr("simplify")
 class TestSimplify(unittest.TestCase):
 
@@ -31,9 +32,9 @@ class TestSimplify(unittest.TestCase):
                 bounds = nodes_series.total_bounds
                 bounds[1] = (bounds[1] + bounds[3]) / 2.0  # Taking half bounding box as polygon
                 polygon_coordinates = [[bounds[0], bounds[1]],
-                                        [bounds[0], bounds[3]],
-                                        [bounds[2], bounds[3]],
-                                        [bounds[2], bounds[1]]]
+                                       [bounds[0], bounds[3]],
+                                       [bounds[2], bounds[3]],
+                                       [bounds[2], bounds[1]]]
                 polygon = Polygon(polygon_coordinates)
                 new_graph = gnx.trim_graph_with_polygon(g, polygon, copy=True, method=method)
                 assert_less(len(new_graph.nodes), len(g.nodes), "Half bounding box trimming must remove some nodes")

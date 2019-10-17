@@ -5,7 +5,8 @@
     Creation date: 09/01/2019
     Python Version: 3.6
 """
-import sys, os, shutil
+import os
+import shutil
 import geopandas as gpd
 import networkx as nx
 import geonetworkx as gnx
@@ -15,7 +16,6 @@ from nose.tools import assert_in
 import unittest
 from nose.plugins.attrib import attr
 import geonetworkx.testing.utils as gnx_tu
-
 
 gnx_tu.SEED = 70595
 data_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), "datasets")
@@ -43,7 +43,6 @@ class TestTools(unittest.TestCase):
         for p in points_gdf.index:
             assert_in(p, graph.nodes())
 
-
     def test_spatial_graph_merge(self):
         streets_mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_mdg.gpickle"))
         streets_mdg = streets_mdg.to_undirected()
@@ -53,7 +52,6 @@ class TestTools(unittest.TestCase):
 
         electrical_dg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_electrical_dg.gpickle"))
         electrical_dg = nx.MultiDiGraph(electrical_dg)
-        original_edges = list(electrical_dg.edges(keys=True, data=True))
         electrical_mg = electrical_dg.to_undirected()
         other_graph = gnx.read_geograph_with_coordinates_attributes(electrical_mg, crs=gnx.WGS84_CRS)
         gnx.order_well_lines(other_graph)
@@ -67,8 +65,6 @@ class TestTools(unittest.TestCase):
             assert_in(n, merged_graph.nodes())
         for e in other_graph.edges:
             assert_in(e, merged_graph.edges)
-
-
 
     def test_spatial_graph_merge_with_non_distinct_nodes(self):
         # base graph definition
@@ -93,13 +89,14 @@ class TestTools(unittest.TestCase):
         gnx.fill_edges_missing_geometry_attributes(other_graph)
         nx.set_node_attributes(other_graph, {n: 3 for n in common_nodes}, "origin")
         nx.set_node_attributes(base_graph, {n: 3 for n in common_nodes}, "origin")
-        #nx.draw_networkx(base_graph, pos=nodes_coords, node_color ="red")
-        #nx.draw_networkx(other_graph, pos=other_graph.get_nodes_coordinates(), node_color=[2 if n in base_graph.nodes() else 3 for n in g2.nodes()])
+        # nx.draw_networkx(base_graph, pos=nodes_coords, node_color ="red")
+        # nx.draw_networkx(other_graph, pos=other_graph.get_nodes_coordinates(),
+        #                  node_color=[2 if n in base_graph.nodes() else 3 for n in g2.nodes()])
 
         merged_graph = gnx.spatial_graph_merge(base_graph, other_graph, inplace=False)
-        origins = nx.get_node_attributes(merged_graph, "origin")
-        nc = [origins[n] if n in origins else 4 for n in merged_graph.nodes()]
-        #nx.draw_networkx(merged_graph, pos=merged_graph.get_nodes_coordinates(), node_color=nc)
+        # origins = nx.get_node_attributes(merged_graph, "origin")
+        # nc = [origins[n] if n in origins else 4 for n in merged_graph.nodes()]
+        # nx.draw_networkx(merged_graph, pos=merged_graph.get_nodes_coordinates(), node_color=nc)
 
     def test_spatial_point_merge_with_filters(self):
         nb_nodes = 30
@@ -133,7 +130,8 @@ class TestTools(unittest.TestCase):
             if not edge_filter(e[0], e[1]):
                 assert_in(e, merged_graph.edges)
         # node filter and edge filter
-        merged_graph = gnx.spatial_points_merge(graph, points_gdf, edge_filter=edge_filter, node_filter=node_filter, inplace=False)
+        merged_graph = gnx.spatial_points_merge(graph, points_gdf, edge_filter=edge_filter, node_filter=node_filter,
+                                                inplace=False)
         for n in graph.nodes:
             assert_in(n, merged_graph.nodes)
         for n in points_gdf.index:
@@ -146,7 +144,6 @@ class TestTools(unittest.TestCase):
                 edges = [e for e in graph.edges if n in e]
                 for e in edges:
                     assert_in(e, merged_graph.edges)
-
 
     def test_isochrone(self):
         # Read data
@@ -161,7 +158,7 @@ class TestTools(unittest.TestCase):
         # Compute the ego graph
         # source = 2192254241
         source = 312173744
-        limit = 400 # meters
+        limit = 400  # meters
         gnx.add_ego_boundary_nodes(gmg, source, limit, distance="length")
         ego_gmg = gnx.extended_ego_graph(gmg, source, limit, distance="length")
         edge_as_lines = gmg.get_edges_as_line_series()
@@ -186,11 +183,3 @@ class TestTools(unittest.TestCase):
         tolerance = 1e-8
         isochrone_polygon = isochrone_polygon.buffer(tolerance)
         isochrone_polygon.to_wkt()
-
-
-
-
-
-
-
-
