@@ -153,8 +153,6 @@ class TestTools(unittest.TestCase):
         import osmnx as ox
         from shapely.wkt import loads
         from geonetworkx.utils import get_line_start
-        # p = loads("Polygon ((5.73294613547621612 45.19383977073096048, 5.73294613547621612 45.20657728923688978, 5.74594209638661457 45.20657728923688978, 5.74594209638661457 45.19383977073096048, 5.73294613547621612 45.19383977073096048))")
-        # mdg = ox.graph_from_polygon(p)
         mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble500_mdg.gpickle"))
         mg = mdg.to_undirected()
         gmg = gnx.read_geograph_with_coordinates_attributes(mg)
@@ -169,7 +167,7 @@ class TestTools(unittest.TestCase):
         edge_as_lines = gmg.get_edges_as_line_series()
         lines = list(edge_as_lines)
         tolerance = 1e-7
-        edge_voronoi_cells = gnx.compute_voronoi_cells_from_lines(lines, scaling_factor=1/tolerance)
+        edge_voronoi_cells = gnx.compute_voronoi_cells_from_lines(lines, tolerance=tolerance)
         edge_voronoi_cells.set_index("id", inplace=True)
         isochrone_polygons = []
         for e, edge in enumerate(edge_as_lines.index):
@@ -185,7 +183,7 @@ class TestTools(unittest.TestCase):
                     isochrone_polygons.append(p)
         from shapely.ops import cascaded_union
         isochrone_polygon = cascaded_union(isochrone_polygons)
-        tolerance = 1e-8  # TODO: as param
+        tolerance = 1e-8
         isochrone_polygon = isochrone_polygon.buffer(tolerance)
         isochrone_polygon.to_wkt()
 

@@ -210,7 +210,7 @@ def compute_voronoi_cells_from_lines(lines: list, tolerance=1e-7) -> list:
     :return: A `GeoDataFrame` with cells geometries. A column named `id` referencing the index of the associated
         input geometry.
     """
-    simple_segments_mapping = split_as_simple_segments(lines, tolerance) # TODO: replace scaling factor by tolerance
+    simple_segments_mapping = split_as_simple_segments(lines, tolerance)
     all_segments = [list(s.coords) for i in range(len(lines)) for s in simple_segments_mapping[i]]
     bounds = MultiLineString(lines).bounds
     bb = [[bounds[0], bounds[1]], [bounds[2], bounds[3]]]
