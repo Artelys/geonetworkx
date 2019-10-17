@@ -41,7 +41,7 @@ class TestUtils(unittest.TestCase):
         res = compute_voronoi_cells_from_lines(lines, tolerance)
         for e, line in edge_as_lines.items():
             cell_found = False
-            for p in res["geometry"]:
+            for p in res:
                 if p.buffer(10 * tolerance).contains(line):
                     cell_found = True
                     break

@@ -12,7 +12,7 @@ import networkx as nx
 import geonetworkx as gnx
 import numpy as np
 from shapely.geometry import Point
-from nose.tools import assert_in
+from nose.tools import assert_in, assert_less
 import unittest
 from nose.plugins.attrib import attr
 import geonetworkx.testing.utils as gnx_tu
@@ -147,39 +147,33 @@ class TestTools(unittest.TestCase):
 
     def test_isochrone(self):
         # Read data
-        import osmnx as ox
-        from shapely.wkt import loads
-        from geonetworkx.utils import get_line_start
         mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble500_mdg.gpickle"))
         mg = mdg.to_undirected()
         gmg = gnx.read_geograph_with_coordinates_attributes(mg)
         gnx.fill_edges_missing_geometry_attributes(gmg)
+        gnx.fill_length_attribute(gmg, "length", True)
         gnx.remove_self_loop_edges(gmg)
-        # Compute the ego graph
-        # source = 2192254241
+
+        # Compute Isochrone polygon
         source = 312173744
         limit = 400  # meters
-        gnx.add_ego_boundary_nodes(gmg, source, limit, distance="length")
-        ego_gmg = gnx.extended_ego_graph(gmg, source, limit, distance="length")
-        edge_as_lines = gmg.get_edges_as_line_series()
-        lines = list(edge_as_lines)
-        tolerance = 1e-7
-        edge_voronoi_cells = gnx.compute_voronoi_cells_from_lines(lines, tolerance=tolerance)
-        edge_voronoi_cells.set_index("id", inplace=True)
-        isochrone_polygons = []
-        for e, edge in enumerate(edge_as_lines.index):
-            if ego_gmg.has_edge(*edge):
-                p = edge_voronoi_cells.at[e]
-                if any("boundary" in str(n) for n in edge):
-                    boundary_line = edge_as_lines[edge]
-                    if get_line_start(gmg, edge, boundary_line) != edge[0]:
-                        boundary_line = LineString(reversed(boundary_line.coords))
-                    edge_buffer_pol = boundary_edge_buffer(boundary_line)
-                    isochrone_polygons.append(p.intersection(edge_buffer_pol))
-                else:
-                    isochrone_polygons.append(p)
-        from shapely.ops import cascaded_union
-        isochrone_polygon = cascaded_union(isochrone_polygons)
-        tolerance = 1e-8
-        isochrone_polygon = isochrone_polygon.buffer(tolerance)
-        isochrone_polygon.to_wkt()
+        iso_polygon = gnx.isochrone_polygon(gmg, source, limit, "length")
+
+        # Try to compute the distance for a set of point that are in the polygon bounding box
+        nb_test_points = 20
+        np.random.seed(gnx_tu.SEED)
+        bb = iso_polygon.bounds
+        points_coords = np.random.rand(nb_test_points, 2) * np.array([bb[2] - bb[0], bb[3] - bb[1]]) + \
+                        np.array([bb[0], bb[1]])
+        points = gpd.GeoDataFrame([Point(p) for p in points_coords], columns=["geometry"], crs=gmg.crs)
+        merged_graph = gnx.spatial_points_merge(gmg, points_gdf=points, inplace=False)
+        gnx.fill_length_attribute(merged_graph, "length", True)
+        tol = 0.05 * limit
+        for p in points.index:
+            shortest_distance = nx.shortest_path_length(merged_graph, source, p, weight="length")
+            if points.at[p, "geometry"].intersects(iso_polygon):
+                assert_less(shortest_distance - tol, limit, "The shortest path between a point intersecting the iso-polygon"
+                                                            " must be shorter than the isochrone limit.")
+            else:
+                assert_less(limit, shortest_distance + tol, "The shortest path between a point not intersecting the "
+                                                            "iso-polygon must be longer than the isochrone limit.")
