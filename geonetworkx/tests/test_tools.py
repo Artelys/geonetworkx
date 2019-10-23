@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-    File name: test_tools
-    Author: Artelys
-    Creation date: 09/01/2019
-    Python Version: 3.6
-"""
 import os
 import shutil
 import geopandas as gpd

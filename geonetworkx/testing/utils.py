@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-    File name: utils
-    Author: Artelys
-    Creation date: 08/01/2019
-    Python Version: 3.6
-"""
 import networkx as nx
 import geonetworkx as gnx
 import numpy as np

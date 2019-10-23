@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-    File name: tools
-    Author: Artelys
-    Creation date: 08/01/2019
-    Python Version: 3.6
-"""
 import numpy as np
 import networkx as nx
 from networkx.classes.filters import no_filter

@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-    File name: test_simplify
-    Author: Artelys
-    Creation date: 23/01/2019
-    Python Version: 3.6
-"""
-
 from nose.plugins.attrib import attr
 from nose.tools import assert_less, assert_not_in, assert_in, assert_equal, assert_true, assert_false
 import unittest

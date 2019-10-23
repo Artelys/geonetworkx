@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-    File name: test_geometry_operations.py
-    Author: Artelys
-    Creation date: 08/01/2019
-    Python Version: 3.6
-"""
 from shapely.geometry import LineString
 import numpy as np
 from nose.plugins.attrib import attr

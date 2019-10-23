@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-    File name: test_classes
-    Author: Artelys
-    Creation date: 17/01/2019
-    Python Version: 3.6
-"""
 from geonetworkx.testing import get_random_geograph_with_wgs84_scale, get_random_geograph_subclass
 from geonetworkx.testing import assert_graphs_have_same_edges_geometry, assert_graphs_have_same_geonodes, ALL_CLASSES, \
                                 assert_graphs_have_same_spatial_keys

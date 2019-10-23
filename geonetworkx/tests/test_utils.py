@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-    File name: test_utils
-    Author: Artelys
-    Creation date: 06/05/2019
-    Python Version: 3.6
-"""
-
 import networkx as nx
 import geonetworkx as gnx
 import unittest

@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-    File name: isochrones
-    Author: Artelys
-    Creation date: 22/05/2019
-    Python Version: 3.6
-"""
 import geonetworkx as gnx
 
 

@@ -1,9 +1,3 @@
-"""
-    File name: VoronoiParser
-    Author: Artelys - Hugo Chareyre
-    Date last modified: 21/11/2018
-    Python Version: 3.6
-"""
 import numpy as np
 from shapely.geometry import MultiLineString, LineString, box, Polygon, MultiPolygon, GeometryCollection
 from shapely.ops import linemerge, polygonize, cascaded_union

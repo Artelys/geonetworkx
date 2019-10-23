@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-    File name: test_readwrite.py
-    Author: Artelys
-    Creation date: 21/01/2019
-    Python Version: 3.6
-"""
 import os
 import shutil
 from nose.tools import assert_is_instance
