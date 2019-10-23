@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-    File name: setup.py
-    Author: Artelys
-    Creation date: 15/01/2019
-    Python Version: 3.6
-"""
-
 import setuptools
 
 with open("README.md", "r") as fh:
@@ -22,7 +15,7 @@ install_requires = ["pyproj>=1.9.6",
 setuptools.setup(
     name="geonetworkx",
     version="0.3",
-    author="Artelys",
+    author="Hugo Chareyre - Artelys",
     author_email="hugo.chareyre@artelys.com",
     description="Python tools for geographic graphs",
     long_description=long_description,
