@@ -34,10 +34,6 @@ Optional packages:
 
 ``pip install geonetworkx``
 
-Examples
---------
-
-TODO
 
 Tests
 -----
