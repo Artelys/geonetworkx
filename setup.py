@@ -4,13 +4,8 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-install_requires = ["pyproj>=1.9.6",
-                    "geopy>=1.12.0",
-                    "geopandas>=0.4.0",
-                    "networkx>=2.2",
-                    "numpy>=1.15.4",
-                    "shapely>=1.2.18",
-                    "scipy>=1.0.1"]
+with open("requirements.txt", "r") as fr:
+    install_requires = fr.read().splitlines()
 
 setuptools.setup(
     name="geonetworkx",
