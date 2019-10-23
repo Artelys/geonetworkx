@@ -6,9 +6,7 @@ import geonetworkx as gnx
 
 
 class GeoMultiDiGraph(GeoMultiGraph, GeoDiGraph, nx.MultiDiGraph):
-    """
-    A directed geographic graph class that can store multiedges.
-    """
+    """A directed geographic graph class that can store multiedges."""
 
     def to_nx_class(self):
         """Return the closest networkx class (in the inheritance graph)."""

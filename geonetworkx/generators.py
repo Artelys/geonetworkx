@@ -7,7 +7,7 @@ from geonetworkx.utils.geograph_utils import get_line_start
 
 
 def _get_ego_boundaries(graph: GeoGraph, ego_graph: GeoGraph, n, radius: float, distance=None) -> tuple:
-    """Retrieve all information to build an extended ego-graph. See ``gnx.extended_ego_graph`` for more info. """
+    """Retrieve all information to build an extended ego-graph. See ``gnx.extended_ego_graph`` for more info."""
     if graph.is_multigraph():
         out_edges_options = {"keys": True}
     else:
@@ -55,25 +55,41 @@ def extended_ego_graph(graph: GeoGraph, n, radius=1, center=True, undirected=Fal
     """Returns induced subgraph of neighbors centered at node n within a given radius extended by interpolated nodes on
     boundary edges.
 
-    :param graph: A Geograph or subclass
-    :param n: A single source node
-    :param radius: Include all neighbors of distance<=radius from n.
-    :param center: If False, do not include center node in graph
-    :param undirected: If True use both in- and out-neighbors of directed graphs.
-    :param distance: Use specified edge data key as distance.  For example, setting distance='weight' will use the edge
-        weight to measure the distance from the node n.
-    :return: The resulting graph with node, edge, and graph attributes copied. Note that the returned graph is not a
+    Parameters
+    ----------
+    graph : GeoGraph, GeoDiGraph, GeoMultiGraph or GeoMultiDiGraph
+        A Geograph or subclass
+    n :
+        A single source node
+    radius : float or int
+        Include all neighbors of distance<=radius from n. (Default value = 1)
+    center : bool
+        If False, do not include center node in graph (Default value = True)
+    undirected : bool
+        If True use both in- and out-neighbors of directed graphs. (Default value = False)
+    distance : str
+        Use specified edge data key as distance.  For example, setting distance='weight' will use the edge
+        weight to measure the distance from the node n. (Default value = None)
+
+    Returns
+    -------
+    GeoGraph, GeoDiGraph, GeoMultiGraph or GeoMultiDiGraph
+        The resulting graph with node, edge, and graph attributes copied. Note that the returned graph is not a
         subgraph of the input graph because it will have boundary nodes in addition.
-
-    It means that a node is added on each edge leaving the ego-graph to represent the furthest reachable point on this
-    edge. The boundary node is added at given node using a linear interpolation. A boundary node :math:`b` will be
-    added on the edge :math:`(u, v)` if :math:`d(n, u) < radius < d(n, v)`. The boundary will be placed along the edge
-    geometry at the following distance:
-
-    .. math::
+        It means that a node is added on each edge leaving the ego-graph to represent the furthest reachable point on
+        this edge. The boundary node is added at given node using a linear interpolation. A boundary node :math:`b` will
+        be added on the edge :math:`(u, v)` if :math:`d(n, u) < radius < d(n, v)`. The boundary will be placed along the
+        edge geometry at the following distance:
+        
+        .. math::
         d(u, b) =  \\frac{\\text{radius} - d(n, u)}{d(u, v)}
+        
+        Furthermore, the attribute ``distance`` is filled with the value :math:`d(u, b)`.
 
-    Furthermore, the attribute ``distance`` is filled with the value :math:`d(u, b)`.
+    See Also
+    --------
+    add_ego_boundary_nodes
+
     """
     ego_graph = nx.ego_graph(graph, n, radius, center=True, undirected=undirected, distance=distance)
     if undirected:
@@ -97,12 +113,24 @@ def add_ego_boundary_nodes(graph: GeoGraph, n, radius, distance, undirected=Fals
     if :math:`(u, v)` if :math:`d(n, u) < radius < d(n, v)`. A boundary node is added on the edge to represent the ego-
     graph limit. See ``gnx.extended_ego_graph`` for more info.
 
-    :param graph: Input graph to modify
-    :param n: A single source node
-    :param radius: Include all neighbors of distance<=radius from n.
-    :param distance: Use specified edge data key as distance. For example, setting distance='weight' will use the edge
+    Parameters
+    ----------
+    graph : GeoGraph, GeoDiGraph, GeoMultiGraph or GeoMultiDiGraph
+        Input graph to modify
+    n :
+        A single source node
+    radius : float or int
+        Include all neighbors of distance<=radius from n.
+    distance : str
+        Use specified edge data key as distance. For example, setting distance='weight' will use the edge
         weight to measure the distance from the node n.
-    :param undirected: If True use both in- and out-neighbors of directed graphs.
+    undirected : bool
+        If True use both in- and out-neighbors of directed graphs. (Default value = False)
+
+    See Also
+    --------
+    extended_ego_graph
+
     """
     ego_graph = nx.ego_graph(graph, n, radius, center=True, undirected=undirected, distance=distance)
     if undirected:

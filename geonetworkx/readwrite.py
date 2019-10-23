@@ -15,7 +15,20 @@ from geonetworkx.utils import get_crs_as_str
 
 
 def parse_graph_as_geograph(graph, **attr):
-    """Parse a ``networkx.Graph`` as a ``geonetworkx.GeoGraph`` with the closest geonetworkx graph type."""
+    """Parse a ``networkx.Graph`` as a ``geonetworkx.GeoGraph`` with the closest geonetworkx graph type.
+
+    Parameters
+    ----------
+    graph : nx.Graph, nx.DiGraph, nx.MultiGraph or nx.MultiDiGraph
+        
+    **attr :
+        Potential spatial keys.
+
+    Returns
+    -------
+    GeoGraph, GeoDiGraph, GeoMultiGraph or GeoMultiDiGraph
+        Depending the orientation and multi edges properties.
+    """
     if graph.is_directed():
         if graph.is_multigraph():
             geograph = GeoMultiDiGraph(graph, **attr)
@@ -31,7 +44,23 @@ def parse_graph_as_geograph(graph, **attr):
 
 def get_graph_with_wkt_geometry(geograph: GeoGraph) -> nx.Graph:
     """Modify the edges geometry attribute to a well-known text format to make the graph writable is some text formats.
-    The returned graph is not as operational as the given one (edge geometries has been removed)"""
+    The returned graph is not as operational as the given one (edge geometries has been removed).
+
+    Parameters
+    ----------
+    geograph: GeoGraph :
+        Geograph to transform
+
+    Returns
+    -------
+    nx.Graph
+        A networkx graph with WKT geometries instead of shapely objects.
+
+    See Also
+    --------
+    parse_nodes_attribute_as_wkt
+
+    """
     graph_shallow_copy = geograph.to_nx_class()(geograph)
     nodes_geometries = nx.get_node_attributes(graph_shallow_copy, geograph.nodes_geometry_key)
     for n, point in nodes_geometries.items():
@@ -45,14 +74,40 @@ def get_graph_with_wkt_geometry(geograph: GeoGraph) -> nx.Graph:
 
 
 def parse_nodes_attribute_as_wkt(graph: nx.Graph, attribute_name: str):
-    """Parse nodes geometries with a wkt (well known text) attribute"""
+    """Transform a graph nodes attribute from WKT to shapely objects. Attribute is replaced.
+
+    Parameters
+    ----------
+    graph: nx.Graph :
+        Graph to modify and parse
+    attribute_name: str :
+        Attribute to parse the nodes geometries
+
+    See Also
+    --------
+    get_graph_with_wkt_geometry, parse_edges_attribute_as_wkt
+
+    """
     wkt_points = nx.get_node_attributes(graph, attribute_name)
     for n, w in wkt_points.items():
         graph.nodes[n][attribute_name] = loads(w)
 
 
 def parse_edges_attribute_as_wkt(graph: nx.Graph, attribute_name: str):
-    """Parse edge geometries with a wkt (well known text) attribute."""
+    """Transform a graph edges attribute from WKT to shapely objects. Attribute is replaced.
+
+    Parameters
+    ----------
+    graph: nx.Graph :
+        Graph to modify and parse
+    attribute_name: str :
+        Attribute to parse the edges geometries
+
+    See Also
+    --------
+    get_graph_with_wkt_geometry, parse_nodes_attribute_as_wkt
+
+    """
     wkt_lines = nx.get_edge_attributes(graph, attribute_name)
     for e, w in wkt_lines.items():
         graph.edges[e][attribute_name] = loads(w)
@@ -66,7 +121,25 @@ def stringify_crs(graph: GeoGraph):
 
 
 def read_gpickle(path, **attr):
-    """Read graph object in Python pickle format."""
+    """Read geograph object in Python pickle format.
+
+    Parameters
+    ----------
+    path : str
+        Path where to read a graph object.
+    **attr :
+        Potential spatial keys.
+
+    Returns
+    -------
+    GeoGraph, GeoDiGraph, GeoMultiGraph or GeoMultiDiGraph
+        The parsed geograph.
+
+    See Also
+    --------
+    write_gpickle, nx.read_gpickle, nx.write_gpickle
+
+    """
     graph = nx.read_gpickle(path)
     if type(graph) in [nx.Graph, nx.DiGraph, nx.MultiDiGraph, nx.MultiGraph]:
         return parse_graph_as_geograph(graph, **attr)
@@ -75,18 +148,51 @@ def read_gpickle(path, **attr):
 
 
 def write_gpickle(geograph, path, protocol=pickle.HIGHEST_PROTOCOL):
-    """Write graph object in Python pickle format."""
+    """Write geograph object in Python pickle format.
+
+    Parameters
+    ----------
+    geograph : GeoGraph, GeoDiGraph, GeoMultiGraph, GeoMultiDiGraph
+        Geograph to write
+    path :
+        Path where to right the pickle file.
+    protocol :
+         See pickle protocols (Default value = pickle.HIGHEST_PROTOCOL).
+
+    Returns
+    -------
+
+    See Also
+    --------
+    read_gpickle, nx.read_gpickle, nx.write_gpickle
+
+    """
     nx.write_gpickle(geograph, path, protocol)
 
 
-def read_graphml(path, node_type=str, edge_key_type=int, **attr):
+def read_graphml(path, node_type=str, edge_key_type=int, **attr) -> GeoGraph:
     """Read graph in GraphML format from path.
 
-    :param path: File path to the graphml file.
-    :param node_type: See ``nx.read_graphml``
-    :param edge_key_type: See ``nx.read_graphml``
-    :param attr: GeoGraph spatial keys specification
-    :return: Parsed Geograph
+    Parameters
+    ----------
+    path :
+        File path to the graphml file.
+    node_type :
+        See ``nx.read_graphml`` (Default value = str)
+    edge_key_type :
+        See ``nx.read_graphml`` (Default value = int)
+    **attr :
+        Potential spatial keys
+
+    Returns
+    -------
+    GeoGraph, GeoDiGraph, GeoMultiGraph, GeoMultiDiGraph
+        Parsed Geograph
+
+    See Also
+    --------
+    write_graphml, nx.read_graphml, nx.write_graphml
+
     """
     graph = nx.read_graphml(path, node_type, edge_key_type)
     nodes_geometry_attr = attr.get("nodes_geometry_key",
@@ -101,19 +207,45 @@ def read_graphml(path, node_type=str, edge_key_type=int, **attr):
 
 
 def write_graphml(geograph, path, encoding='utf-8', prettyprint=True, infer_numeric_types=False):
-    """Generate GraphML lines for G"""
+    """Generate GraphML file for the given geograph.
+
+    Parameters
+    ----------
+    geograph : GeoGraph, GeoDiGraph, GeoMultiGraph, GeoMultiDiGraph
+        Geograph to write
+    path : str
+        Writing file path
+    encoding :
+         See ``nx.write_graphml`` (Default value = 'utf-8')
+    prettyprint :
+         See ``nx.write_graphml`` (Default value = True)
+    infer_numeric_types :
+         See ``nx.write_graphml`` (Default value = False)
+
+    See Also
+    --------
+    read_graphml, nx.read_graphml, nx.write_graphml
+
+    """
     graph_wkt = get_graph_with_wkt_geometry(geograph)
     stringify_crs(graph_wkt)
     nx.write_graphml(graph_wkt, path, encoding, prettyprint, infer_numeric_types)
 
 
 def graph_nodes_to_gdf(graph: GeoGraph) -> gpd.GeoDataFrame:
-    """
-    Create and fill a GeoDataFrame (geopandas) from nodes of a networkX graph. The ``'geometry'`` attribute is used for
+    """Create and fill a GeoDataFrame (geopandas) from nodes of a networkX graph. The ``'geometry'`` attribute is used for
     shapes.
 
-    :param graph: Graph to parse
-    :return: The resulting GeoDataFrame : one row is a node
+    Parameters
+    ----------
+    graph : GeoGraph
+        Graph to parse
+
+    Returns
+    -------
+    gpd.GeoDataFrame
+        The resulting GeoDataFrame : one row is a node
+
     """
     nodes = {node: data for node, data in graph.nodes(data=True)}
     gdf_nodes = gpd.GeoDataFrame(nodes).T
@@ -127,12 +259,19 @@ def graph_nodes_to_gdf(graph: GeoGraph) -> gpd.GeoDataFrame:
 
 
 def graph_edges_to_gdf(graph: nx.Graph) -> gpd.GeoDataFrame:
-    """
-    Create and fill a GeoDataFrame (geopandas) from edges of a networkX graph. The ``'geometry'`` attribute is used for
-    shapes.
+    """Create and fill a GeoDataFrame (geopandas) from edges of a networkX graph. The ``'geometry'`` attribute is used
+     for shapes.
 
-    :param graph: Graph to parse
-    :return: The resulting GeoDataFrame : one row is an edge
+    Parameters
+    ----------
+    graph : nx.Graph
+        Graph to parse
+
+    Returns
+    -------
+    gpd.GeoDataFrame
+        The resulting GeoDataFrame : one row is an edge
+
     """
     # create a list to hold our edges, then loop through each edge in the graph
     edges = []
@@ -157,14 +296,26 @@ def graph_edges_to_gdf(graph: nx.Graph) -> gpd.GeoDataFrame:
 
 
 def parse_bool_columns_as_int(gdf: gpd.GeoDataFrame):
-    """Transform bool columns into integer columns."""
+    """Transform bool columns into integer columns.
+
+    Parameters
+    ----------
+    gdf: gpd.GeoDataFrame :
+        GeoDataFrame to modify
+    """
     for c in gdf.columns:
         if gdf[c].dtype == "bool":
             gdf[c] = gdf[c].astype("int")
 
 
 def parse_numpy_types(gdf: gpd.GeoDataFrame):
-    """Transform numpy types as scalar types."""
+    """Transform numpy types as scalar types.
+
+    Parameters
+    ----------
+    gdf: gpd.GeoDataFrame :
+        GeoDataFrame to modify
+    """
     for c in gdf.columns:
         if any(map(lambda x: isinstance(x, np.generic), gdf[c])):
             for i in gdf.index:
@@ -173,7 +324,13 @@ def parse_numpy_types(gdf: gpd.GeoDataFrame):
 
 
 def stringify_unwritable_columns(gdf: gpd.GeoDataFrame):
-    """Transform elements which have type bool or list to string"""
+    """Transform elements which have type bool or list to string
+
+    Parameters
+    ----------
+    gdf: gpd.GeoDataFrame :
+        GeoDataFrame to modify
+    """
     valid_columns_types = ("int64", "float64")
     for c in gdf.columns:
         if not gdf[c].dtype in valid_columns_types and c != gdf._geometry_column_name:
@@ -181,19 +338,37 @@ def stringify_unwritable_columns(gdf: gpd.GeoDataFrame):
 
 
 def cast_for_fiona(gdf: gpd.GeoDataFrame):
-    """Transform elements so that attributes can be writable by fiona."""
+    """Transform elements so that attributes can be writable by fiona.
+
+    Parameters
+    ----------
+    gdf: gpd.GeoDataFrame :
+        GeoDataFrame to modify
+    """
     parse_bool_columns_as_int(gdf)
     parse_numpy_types(gdf)
     stringify_unwritable_columns(gdf)
 
 
 def write_edges_to_geofile(graph: GeoGraph, file_name, driver="GPKG", fiona_cast=True):
-    """ Writes the edges of a geograph as a geographic file.
+    """Writes the edges of a geograph as a geographic file.
 
-    :param graph: Graph to export
-    :param file_name: File name (with path)
-    :param driver: driver for export file format (GPKG, geojson, etc: can be found from ``fiona.supported_drivers``)
-    :param fiona_cast: If true, methods for casting types to writable fiona types are used
+    Parameters
+    ----------
+    graph : GeoGraph, GeoDiGraph, GeoMultiGraph, GeoMultiDiGraph
+        Graph to export
+    file_name :
+        File name (with path)
+    driver :
+        driver for export file format (GPKG, geojson, etc: can be found from ``fiona.supported_drivers``)
+        (Default value = "GPKG")
+    fiona_cast :
+        If true, methods for casting types to writable fiona types are used (Default value = True)
+
+    See Also
+    --------
+    write_geofile, write_nodes_to_geofile
+
     """
     gdf_edges = graph.edges_to_gdf()
     if fiona_cast:
@@ -202,12 +377,24 @@ def write_edges_to_geofile(graph: GeoGraph, file_name, driver="GPKG", fiona_cast
 
 
 def write_nodes_to_geofile(graph: GeoGraph, file_name, driver="GPKG", fiona_cast=True):
-    """ Writes the nodes of a geograph as a geographic file.
+    """Writes the nodes of a geograph as a geographic file.
 
-    :param graph: Graph to export
-    :param file_name: File name (with path)
-    :param driver: driver for export file format (GPKG, geojson, etc: can be found from ``fiona.supported_drivers``)
-    :param fiona_cast: If true, methods for casting types to writable fiona types are used
+    Parameters
+    ----------
+    graph : GeoGraph, GeoDiGraph, GeoMultiGraph, GeoMultiDiGraph
+        Graph to export
+    file_name :
+        File name (with path)
+    driver :
+        driver for export file format (GPKG, geojson, etc: can be found from ``fiona.supported_drivers``)
+        (Default value = "GPKG")
+    fiona_cast :
+        If true, methods for casting types to writable fiona types are used (Default value = True)
+
+    See Also
+    --------
+    write_geofile, write_edges_to_geofile
+
     """
     gdf_nodes = graph.nodes_to_gdf()
     if fiona_cast:
@@ -216,16 +403,29 @@ def write_nodes_to_geofile(graph: GeoGraph, file_name, driver="GPKG", fiona_cast
 
 
 def write_geofile(graph: GeoGraph, path='./', nodes=True, edges=True, driver="GPKG", fiona_cast=True):
-    """
-    Export a networkx graph as a geographic file.
+    """Export a networkx graph as a geographic files. Two files are generated: one for the nodes and one for the edges.
+    The files names will be prefixed by the graph name and suffixed by "_edges" or "_nodes".
 
-    :param graph: Graph to export
-    :param path: export directory
-    :param nodes: boolean to indicate whether export nodes or not.
-    :param edges: boolean to indicate whether export edges or not.
-    :param driver: driver for export file format (GPKG, geojson, etc: can be found from ``fiona.supported_drivers``)
-    :param fiona_cast: If true, methods for casting types to writable fiona types are used
-    :return: None
+    Parameters
+    ----------
+    graph :
+        Graph to export
+    path :
+        export directory (Default value = './')
+    nodes :
+        boolean to indicate whether export nodes or not. (Default value = True)
+    edges :
+        boolean to indicate whether export edges or not. (Default value = True)
+    driver :
+        driver for export file format (GPKG, geojson, etc: can be found from ``fiona.supported_drivers``)
+         (Default value = "GPKG")
+    fiona_cast :
+        If true, methods for casting types to writable fiona types are used (Default value = True)
+
+    See Also
+    --------
+    write_nodes_to_geofile, write_edges_to_geofile
+
     """
     if not os.path.exists(path):
         os.mkdir(path)
@@ -243,11 +443,22 @@ def read_geograph_with_coordinates_attributes(graph: nx.Graph, x_key='x', y_key=
     """Parse a `networkx` graph which have node's coordinates as attribute. This method can be useful to parse an output
     graph of the `osmnx` package.
 
-    :param graph: Given graph to parse. All nodes must have the ``x_key`` and ``y_key`` attributes.
-    :param x_key: x-coordinates attribute to parse
-    :param y_key: y-coordinates attribute to parse
-    :param attr: Optional geograph spatial keys.
-    :return: The parsed geograph (shallow copy of the input graph).
+    Parameters
+    ----------
+    graph : nx.Graph
+        Given graph to parse. All nodes must have the ``x_key`` and ``y_key`` attributes.
+    x_key :
+        x-coordinates attribute to parse (Default value = 'x')
+    y_key :
+        y-coordinates attribute to parse (Default value = 'y')
+    **attr :
+        Optional geograph spatial keys.
+
+    Returns
+    -------
+    GeoGraph, GeoDiGraph, GeoMultiGraph, GeoMultiDiGraph
+        The parsed geograph (shallow copy of the input graph).
+
     """
     graph = graph.__class__(graph)
     x_coords = nx.get_node_attributes(graph, x_key)
@@ -269,17 +480,34 @@ def read_geofiles(nodes_file_path: str, edges_file_path: str,
                   node_index_attr=settings.NODE_ID_COLUMN_NAME,
                   edge_first_node_attr=settings.EDGE_FIRST_NODE_COLUMN_NAME,
                   edge_second_node_attr=settings.EDGE_SECOND_NODE_COLUMN_NAME):
-    """Read geofiles to create a ``GeoGraph``. Geofiles are read with ``geopandas.read_file`` method. See
-    ``GeoGraph.add_nodes_from_gdf`` and ``GeoGraph.add_edges_from_gdf``.
+    """Read geofiles to create a ``GeoGraph``. Geofiles are read with ``geopandas.read_file`` method.
 
-    :param nodes_file_path: File path of nodes.
-    :param edges_file_path: File path of edges.
-    :param directed: If ``True``, returns a directed graph.
-    :param multigraph: If ``True``, returns a multigraph.
-    :param node_index_attr: Node id attribute in the geofile for nodes labeling.
-    :param edge_first_node_attr: Edge first node attribute in the geofile.
-    :param edge_second_node_attr: Edge second node attribute in the geofile.
-    :return: A parsed ``Geograph``.
+    Parameters
+    ----------
+    nodes_file_path : str
+        File path of nodes.
+    edges_file_path : str
+        File path of edges.
+    directed : bool
+        If ``True``, returns a directed graph. (Default value = True)
+    multigraph : bool
+        If ``True``, returns a multigraph. (Default value = False)
+    node_index_attr : str
+        Node id attribute in the geofile for nodes labeling. (Default value = settings.NODE_ID_COLUMN_NAME)
+    edge_first_node_attr : str
+        Edge first node attribute in the geofile. (Default value = settings.EDGE_FIRST_NODE_COLUMN_NAME)
+    edge_second_node_attr : str
+        Edge second node attribute in the geofile. (Default value = settings.EDGE_SECOND_NODE_COLUMN_NAME)
+
+    Returns
+    -------
+    GeoGraph, GeoDiGraph, GeoMultiGraph, GeoMultiDiGraph
+        A parsed ``Geograph``.
+
+    See Also
+    --------
+    GeoGraph.add_nodes_from_gdf, GeoGraph.add_edges_from_gdf, geopandas.read_file
+
     """
     if directed:
         if multigraph:

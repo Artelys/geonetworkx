@@ -9,11 +9,18 @@ from networkx.classes.filters import no_filter
 
 
 def remove_isolates(graph: nx.Graph) -> int:
-    """
-    Removes all isolates nodes in the given graph.
+    """Removes all isolates nodes in the given graph.
 
-    :param graph: A graph on which to remove all isolates
-    :return: Number of removed isolates
+    Parameters
+    ----------
+    graph : nx.Graph
+        A graph on which to remove all isolates
+
+    Returns
+    -------
+    int
+        Number of removed isolates
+
     """
     isolates = list(nx.isolates(graph))
     graph.remove_nodes_from(isolates)
@@ -21,11 +28,18 @@ def remove_isolates(graph: nx.Graph) -> int:
 
 
 def remove_self_loop_edges(graph: nx.Graph) -> int:
-    """
-    Remove self loop edges on nodes of the given graph.
+    """Remove self loop edges on nodes of the given graph.
 
-    :param graph: A graph on which to remove all self loops.
-    :return: The number of removed self loops
+    Parameters
+    ----------
+    graph : nx.Graph
+        A graph on which to remove all self loops.
+
+    Returns
+    -------
+    int
+        The number of removed self loops
+
     """
     self_loops_edges = list(nx.selfloop_edges(graph))
     graph.remove_edges_from(self_loops_edges)
@@ -33,12 +47,20 @@ def remove_self_loop_edges(graph: nx.Graph) -> int:
 
 
 def remove_small_connected_components(graph: nx.Graph, minimum_allowed_size: int) -> int:
-    """
-    Remove all connected components having strictly less than ``minimum_allowed_size``.
+    """Remove all connected components having strictly less than ``minimum_allowed_size``.
 
-    :param graph: The graph on which to remove connected components
-    :param minimum_allowed_size: The minimum number of nodes where a connected component is kept.
-    :return: The number of removed connected components
+    Parameters
+    ----------
+    graph : nx.Graph
+        The graph on which to remove connected components
+    minimum_allowed_size : int
+        The minimum number of nodes where a connected component is kept.
+
+    Returns
+    -------
+    int
+        The number of removed connected components
+
     """
     connected_components = list(nx.connected_components(graph))
     nb_removed_cc = 0
@@ -53,16 +75,26 @@ def remove_small_connected_components(graph: nx.Graph, minimum_allowed_size: int
 
 
 def trim_graph_with_polygon(graph: GeoGraph, polygon: Union[Polygon, MultiPolygon], copy=False, method="intersects"):
-    """
-    Trim a graph with a given polygon. Keep only the nodes and edges that intersect (or are within) the polygon.
+    """Trim a graph with a given polygon. Keep only the nodes and edges that intersect (or are within) the polygon.
 
-    :param graph: A GeoGraph (or subclass)
-    :param polygon: A ``shapely.Polygon`` describing the area to keep
-    :param copy: If ``True``, a deep copy is done and a new graph is returned.
-    :param method: If set to ``"intersects"``, the ``shapely.intersects`` is used (keeps nodes and edges that
+    Parameters
+    ----------
+    graph : GeoGraph, GeoDiGraph, GeoMultiGraph or GeoMultiDiGraph
+        A GeoGraph (or subclass)
+    polygon : Polygon or MultiPolygon
+        A ``shapely.Polygon`` describing the area to keep
+    copy : bool
+        If ``True``, a deep copy is done and a new graph is returned. (Default value = False)
+    method : str
+        If set to ``"intersects"``, the ``shapely.intersects`` is used (keeps nodes and edges that
         intersects the polygon). If set to ``"within"``, the ``shapely.within`` is used (keep nodes and edges that are
-        strictly into the polygon).
-    :return: The modified graph if ``copy`` is ``True``.
+        strictly into the polygon). (Default value = "intersects")
+
+    Returns
+    -------
+    None or GeoGraph
+        The modified graph if ``copy`` is ``True``.
+
     """
     if copy:
         used_graph = graph.copy()
@@ -87,14 +119,24 @@ def trim_graph_with_polygon(graph: GeoGraph, polygon: Union[Polygon, MultiPolygo
 
 
 def remove_nan_attributes(graph: nx.Graph, remove_nan=True, remove_none=True, copy=False):
-    """
-    Remove the `nan` and `None` values from nodes and edges attributes.
+    """Remove the `nan` and `None` values from nodes and edges attributes.
 
-    :param graph: Graph (or subclass)
-    :param remove_nan: If true, remove the `nan` values (test is ``val is np.nan``)
-    :param remove_none: If true, remove the ``None`` values (test is ``val is None``)
-    :param copy: If True, a copy of the graph is returned, otherwise the graph is modified inplace.
-    :return: The modified graph if ``copy`` is true.
+    Parameters
+    ----------
+    graph : nx.Graph
+        Graph (or subclass)
+    remove_nan :
+        If true, remove the `nan` values (test is ``val is np.nan``) (Default value = True)
+    remove_none :
+        If true, remove the ``None`` values (test is ``val is None``) (Default value = True)
+    copy :
+        If True, a copy of the graph is returned, otherwise the graph is modified inplace. (Default value = False)
+
+    Returns
+    -------
+    None or nx.Graph
+        The modified graph if ``copy`` is true.
+
     """
     if copy:
         used_graph = graph.copy()
@@ -119,14 +161,24 @@ def remove_nan_attributes(graph: nx.Graph, remove_nan=True, remove_none=True, co
         return used_graph
 
 
-def get_dead_ends(graph: nx.Graph, node_filter=no_filter, only_strict=False):
+def get_dead_ends(graph: nx.Graph, node_filter=no_filter, only_strict=False) -> list:
     """Return the list of dead end in the given graph. A dead end is defined as a node having only one neighbor. For
     directed graphs, a strict dead end is a node having a unique predecessor and no successors. A weak dead end is a
     node having a unique predecessor that is also its unique successor.
 
-    :param graph: Graph to parse.
-    :param node_filter: Evaluates to true if a node can be considered as dead end, false otherwise.
-    :param only_strict: If true, remove only strict dead ends. Used only for directed graphs.
+    Parameters
+    ----------
+    graph : nx.Graph
+        Graph to parse.
+    node_filter :
+        Evaluates to true if a node can be considered as dead end, false otherwise. (Default value = no_filter)
+    only_strict :
+        If true, remove only strict dead ends. Used only for directed graphs. (Default value = False)
+
+    Returns
+    -------
+    list
+        List of node name that are dead ends.
     """
     if graph.is_directed():
         dead_ends = []
@@ -153,9 +205,15 @@ def remove_dead_ends(graph: nx.Graph, node_filter=no_filter, only_strict=False):
     directed graphs, a strict dead end is a node having a unique predecessor and no successors. A weak dead end is a
     node having a unique predecessor that is also its unique successor.
 
-    :param graph: Graph to simplify
-    :param node_filter: Evaluates to true if a node can be removed, false otherwise.
-    :param only_strict: If true, remove only strict dead ends. Used only for directed graphs.
+    Parameters
+    ----------
+    graph : nx.Graph
+        Graph to simplify
+    node_filter :
+        Evaluates to true if a node can be removed, false otherwise. (Default value = no_filter)
+    only_strict :
+        If true, remove only strict dead ends. Used only for directed graphs. (Default value = False)
+
     """
     nodes_to_remove = get_dead_ends(graph, node_filter, only_strict)
     while nodes_to_remove:
@@ -165,7 +223,8 @@ def remove_dead_ends(graph: nx.Graph, node_filter=no_filter, only_strict=False):
 
 def _clean_merge_mapping(edge_mapping: dict, new_edge: tuple, old_edges: list, directed: bool):
     """For the two-degree node merge operation, it cleans the new-old edges mapping dictionary by reporting original
-    edges to the newest edge. It makes sure that all edges in the mapping dictionary dict are in the resulting graph."""
+    edges to the newest edge. It makes sure that all edges in the mapping dictionary dict are in the resulting graph.
+    """
     for e in old_edges:
         old_edge = None
         if e in edge_mapping.keys():
@@ -186,16 +245,25 @@ def two_degree_node_merge_for_directed_graphs(graph: GeoDiGraph, node_filter=no_
     different neighbors `u` and `v` with one of the following set of edges:
         * `(u, n)` and `(n, v)`
         * `(u, n)`, `(n, u)`, `(n, v)` and `(v, n)`
-
+    
     For the first case, a merging edge `(u, v)` is added. Under the latter, two edges `(u, v)` and `(v, u)` are added.
     The added edges will have a geometry corresponding to concatenation of the two replaced edges. If a replaced edge
     doesn't have a geometry, the added edge will not have a geometry as well. Edges geometries must be well ordered
     (first node must match with line's first extremity), otherwise lines concatenation may not be consistent (see
     ``order_well_lines``).
 
-    :param graph: Given graph to modify
-    :param node_filter: Evaluates to true if a given node can be merged.
-    :return: Dictionary indicating for each new edge the merged ones.
+    Parameters
+    ----------
+    graph : GeoDiGraph or GeoMultiDiGraph
+        Given graph to modify
+    node_filter :
+        Evaluates to true if a given node can be merged. (Default value = no_filter)
+
+    Returns
+    -------
+    dict
+        Dictionary indicating for each new edge the merged ones.
+
     """
     def _get_merging_line(g: GeoDiGraph, e1: tuple, e2: tuple) -> Union[LineString, None]:
         first_edge_geometry = g.edges[e1].get(g.edges_geometry_key, None)
@@ -271,9 +339,18 @@ def two_degree_node_merge_for_undirected_graphs(graph: GeoGraph, node_filter=no_
     nodes with two edges connecting two different nodes. If a replaced edge doesn't have a geometry, the added edge will
     not have a geometry as well.
 
-    :param graph: Graph to modify
-    :param node_filter: Evaluates to true if a given node can be merged.
-    :return: Dictionary indicating for each new edge the merged ones.
+    Parameters
+    ----------
+    graph : GeoGraph or GeoMultiGraph
+        Graph to modify
+    node_filter :
+        Evaluates to true if a given node can be merged. (Default value = no_filter)
+
+    Returns
+    -------
+    dict
+        Dictionary indicating for each new edge the merged ones.
+
     """
     if graph.is_multigraph():
         keys_args = {"keys": True}
@@ -311,12 +388,24 @@ def two_degree_node_merge_for_undirected_graphs(graph: GeoGraph, node_filter=no_
 
 
 def two_degree_node_merge(graph: GeoGraph, node_filter=no_filter) -> dict:
-    """Merge edges that connects two nodes with a unique third node. See ``two_degree_node_merge_for_directed_graphs``
-    or ``two_degree_node_merge_for_undirected_graphs`` for more details.
+    """Merge edges that connects two nodes with a unique third node.
 
-    :param graph: Graph to modify
-    :param node_filter: Evaluates to true if a given node can be merged.
-    :return: Dictionary indicating for each new edge the merged ones.
+    Parameters
+    ----------
+    graph : GeoGraph, GeoDiGraph, GeoMultiGraph or GeoMultiDiGraph
+        Graph to modify
+    node_filter :
+        Evaluates to true if a given node can be merged. (Default value = no_filter)
+
+    Returns
+    -------
+    dict
+        Dictionary indicating for each new edge the merged ones.
+
+    See Also
+    --------
+    two_degree_node_merge_for_directed_graphs, two_degree_node_merge_for_undirected_graphs
+
     """
     if graph.is_directed():
         return two_degree_node_merge_for_directed_graphs(graph, node_filter)

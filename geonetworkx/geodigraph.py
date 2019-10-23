@@ -5,9 +5,8 @@ import geonetworkx as gnx
 
 
 class GeoDiGraph(GeoGraph, nx.DiGraph):
-    """
-    Base class for directed geographic graphs.
-
+    """Base class for directed geographic graphs.
+    
     Because edges are directed, it supposes that the edges lines are well-ordered. Namely, that the first point of the
     line matches with the coordinates of the first vertex of the edge (or is at least close) and vice versa with the
     last point of the line and the second. If this is not the case, the method ``order_well_lines`` can be useful to
@@ -15,7 +14,7 @@ class GeoDiGraph(GeoGraph, nx.DiGraph):
     """
 
     def to_nx_class(self):
-        """Return the closest networkx class (in the inheritance graph)."""
+        """ """
         return nx.DiGraph
 
     def to_undirected(self, reciprocal=False, as_view=False):

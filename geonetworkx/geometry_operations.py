@@ -14,9 +14,7 @@ PointsCoordinatesLike = Union[Iterable[PointCoordinatesLike], MultiPoint]
 
 
 class Extremity:
-    """
-    Represents an extremity of a line. It's useful to parse and deal with lines given as input.
-    """
+    """Represents an extremity of a line. It's useful to parse and deal with lines given as input."""
     nb_extremity = 0
 
     def __init__(self, shape_id, position, coords):
@@ -34,15 +32,7 @@ class Extremity:
 
 
 def merge_two_shape(e1: Extremity, e2: Extremity, line1: LineString, line2: LineString) -> LineString:
-    """
-    Merge two lines (line1 and line2) with the given extremities (e1 and e2).
-
-    :param e1: line1 extremity
-    :param e2: line2 extremity
-    :param line1: first line (shapely LineString)
-    :param line2: second line (shapely LineString)
-    :return: the resulting merged line (shapely LineString)
-    """
+    """Merge two lines (line1 and line2) with the given extremities (e1 and e2)."""
     if e1.position == -1 and e2.position == 0:
         new_line = LineString(list(line1.coords) + list(line2.coords))
     elif e1.position == 0 and e2.position == 0:
@@ -57,13 +47,7 @@ def merge_two_shape(e1: Extremity, e2: Extremity, line1: LineString, line2: Line
 
 
 def merge_two_lines_with_closest_extremities(first_line: LineString, second_line: LineString) -> LineString:
-    """
-    Merge two lines with their closest extremities. Euclidian distance is used here.
-
-    :param first_line: first line to merge
-    :param second_line: second line
-    :return: merged line
-    """
+    """Merge two lines with their closest extremities. Euclidian distance is used here."""
     combinations = [(0, 0), (-1, 0), (0, -1), (-1, -1)]
     extremities = np.array([[first_line.coords[i1], second_line.coords[i2]] for (i1, i2) in combinations])
     distances = np.linalg.norm(extremities[:, 0, :] - extremities[:, 1, :], axis=1)
@@ -81,13 +65,7 @@ def merge_two_lines_with_closest_extremities(first_line: LineString, second_line
 
 
 def get_shape_extremities(shape: LineString, shape_id: int):
-    """
-    Return the extremities of a shape in the network_shapes_gdf.
-
-    :param shape: LineString on which to parse Extremity objects
-    :param shape_id: id of the shape
-    :return: Two extremities of the shape.
-    """
+    """Return the extremities of a shape in the network_shapes_gdf."""
     assert isinstance(shape, LineString), "Shape must be a LineString"
     first_vertex = shape.coords[0]
     last_vertex = shape.coords[-1]
@@ -99,12 +77,24 @@ def get_shape_extremities(shape: LineString, shape_id: int):
 
 
 def convert_multilinestring_to_linestring(gdf: gpd.GeoDataFrame) -> int:
-    """
-    Convert all geometry attribute being a 'MultiLineString' to a 'LineString'. The created line is a merge of all sub
-    lines.
+    """Convert all geometry attribute being a 'MultiLineString' to a 'LineString'. The created line is a merge of all
+     sublines.
 
-    :param gdf: A GeoDataFrame with a 'geometry' column to modify
-    :return: The number of converted 'MultiLineString'
+    Parameters
+    ----------
+    gdf : gpd.GeoDataFrame
+        A GeoDataFrame with a 'geometry' column to modify
+
+    Returns
+    -------
+    int
+        The number of converted 'MultiLineString'
+
+    Raises
+    ------
+    RuntimeError
+        If an input shape is not a LineString or a MultiLineString
+
     """
     nb_converted_multilinestring = 0
     for s in gdf.index:
@@ -122,13 +112,24 @@ def convert_multilinestring_to_linestring(gdf: gpd.GeoDataFrame) -> int:
     return nb_converted_multilinestring
 
 
-def discretize_line(line: LineString):
-    """
-    Takes a shapely LineString and discretize it into a list of shapely Points. Each point is at most at the
+def discretize_line(line: LineString) -> list:
+    """Takes a shapely LineString and discretize it into a list of shapely Points. Each point is at most at the
     discretization tolerance distance of the following point.
 
-    :param line: Line to discretize
-    :return: An ordered list of shapely Point
+    Parameters
+    ----------
+    line : LineString
+        Line to discretize
+
+    Returns
+    -------
+    list
+        An ordered list of shapely Point
+
+    See Also
+    --------
+    discretize_lines
+
     """
     points_list = []
     current_dist = settings.DISCRETIZATION_TOLERANCE
@@ -142,6 +143,24 @@ def discretize_line(line: LineString):
 
 
 def discretize_lines(lines: Iterable[LineString]):
+    """Discretize some line into points.
+
+    Parameters
+    ----------
+    lines: Iterable[LineString] :
+        Lines to discretize
+
+    Returns
+    -------
+    MultiPoint and defaultdict
+        Return all the discretized points as a shapely MultiPoint and a dictionary to map the discretized points for
+        each line.
+
+    See Also
+    --------
+    discretize_line
+
+    """
     points_line_association = defaultdict(list)
     all_points = []
     nb_points = 0
@@ -156,13 +175,24 @@ def discretize_lines(lines: Iterable[LineString]):
 
 
 def get_closest_point_from_points(points_from: PointsCoordinatesLike, points_to: list = None, kd_tree: cKDTree = None):
-    """
-    Compute the closest point among the ``points_from`` list for each point in the ``points_to`` list.
+    """Compute the closest point among the ``points_from`` list for each point in the ``points_to`` list.
 
-    :param points_from: Iterable of points coordinates
-    :param points_to: Iterable of points coordinates
-    :param kd_tree: a constructed kd tree representing ``points_from``
-    :return: tuple: (distances, indexes)
+    Parameters
+    ----------
+    points_from : PointsCoordinatesLike
+        Iterable of points coordinates
+    points_to : list or None
+        Iterable of points coordinates (Default value = None)
+    kd_tree : cKDTree
+        a constructed kd tree representing ``points_from`` (Default value = None)
+
+    Returns
+    -------
+    array of floats
+        distances
+    ndarray of ints
+        indexes
+
     """
     if points_to is None and kd_tree is None:
         raise ValueError("Must provide at least argument 'points_to' or 'kd_tree'")
@@ -172,15 +202,26 @@ def get_closest_point_from_points(points_from: PointsCoordinatesLike, points_to:
 
 
 def get_closest_point_from_line(line_from: LineString, points_to: list = None, kd_tree: cKDTree = None):
-    """
-    Return the closest point from a given line and its distance.
+    """Return the closest point from a given line and its distance.
 
-    :param line_from: A shapely LineString
-    :param points_to: A list of points among which the closest to the line has to be found (optional is ``kdtree`` is
+    Parameters
+    ----------
+    line_from : LineString
+        A shapely LineString (Default value = None)
+    points_to : list
+        A list of points among which the closest to the line has to be found (optional is ``kdtree`` is
         given)
-    :param kd_tree: A kd-tree representing the points among which the closest to the line has to be found (optional if
-        ``points_to`` is given)
-    :return: a couple containing the closest distance and the index of the closest point
+    kd_tree : cKDTree
+        A kd-tree representing the points among which the closest to the line has to be found (optional if
+        ``points_to`` is given) (Default value = None)
+
+    Returns
+    -------
+    float
+        closest distance
+    int
+        index of the closest point
+
     """
     if points_to is None and kd_tree is None:
         raise ValueError("Must provide at least argument 'points_to' or 'kd_tree'")
@@ -193,15 +234,26 @@ def get_closest_point_from_line(line_from: LineString, points_to: list = None, k
 
 
 def get_closest_point_from_multi_shape(multi_shape, points_to=None, kd_tree=None):
-    """
-    Computes the closest point to the multi shape (i.e. the point that has the smallest projection distance on the
+    """Computes the closest point to the multi shape (i.e. the point that has the smallest projection distance on the
     entire multi shape object.
 
-    :param multi_shape: The multi shape object can be any shapely object among: MultiPoint, MultiLineString
-    :param points_to:  A list of points among which to find the closest to the multi shape
-    :param kd_tree: A kdtree representing the points among which the closest to the multishape has to be found (optional
-        if 'points_to' is given)
-    :return: A couple containing the distance and the index of the closest point
+    Parameters
+    ----------
+    multi_shape :  MultiPoint or MultiLineString
+        The multi shape object can be any shapely object among: MultiPoint, MultiLineString
+    points_to : list
+        A list of points among which to find the closest to the multi shape (Default value = None)
+    kd_tree : cKDTree
+        A kdtree representing the points among which the closest to the multishape has to be found (optional
+        if 'points_to' is given) (Default value = None)
+
+    Returns
+    -------
+    float
+        distance
+    int
+        index of the closest point
+
     """
     if isinstance(multi_shape, MultiPoint):
         distances_and_points_indexes = get_closest_point_from_points(multi_shape, points_to, kd_tree)
@@ -219,14 +271,25 @@ def get_closest_point_from_multi_shape(multi_shape, points_to=None, kd_tree=None
 def get_closest_point_from_shape(shape: Union[Point, LineString, MultiPoint, MultiLineString],
                                  points_to: Union[MultiPoint, np.ndarray, list] = None,
                                  kd_tree: cKDTree = None):
-    """
-    Compute the closest point to the given shape.
+    """Compute the closest point to the given shape.
 
-    :param shape: Any shapely shape (Point, MultiPoint, LineString, MultiLineString)
-    :param points_to:  A list of points among which to find the closest to the multi shape
-    :param kd_tree: A kdtree representing the points among which the closest to the shape has to be found (optional if
-        'points_to' is given)
-    :return: A couple containing the distance and the index of the closest point
+    Parameters
+    ----------
+    shape : Point, MultiPoint, LineString or MultiLineString
+        Any shapely shape
+    points_to : list
+        A list of points among which to find the closest to the multi shape (Default value = None)
+    kd_tree : cKDTree
+        A kdtree representing the points among which the closest to the shape has to be found (optional if
+        'points_to' is given) (Default value = None)
+
+    Returns
+    -------
+    float
+        distance
+    int
+        index of the closest point
+
     """
     if isinstance(shape, Point):
         result = get_closest_point_from_points(MultiPoint([shape]), points_to, kd_tree=kd_tree)
@@ -241,12 +304,22 @@ def get_closest_point_from_shape(shape: Union[Point, LineString, MultiPoint, Mul
 
 
 def get_closest_point_from_shapes(shapes_from, points_to):
-    """
-    Compute the closest point for each given shape.
+    """Compute the closest point for each given shape.
 
-    :param shapes_from: An iterable of shapes (Point, MultiPoint, LineString, MultiLineString)
-    :param points_to:  A list of points among which to find the closest to the multi shape
-    :return: A list of couple containing the distance and the index of the closest point
+    Parameters
+    ----------
+    shapes_from :
+        An iterable of shapes (Point, MultiPoint, LineString, MultiLineString)
+    points_to : list
+        A list of points among which to find the closest to the multi shape
+
+    Returns
+    -------
+    float
+        distance
+    int
+        index of the closest point
+
     """
     results = []
     kd_tree = cKDTree(points_to)
@@ -260,15 +333,27 @@ def get_closest_line_from_point(point_from: PointCoordinatesLike,
                                 lines_to=None,
                                 kd_tree=None,
                                 points_line_association=None):
-    """
-    Find the closest line from a given point.
+    """Find the closest line from a given point.
 
-    :param point_from: Point coordinate to find the closest line.
-    :param lines_to: Group of lines among which the closest has to be found (optional if ``kdtree`` and
-                    ``points_line_association`` are given).
-    :param kd_tree: An optional pre-computed kd_tree of discretized lines.
-    :param points_line_association: An optional pre-computed dictionary matching lines and discretized points.
-    :return: The closest distance and closest line index.
+    Parameters
+    ----------
+    point_from : PointCoordinatesLike
+        Point coordinate to find the closest line.
+    lines_to : list
+        Group of lines among which the closest has to be found (optional if ``kdtree`` and
+        ``points_line_association`` are given). (Default value = None)
+    kd_tree : cKDTree
+        An optional pre-computed kd_tree of discretized lines. (Default value = None)
+    points_line_association : dict
+        An optional pre-computed dictionary matching lines and discretized points. (Default value = None)
+
+    Returns
+    -------
+    float
+        distance
+    int
+        index of the closest line
+
     """
     if lines_to is None and kd_tree is None:
         raise ValueError("Must provide at least argument 'points_to' or 'kd_tree'")
@@ -285,12 +370,20 @@ def get_closest_line_from_point(point_from: PointCoordinatesLike,
 
 
 def get_closest_line_from_points(points_from, lines_to):
-    """
-    Find the closest line for each given points.
+    """Find the closest line for each given points.
 
-    :param points_from: Points coordinates.
-    :param lines_to: Group of lines among which the closest has to be found.
-    :return: A list of closest lines indexes.
+    Parameters
+    ----------
+    points_from : list
+        Points coordinates.
+    lines_to : list
+        Group of lines among which the closest has to be found.
+
+    Returns
+    -------
+    list
+        A list of closest lines indexes.
+
     """
     points_to, points_line_association = discretize_lines(lines_to)
     kd_tree = cKDTree(points_to)
@@ -302,6 +395,7 @@ def get_closest_line_from_points(points_from, lines_to):
 
 
 def get_polygons_neighborhood(polygons):
+    """Returns for each polygon a set of intersecting polygons."""
     nb_polygons = len(polygons)
     neighborhoods = [set() for c in range(nb_polygons)]
     for ix1, p1 in enumerate(polygons):
@@ -314,7 +408,7 @@ def get_polygons_neighborhood(polygons):
 
 
 def split_line(line, distance):
-    """Cuts a line in two at a distance from its starting point"""
+    """Cuts a line in two at a distance from its starting point."""
     coords = list(line.coords)
     if distance <= 0.0:
         return [LineString([coords[0]]*2), LineString(line)]
@@ -330,7 +424,25 @@ def split_line(line, distance):
 
 
 def coordinates_almost_equal(c1: Iterable, c2: Iterable, tolerance=1e-8) -> bool:
-    """Return true if the two given set of coordinates are almost equals within a given tolerance"""
+    """Returns true if the two given list of coordinates equals within a given tolerance.
+
+    Parameters
+    ----------
+    c1: Iterable
+        First point coordinates
+        
+    c2: Iterable
+        Second point coordinates
+        
+    tolerance : float
+         Tolerance comparison (Default value = 1e-8)
+
+    Returns
+    -------
+    bool
+        True if the coordinates almost equal, false otherwise.
+
+    """
     for i, j in zip(c1, c2):
         if abs(i - j) > tolerance:
             return False
@@ -338,12 +450,27 @@ def coordinates_almost_equal(c1: Iterable, c2: Iterable, tolerance=1e-8) -> bool
 
 
 def almost_equally_located(p1: Point, p2: Point, tolerance=1e-8) -> bool:
-    """Return True if the two given point are equally located within a given tolerance"""
+    """Test if two point are loacated at the same place within a tolerance.
+
+    Parameters
+    ----------
+    p1: Point
+        First point to compare
+    p2: Point
+        Second point to compare
+    tolerance :
+         Comparison tolerance (Default value = 1e-8)
+
+    Returns
+    -------
+    bool
+        True if the two points have the same coordinates.
+    """
     return coordinates_almost_equal([p1.x, p1.y], [p2.x, p2.y], tolerance)
 
 
-def insert_point_in_line(line: LineString, point_coords: list, position: int):
-    """Insert a new point in a line given its coordinates"""
+def insert_point_in_line(line: LineString, point_coords: list, position: int) -> LineString:
+    """Insert a new point in a line given its coordinates."""
     new_line_coordinates = line.coords[0:position]
     new_line_coordinates.append((point_coords[0], point_coords[1]))
     new_line_coordinates.extend(line.coords[position:])

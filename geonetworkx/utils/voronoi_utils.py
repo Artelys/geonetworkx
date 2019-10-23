@@ -80,9 +80,18 @@ class PyVoronoiHelper:
         """"Parse the results of ``pyvoronoi`` to compute the voronoi cells coordinates. The infinite ridges are
         projected at a ``eta`` distance in the ridge direction.
 
-        :param eta: Distance for infinite ridges projection.
-        :param discretization_tolerance: Discretization distance for curved edges.
-        :return: A dictionary mapping the cells ids and their coordinates.
+        Parameters
+        ----------
+        eta : float
+            Distance for infinite ridges projection. (Default value = 1.0)
+        discretization_tolerance : float
+            Discretization distance for curved edges. (Default value = 0.05)
+
+        Returns
+        -------
+        dict
+            A dictionary mapping the cells ids and their coordinates.
+
         """
         vertices = self.pv.GetVertices()
         cells = self.pv.GetCells()
@@ -177,9 +186,18 @@ def split_as_simple_segments(lines: list, tol=1e-7) -> defaultdict:
     """Split a list of lines to simple segments (linestring composed by two points). All returned segments do not
     cross themselves except at extremities.
 
-    :param lines: List of lines to split
-    :param tol: Tolerance to test if a line is a sub line of another one.
-    :return: A dictionary mapping for each input line index, the list of simple segments.
+    Parameters
+    ----------
+    lines : list
+        List of lines to split
+    tol : float
+        Tolerance to test if a line is a sub line of another one. (Default value = 1e-7)
+
+    Returns
+    -------
+    defaultdict
+        A dictionary mapping for each input line index, the list of simple segments.
+
     """
     split_lines_mapping = defaultdict(list)
     all_split_lines = split_linestring_as_simple_linestrings(MultiLineString(lines))
@@ -203,11 +221,19 @@ def split_as_simple_segments(lines: list, tol=1e-7) -> defaultdict:
 def compute_voronoi_cells_from_lines(lines: list, tolerance=1e-7) -> list:
     """Compute the voronoi cells of given generic lines. Input linestrings can be not simple.
 
-    :param lines: List of ``LineString``
-    :param tolerance: Tolerance for the voronoi cells computation (Two points will be considered equal if their
-        coordinates are equal when rounded at ``tolerance``).
-    :return: A `GeoDataFrame` with cells geometries. A column named `id` referencing the index of the associated
-        input geometry.
+    Parameters
+    ----------
+    lines : list
+        List of ``LineString``
+    tolerance : float
+        Tolerance for the voronoi cells computation (Two points will be considered equal if their
+        coordinates are equal when rounded at ``tolerance``). (Default value = 1e-7)
+
+    Returns
+    -------
+    list
+        A list of cells geometries.
+
     """
     simple_segments_mapping = split_as_simple_segments(lines, tolerance)
     all_segments = [list(s.coords) for i in range(len(lines)) for s in simple_segments_mapping[i]]

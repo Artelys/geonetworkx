@@ -81,12 +81,24 @@ def boundary_edge_buffer(line: LineString) -> GenericPolygon:
 def isochrone_polygon(graph: GeoGraph, source, limit, weight="length", tolerance=1e-7) -> GenericPolygon:
     """Return a polygon approximating the isochrone set in the geograph.
 
-    :param graph: Graph representing possible routes.
-    :param source: Source node from where distance is computed
-    :param limit: Isochrone limit (e.g. 100 meters, 5 minutes, depending on ``weight`` unit).
-    :param weight: Weight attribute on edges to compute distances (edge weights should be non-negative).
-    :param tolerance: Tolerance to compute Voronoi cells.
-    :return: A polygon representing all reachable points within the given limit from the source node.
+    Parameters
+    ----------
+    graph : Geograph
+        Graph representing possible routes.
+    source :
+        Source node from where distance is computed
+    limit : float or int
+        Isochrone limit (e.g. 100 meters, 5 minutes, depending on ``weight`` unit).
+    weight : str
+        Weight attribute on edges to compute distances (edge weights should be non-negative). (Default value = "length")
+    tolerance : float
+        Tolerance to compute Voronoi cells. (Default value = 1e-7)
+
+    Returns
+    -------
+    Polygon or MultiPolygon
+        A polygon representing all reachable points within the given limit from the source node.
+
     """
     working_graph = graph.copy()
     # Compute the ego-graph
@@ -117,14 +129,23 @@ def get_alpha_shape_polygon(points: list, quantile: float) -> GenericPolygon:
     """Return the alpha-shape polygon formed by the given points. Alpha parameter is determined using a quantile of
     circumradius of Delaunay triangles.
 
-    :param points: List of input points (2D)
-    :param quantile: Quantile on circumradius to determine alpha (100 returns the convex hull,
+    Parameters
+    ----------
+    points : list
+        List of input points (2D)
+    quantile : float
+        Quantile on circumradius to determine alpha (100 returns the convex hull,
         0 returns an empty polygon). ``0 <= quantile <= 100``.
-    :return: The polygon formed by all triangles having a circumradius inferior or equal to :math:`1/\\alpha`.
 
-    Note that this does not return the exhaustive alpha-shape for low quantiles, the minimum spanning tree LineString
-    should be added to the returned polygon.
-    This is adapted from `Sean Gillies code <https://sgillies.net/2012/10/13/the-fading-shape-of-alpha.html>`_.
+    Returns
+    -------
+    Polygon or MultiPolygon
+        The polygon formed by all triangles having a circumradius inferior or equal to :math:`1/\\alpha`.
+        
+        Note that this does not return the exhaustive alpha-shape for low quantiles, the minimum spanning tree LineString
+        should be added to the returned polygon.
+        This is adapted from `Sean Gillies code <https://sgillies.net/2012/10/13/the-fading-shape-of-alpha.html>`_.
+
     """
     points = np.asarray(points)
     tri = Delaunay(points)
@@ -161,15 +182,29 @@ def isochrone_polygon_with_alpha_shape(graph: GeoGraph, source, limit,
                                        tolerance=1e-7) -> GenericPolygon:
     """Returns an approximation of the isochrone polygon using an alpha-shape of the Shortest Path Tree.
 
-    :param graph: GeoGraph to browse
-    :param source: Source node from where distance is computed
-    :param limit: Isochrone limit (e.g. 100 meters, 5 minutes, depending on ``weight`` unit).
-    :param weight: Weight attribute on edges to compute distances (edge weights should be non-negative).
-    :param alpha_quantile: Quantile on circumradius to determine alpha (100 returns the convex hull,
-        0 returns an empty polygon). ``0 <= quantile <= 100``.
-    :param remove_holes: If ``True`` remove holes in the returned polygon.
-    :param tolerance: Buffering tolerance on polygon for rendering
-    :return: A polygon approximating the isochrone.
+    Parameters
+    ----------
+    graph : GeoGraph
+        GeoGraph to browse
+    source :
+        Source node from where distance is computed
+    limit : float or int
+        Isochrone limit (e.g. 100 meters, 5 minutes, depending on ``weight`` unit).
+    weight : str
+        Weight attribute on edges to compute distances (edge weights should be non-negative). (Default value = "length")
+    alpha_quantile : float
+        Quantile on circumradius to determine alpha (100 returns the convex hull,
+        0 returns an empty polygon). ``0 <= quantile <= 100``. (Default value = 99.0)
+    remove_holes : bool
+        If ``True`` remove holes in the returned polygon. (Default value = True)
+    tolerance : float
+        Buffering tolerance on polygon for rendering (Default value = 1e-7)
+
+    Returns
+    -------
+    Polygon or MultiPolygon
+        A polygon approximating the isochrone.
+
     """
     # Compute the ego-graph
     ego_graph = gnx.extended_ego_graph(graph, source, limit, distance=weight)

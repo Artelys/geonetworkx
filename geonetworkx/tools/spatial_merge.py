@@ -19,8 +19,7 @@ from collections import defaultdict
 
 def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=False, merge_direction="both",
                          node_filter=no_filter, edge_filter=no_filter, intersection_nodes_attr=None) -> GeoGraph:
-    """
-    Merge given points as node with a spatial merge. Points are projected on the closest edge of the
+    """Merge given points as node with a spatial merge. Points are projected on the closest edge of the
     graph and an intersection node is added if necessary. If two nodes a given point and a node have the same name, with
     equal coordinates, then the node is considered as already in the graph. A discretization tolerance
     (``settings.DISCRETIZATION_TOLERANCE``) is used for edges lines and is set by default to a constant matching the
@@ -28,22 +27,41 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
     created from the geodataframe have attributes described by other columns (except if an attribute value is `nan`).
     When a point is projected on an edge, this edge is removed and replaced by two others that connect the extremities
     to the intersection node. A reference to the original edge is kept on theses new edges with the attribute
-    ``settings.ORIGINAL_EDGE_KEY``. The original edge is the oldest parent of the new edge, to have the direct parent, 
+    ``settings.ORIGINAL_EDGE_KEY``. The original edge is the oldest parent of the new edge, to have the direct parent,
     the attribute has to be cleant first.
 
-    :param graph: A GeoGraph or derived class describing a spatial graph.
-    :param points_gdf: A list of point describing new nodes to add.
-    :param inplace: If True, do operation inplace and return None.
-    :param merge_direction: For directed graphs only:
+    Parameters
+    ----------
+    graph : GeoGraph, GeoDiGraph, GeoMultiGraph or GeoMultiDiGraph
+        A GeoGraph or derived class describing a spatial graph.
+    points_gdf : gpd.GeoDataFrame
+        A list of point describing new nodes to add.
+    inplace : bool
+        If True, do operation inplace and return None. (Default value = False)
+    merge_direction : str
+        For directed graphs only:
+        
+        * ``'both'``: 2 edges are added: graph -> new node and new node -> graph
+        * ``'in'``: 1 edge is added: new_node -> graph
+        * ``'out'``: 1 edge is added: graph -> new_node (Default value = "both")
+    node_filter :
+        A node filter (lambda) to exclude nodes (and by the way all concerned edges) from the projection
+        operation. (Default value = no_filter)
+    edge_filter :
+        An edge filter (lambda) to exclude edges on which the projection will not take place. (Default value = no_filter)
+    intersection_nodes_attr : str
+        A dictionary of attributes (constant for all added intersection nodes). (Default value = None)
 
-         * ``'both'``: 2 edges are added: graph -> new node and new node -> graph
-         * ``'in'``: 1 edge is added: new_node -> graph
-         * ``'out'``: 1 edge is added: graph -> new_node
-    :param node_filter: A node filter (lambda) to exclude nodes (and by the way all concerned edges) from the projection
-     operation.
-    :param edge_filter: An edge filter (lambda) to exclude edges on which the projection will not take place.
-    :param intersection_nodes_attr: A dictionary of attributes (constant for all added intersection nodes).
-    :return: None if inplace, new graph otherwise.
+    Returns
+    -------
+    None or GeoGraph
+        If not inplace, the created graph.
+
+
+    See Also
+    --------
+    spatial_graph_merge
+
     """
     if not inplace:
         graph = graph.copy()
@@ -145,18 +163,35 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
 
 def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
                         inplace=False, merge_direction="both", node_filter=None, intersection_nodes_attr=None):
-    """
-    Operates spatial merge between two graphs. Spatial edge projection is used on merging nodes (see
+    """Operates spatial merge between two graphs. Spatial edge projection is used on merging nodes (see
     ``spatial_points_merge``). The ``base_graph`` attributes have higher priority than the ``other_graph`` attributes (
     i.e. if graphs have common graph attributes, nodes or edges, the ``base_graph`` attributes will be kept).
 
-    :param base_graph: Base graph on which the merge operation is done.
-    :param other_graph: Input graph to merge. Modified graph if operation is done inplace.
-    :param inplace: If True, do operation inplace and return None.
-    :param merge_direction: See ``spatial_points_merge``
-    :param node_filter: Lambda returning if a given node (from the ``other_graph`` graph) has to be merged.
-    :param intersection_nodes_attr: A dictionary of attributes (constant for all added intersection nodes).
-    :return: A new graph with the same type as ``base_graph`` if not inplace.
+    Parameters
+    ----------
+    base_graph : GeoGraph, GeoDiGraph, GeoMultiGraph or GeoMultiDiGraph
+        Base graph on which the merge operation is done.
+    other_graph : GeoGraph, GeoDiGraph, GeoMultiGraph or GeoMultiDiGraph
+        Input graph to merge. Modified graph if operation is done inplace.
+    inplace : bool
+        If True, do operation inplace and return None. (Default value = False)
+    merge_direction : str
+        See ``spatial_points_merge`` (Default value = "both")
+    node_filter :
+        Lambda returning if a given node (from the ``other_graph`` graph) has to be merged. (Default value = None)
+    intersection_nodes_attr : str
+        A dictionary of attributes (constant for all added intersection nodes). (Default value = None)
+
+
+    Returns
+    -------
+    None or GeoGraph
+        A new graph with the same type as ``base_graph`` if not inplace.
+
+    See Also
+    --------
+    spatial_points_merge
+
     """
     if base_graph.is_directed() != other_graph.is_directed():
         raise ValueError("Merging a directed graph and an undirected graph is ambiguous")

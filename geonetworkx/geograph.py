@@ -8,14 +8,26 @@ import geonetworkx.settings as settings
 
 
 class GeoGraph(nx.Graph):
-    """
-    This class extends the ``networkx.Graph`` to represent a graph that have a geographical meaning. Nodes are located
-    with their coordinates (x, y) (using ``shapely.geometry.Point`` objects) and edges can be represented with a given
-    broken line (using ``shapely.geometry.LineString`` objects). Each graph has its own keys for naming nodes and edges
-    geometry (``nodes_geometry_key``, ``edges_geometry_key``). A coordinate reference system (CRS) can be defined for a
-    graph and will be used for some methods managing earth coordinates (especially for distances). For now, the only
-    supported CRS is the WGS84 standard (EPSG:4326). All nodes must have defined coordinates, otherwise an error will be
-    raised.
+    """This class extends the ``networkx.Graph`` to represent a graph that have a geographical meaning. Nodes are
+    located with their coordinates (x, y) (using ``shapely.geometry.Point`` objects) and edges can be represented with a
+    given broken line (using ``shapely.geometry.LineString`` objects). Each graph has its own keys for naming nodes and
+    edges geometry (``nodes_geometry_key``, ``edges_geometry_key``). A coordinate reference system (CRS) can be defined
+    for a graph and will be used for some methods managing earth coordinates (especially for distances). For now, the
+    only supported CRS is the WGS84 standard (EPSG:4326). All nodes must have defined coordinates, otherwise an error
+    will be raised  .
+
+    Raises
+    ------
+    ValueError
+        If the all nodes don't have valid coordinates.
+
+    See Also
+    --------
+    networkx.Graph
+    GeoDiGraph
+    GeoMultiGraph
+    GeoMultiDiGraph
+
     """
     def __init__(self, incoming_graph_data=None, **attr):
         super(GeoGraph, self).__init__(incoming_graph_data, **attr)
@@ -34,7 +46,8 @@ class GeoGraph(nx.Graph):
         return self.graph.get('nodes_geometry_key', settings.NODES_GEOMETRY_DEFAULT_KEY)
 
     @nodes_geometry_key.setter
-    def nodes_geometry_key(self, s):
+    def nodes_geometry_key(self, s: str):
+        """Sets the node geometry key with the given value"""
         self.graph['nodes_geometry_key'] = s
 
     @property
@@ -44,7 +57,8 @@ class GeoGraph(nx.Graph):
         return self.graph.get('edges_geometry_key', settings.EDGES_GEOMETRY_DEFAULT_KEY)
 
     @edges_geometry_key.setter
-    def edges_geometry_key(self, s):
+    def edges_geometry_key(self, s: str):
+        """Sets the edges geometry key with the given value"""
         self.graph['edges_geometry_key'] = s
 
     @property
@@ -55,48 +69,137 @@ class GeoGraph(nx.Graph):
 
     @crs.setter
     def crs(self, c):
+        """Sets the current crs"""
         self.graph['crs'] = c
 
-    def get_node_coordinates(self, node_name):
-        """Return the coordinates of a given node."""
+    def get_node_coordinates(self, node_name) -> list:
+        """Return the coordinates of the given node.
+
+        Parameters
+        ----------
+        node_name
+            Name of the node on which the coordinates are browsed.
+
+        Returns
+        -------
+        list
+            A two-element list containing (x,y) coordinates of the given node.
+
+        See Also
+        --------
+        get_nodes_coordinates, get_node_as_point, get_nodes_as_points
+
+        """
         point = self.get_node_as_point(node_name)
         return [point.x, point.y]
 
-    def get_nodes_coordinates(self):
-        """Return all nodes coordinates within a dictionary."""
+    def get_nodes_coordinates(self) -> dict:
+        """Return all nodes coordinates within a dictionary.
+        
+        Returns
+        -------
+        dict
+            Dictionary containing the coordinates of the each node of the graph.
+
+        See Also
+        --------
+        get_node_coordinates, get_node_as_point, get_nodes_as_points
+
+        """
         return {n: self.get_node_coordinates(n) for n in self.nodes}
 
     def get_node_as_point(self, node_name):
-        """Return a node as a ``shapely.geometry.Point`` object."""
+        """Return a node as a ``shapely.geometry.Point`` object.
+
+        Parameters
+        ----------
+        node_name :
+            Name of the node on which the geometry is browsed.
+
+        Returns
+        -------
+        shapely.geometry.Point
+            The point representing the located node.
+
+        See Also
+        --------
+        get_node_coordinates, get_node_coordinates, get_nodes_as_points
+
+        """
         node_data = self.nodes[node_name]
         return node_data[self.nodes_geometry_key]
 
-    def get_nodes_as_points(self):
-        """Return all nodes as ``shapely.geometry.Point`` objects within a dictionary."""
+    def get_nodes_as_points(self) -> dict:
+        """Return all nodes as ``shapely.geometry.Point`` objects within a dictionary.
+
+        Returns
+        -------
+        dict
+            Dictionary containing the geometry of each node of the graph.
+
+        See Also
+        --------
+        get_node_coordinates, get_node_coordinates, get_node_as_point
+
+        """
         return {n: self.get_node_as_point(n) for n in self.nodes}
 
-    def get_nodes_as_point_series(self):
-        """Return the nodes as a ``geopandas.GeoSeries`` of ``shapely.geometry.Point``."""
+    def get_nodes_as_point_series(self) -> gpd.GeoSeries:
+        """Return the nodes as a ``geopandas.GeoSeries`` of ``shapely.geometry.Point``.
+
+        Returns
+        -------
+        gpd.GeoSeries
+            Series containing all nodes geometries. Its CRS is the graph CRS.
+
+        See Also
+        --------
+        nodes_to_gdf, get_edges_as_line_series
+
+        """
         nodes_as_points = self.get_nodes_as_points()
         point_series = gpd.GeoSeries(nodes_as_points)
         point_series.crs = self.crs
         return point_series
 
-    def get_edges_as_line_series(self):
-        """Return the edges as a ``geopandas.GeoSeries`` of ``shapely.geometry.LineString``."""
+    def get_edges_as_line_series(self) -> gpd.GeoSeries:
+        """Return the edges as a ``geopandas.GeoSeries`` of ``shapely.geometry.LineString``.
+
+        Returns
+        -------
+        gpd.GeoSeries
+            Series containing all edges geometries. Its CRS is the graph CRS.
+
+        See Also
+        --------
+        edges_to_gdf, get_nodes_as_point_series
+
+        """
         lines = nx.get_edge_attributes(self, self.edges_geometry_key)
         line_series = gpd.GeoSeries(lines)
         line_series.crs = self.crs
         return line_series
 
-    def get_spatial_keys(self):
-        """Return the current graph spatial keys."""
+    def get_spatial_keys(self) -> dict:
+        """Return the current graph spatial keys.
+
+        Returns
+        -------
+        dict
+            Dictionary containing spatial keys (nodes and edges geometry keys and crs).
+        """
         return {'nodes_geometry_key': self.nodes_geometry_key,
                 'edges_geometry_key': self.edges_geometry_key,
                 'crs': self.crs}
 
     def set_nodes_coordinates(self, coordinates: dict):
-        """Set nodes coordinates with a given dictionary of coordinates (can be used for a subset of all nodes)."""
+        """Set nodes coordinates with a given dictionary of coordinates (can be used for a subset of all nodes).
+
+        Parameters
+        ----------
+        coordinates: dict :
+            Dictionary mapping node names and two-element list of coordinates.
+        """
         for n, coords in coordinates.items():
             node_data = self.nodes[n]
             node_data[self.nodes_geometry_key] = Point(coords)
@@ -138,7 +241,26 @@ class GeoGraph(nx.Graph):
         return gnx.GeoGraph
 
     def to_crs(self, crs=None, epsg=None, inplace=False):
-        """Transform edge geometries and nodes coordinates to a new coordinate reference system."""
+        """Transform nodes and edges geometries to a new coordinate reference system.
+
+        Parameters
+        ----------
+        crs : dict or str
+             Output projection parameters as string or in dictionary form (Default value = None).
+        epsg : int
+             EPSG code specifying output projection.
+        inplace : bool
+             If True, the modification is done inplace, otherwise a new graph is created (Default value = False).
+
+        Returns
+        -------
+        None or GeoGraph
+            Nothing is returned if the transformation is inplace, a new GeoGraph is returned otherwise.
+
+        See Also
+        --------
+        geopandas.GeoSeries.to_crs
+        """
         if self.crs is None:
             raise ValueError('Cannot transform naive geometries. Please set a crs on the graph first.')
         if inplace:
@@ -163,11 +285,18 @@ class GeoGraph(nx.Graph):
             return graph
 
     def nodes_to_gdf(self) -> gpd.GeoDataFrame:
-        """
-        Create a ``geopandas.GeoDataFrame`` from nodes of the current graph. The column representing the geometry is
+        """Create a ``geopandas.GeoDataFrame`` from nodes of the current graph. The column representing the geometry is
         named after the current ``nodes_geometry_key`` attribute.
 
-        :return: The resulting GeoDataFrame : one row is a node
+        Returns
+        -------
+        gpd.GeoDataFrame
+            The resulting GeoDataFrame : one row is a node
+
+        See Also
+        --------
+        get_nodes_as_point_series, edges_to_gdf
+
         """
         nodes = {node: data for node, data in self.nodes(data=True)}
         gdf_nodes = gpd.GeoDataFrame(nodes).T
@@ -177,11 +306,18 @@ class GeoGraph(nx.Graph):
         return gdf_nodes
 
     def edges_to_gdf(self) -> gpd.GeoDataFrame:
-        """
-        Create a ``geopandas.GeoDataFrame`` from edges of the current graph. The column representing the geometry is
+        """Create a ``gpd.GeoDataFrame`` from edges of the current graph. The column representing the geometry is
         named after the current ``edges_geometry_key`` attribute.
 
-        :return: The resulting GeoDataFrame : one row is an edge
+        Returns
+        -------
+        gdf_edges: geopandas.GeoDataFrame
+            The resulting GeoDataFrame : one row is an edge
+
+        See Also
+        --------
+        get_edges_as_line_series, nodes_to_gdf
+
         """
         # create a list to hold our edges, then loop through each edge in the graph
         edges = []
@@ -202,11 +338,20 @@ class GeoGraph(nx.Graph):
         return gdf_edges
 
     def add_nodes_from_gdf(self, gdf: gpd.GeoDataFrame, node_index_attr=None):
-        """Add nodes with the given `GeoDataFrame`.
+        """Add nodes with the given `GeoDataFrame` and fill nodes attributes with the geodataframe columns.
 
-        :param gdf: GeoDataFrame representing nodes to add (one row for one node).
-        :param node_index_attr: Node index attribute for labeling nodes. If ``None``, the dataframe index is used, else
-            the given column is used.
+        Parameters
+        ----------
+        gdf :
+            GeoDataFrame representing nodes to add (one row for one node).
+        node_index_attr :
+            Node index attribute for labeling nodes. If ``None``, the dataframe index is used, else
+            the given column is used. (Default value = None)
+
+        See Also
+        --------
+        add_edges_from_gdf
+
         """
         if not (gnx.is_null_crs(self.crs) or gnx.is_null_crs(gdf.crs) or gnx.crs_equals(gdf.crs, self.crs)):
             gdf = gdf.to_crs(self.crs, inplace=False)
@@ -222,11 +367,20 @@ class GeoGraph(nx.Graph):
         """Add edges with the given `GeoDataFrame`. If no dataframe columns are specified for first and second node,
         the dataframe index must be a multi-index `(u, v)`.
 
-        :param gdf: GeoDataFrame representing edges to add (one row for one edge).
-        :param edge_first_node_attr: Edge first node attribute. If ``None``, the dataframe index is used, else the given
-            column is used. Must be used with ``edge_second_node_attr``.
-        :param edge_second_node_attr: Edge second node attribute. If ``None``, the dataframe index is used, else the
-            given column is used. Must be used with ``edge_first_node_attr``.
+        Parameters
+        ----------
+        gdf :
+            GeoDataFrame representing edges to add (one row for one edge).
+        edge_first_node_attr :
+            Edge first node attribute. If ``None``, the dataframe index is used, else the given
+            column is used. Must be used with ``edge_second_node_attr``. (Default value = None)
+        edge_second_node_attr :
+            Edge second node attribute. If ``None``, the dataframe index is used, else the
+            given column is used. Must be used with ``edge_first_node_attr``. (Default value = None)
+
+        See Also
+        --------
+        add_nodes_from_gdf
         """
         if not (gnx.is_null_crs(self.crs) or gnx.is_null_crs(gdf.crs) or gnx.crs_equals(gdf.crs, self.crs)):
             gdf = gdf.to_crs(self.crs, inplace=False)

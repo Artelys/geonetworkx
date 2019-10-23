@@ -75,11 +75,18 @@ def approx_map_unit_factor(points_coordinates, tolerance=1e-7) -> float:
 
 
 def measure_line_distance(line: LineString) -> float:
-    """
-    Measure the length of a shapely LineString object using the vincenty distance.
+    """Measure the length of a shapely LineString object using the vincenty distance.
 
-    :param line: Linestring to measure. Coordinates have to be (in the WGS-84 ellipsoid model)
-    :return: distance in meters of the linestring.
+    Parameters
+    ----------
+    line : LineString
+        Linestring to measure. Coordinates have to be (in the WGS-84 ellipsoid model)
+
+    Returns
+    -------
+    float
+        distance in meters of the linestring.
+
     """
     coords = line.coords
     if len(coords) < 2:
@@ -94,13 +101,21 @@ def measure_line_distance(line: LineString) -> float:
 
 
 def get_new_node_unique_name(graph: nx.Graph, name: str):
-    """
-    Return a new unique node name from an initial node name. A counter suffix is added at the end if the node name is
+    """Return a new unique node name from an initial node name. A counter suffix is added at the end if the node name is
     already used.
 
-    :param graph: A given graph
-    :param name: A initial node name
-    :return: A unique name not in ``graph.nodes()``.
+    Parameters
+    ----------
+    graph : nx.Graph
+        A given graph
+    name : str
+        A initial node name
+
+    Returns
+    -------
+    str
+        A unique name not in ``graph.nodes()``.
+
     """
     if name not in graph.nodes():
         return name
@@ -119,22 +134,33 @@ def euclidian_distance_coordinates(c1: Iterable, c2: Iterable) -> float:
 
 
 def euclidian_distance(p1: Point, p2: Point) -> float:
-    """
-    Return the euclidian distance between the two points
+    """Return the euclidian distance between the two points
 
-    :param p1: The first shapely Point
-    :param p2: The second shapely Point
-    :return: The euclidian distance
+    Parameters
+    ----------
+    p1 : Point
+        The first shapely Point
+    p2 : Point
+        The second shapely Point
+
+    Returns
+    -------
+    float
+        The euclidian distance
+
     """
     return euclidian_distance_coordinates((p1.x, p1.y), (p2.x, p2.y))
 
 
 def fill_edges_missing_geometry_attributes(graph: GeoGraph):
-    """
-    Add a geometry attribute to the edges that don't have any. The created geometry is a straight line between the
+    """Add a geometry attribute to the edges that don't have any. The created geometry is a straight line between the
     two nodes.
 
-    :param graph: graph to fill
+    Parameters
+    ----------
+    graph : GeoGraph
+        graph to fill
+
     """
     edges = dict(graph.edges)
     nodes = dict(graph.nodes)
@@ -147,14 +173,17 @@ def fill_edges_missing_geometry_attributes(graph: GeoGraph):
 
 
 def fill_length_attribute(graph: GeoGraph, attribute_name="length", only_missing=True):
-    """
-    Fill the ``'length'`` attribute of the given networkX Graph. The length is computed in meters using the vincenty
+    """Fill the ``'length'`` attribute of the given networkX Graph. The length is computed in meters using the vincenty
     formula. Method won't be consistent if the graph crs is not WGS84.
 
-    :param graph: graph to fill
-    :param attribute_name: The length attribute name to set
-    :param only_missing: Compute the length only if the attribute is missing
-    :return: None
+    Parameters
+    ----------
+    graph : GeoGraph
+        graph to fill
+    attribute_name : str
+        The length attribute name to set (Default value = "length")
+    only_missing : bool
+        Compute the length only if the attribute is missing (Default value = True)
     """
     if not crs_equals(graph.crs, settings.USED_CRS):
         raise ValueError("Impossible to compute distance for graph with different"
@@ -167,13 +196,18 @@ def fill_length_attribute(graph: GeoGraph, attribute_name="length", only_missing
 
 
 def fill_elevation_attribute(graph: GeoGraph, attribute_name="elevation[m]", only_missing=True):
-    """
-    Fill the ``elevation[m]`` attribute on nodes of the given geograph. The elevation is found with the `srtm` package.
-    Graph crs has to be WGS84 standard, otherwise elevation data won't be consistent.
+    """Fill the ``elevation[m]`` attribute on nodes of the given geograph. The elevation is found with the `srtm`
+    package. Graph crs has to be WGS84 standard, otherwise elevation data won't be consistent.
 
-    :param graph: GeoGraph to modify
-    :param attribute_name: Attribute to fill
-    :param only_missing: Get the elevation and set it only if the node attribute is missing.
+    Parameters
+    ----------
+    graph : GeoGraph
+        GeoGraph to modify
+    attribute_name : str
+        Attribute to fill (Default value = "elevation[m]")
+    only_missing : bool
+        Get the elevation and set it only if the node attribute is missing. (Default value = True)
+
     """
     if srtm is None:
         raise ImportError("Impossible to get elevation data, `srtm` package not found.")
@@ -187,10 +221,13 @@ def fill_elevation_attribute(graph: GeoGraph, attribute_name="elevation[m]", onl
 
 
 def join_lines_extremity_to_nodes_coordinates(graph: GeoGraph):
-    """
-    Modify the edges geometry attribute so that lines extremities match with nodes coordinates.
+    """Modify the edges geometry attribute so that lines extremities match with nodes coordinates.
 
-    :param graph: A geograph to modify
+    Parameters
+    ----------
+    graph : GeoGraph
+        A geograph to modify
+
     """
     edges_geometry = nx.get_edge_attributes(graph, graph.edges_geometry_key)
     for e in edges_geometry:
@@ -240,14 +277,16 @@ def get_line_ordered_edge(graph: GeoGraph, e, line):
 
 
 def order_well_lines(graph: GeoGraph):
-    """
-    Try to order well each geometry attribute of edges so that the first coordinates of the line string are the
+    """Try to order well each geometry attribute of edges so that the first coordinates of the line string are the
     coordinates of the first vertex of the edge. The closest node rule is applied. If the graph is not oriented, the
     modification will be inconsistent (nodes declaration in edges views are not ordered). Euclidian distance is used
     here.
 
-    :param graph: Graph on which to apply the ordering step. Modification is inplace.
-    :return: None
+    Parameters
+    ----------
+    graph : GeoGraph
+        Graph on which to apply the ordering step. Modification is inplace.
+
     """
     line_strings = nx.get_edge_attributes(graph, graph.edges_geometry_key)
     for e, line in line_strings.items():
@@ -302,11 +341,22 @@ def compose(G: GeoGraph, H: GeoGraph) -> GeoGraph:
 def geographical_distance(graph: GeoGraph, node1, node2, method="vincenty") -> float:
     """Return the geographical distance between the two given nodes.
 
-    :param graph: Geograph
-    :param node1: First node label
-    :param node2: Second node label
-    :param method: "vincenty", "euclidian", "great_circle"
-    :return: Distance between nodes, unit depends on the method.
+    Parameters
+    ----------
+    graph : Geograph
+        Geograph
+    node1 :
+        First node label
+    node2 :
+        Second node label
+    method :
+        vincenty", "euclidian", "great_circle" (Default value = "vincenty")
+
+    Returns
+    -------
+    float
+        Distance between nodes, unit depends on the method.
+
     """
     point1 = graph.nodes[node1][graph.nodes_geometry_key]
     point2 = graph.nodes[node2][graph.nodes_geometry_key]
