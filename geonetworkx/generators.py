@@ -55,6 +55,17 @@ def extended_ego_graph(graph: GeoGraph, n, radius=1, center=True, undirected=Fal
     """Returns induced subgraph of neighbors centered at node n within a given radius extended by interpolated nodes on
     boundary edges.
 
+    Note that the returned graph is not a subgraph of the input graph because it will have boundary nodes in addition.
+    It means that a node is added on each edge leaving the ego-graph to represent the furthest reachable point on
+    this edge. The boundary node is added at given node using a linear interpolation. A boundary node :math:`b` will
+    be added on the edge :math:`(u, v)` if :math:`d(n, u) < radius < d(n, v)`. The boundary will be placed along the
+    edge geometry at the following distance:
+
+    .. math::
+        d(u, b) =  \\frac{\\text{radius} - d(n, u)}{d(u, v)}
+
+    Furthermore, the attribute ``distance`` is filled with the value :math:`d(u, b)`.
+
     Parameters
     ----------
     graph : GeoGraph, GeoDiGraph, GeoMultiGraph or GeoMultiDiGraph
@@ -74,17 +85,7 @@ def extended_ego_graph(graph: GeoGraph, n, radius=1, center=True, undirected=Fal
     Returns
     -------
     GeoGraph, GeoDiGraph, GeoMultiGraph or GeoMultiDiGraph
-        The resulting graph with node, edge, and graph attributes copied. Note that the returned graph is not a
-        subgraph of the input graph because it will have boundary nodes in addition.
-        It means that a node is added on each edge leaving the ego-graph to represent the furthest reachable point on
-        this edge. The boundary node is added at given node using a linear interpolation. A boundary node :math:`b` will
-        be added on the edge :math:`(u, v)` if :math:`d(n, u) < radius < d(n, v)`. The boundary will be placed along the
-        edge geometry at the following distance:
-        
-        .. math::
-        d(u, b) =  \\frac{\\text{radius} - d(n, u)}{d(u, v)}
-        
-        Furthermore, the attribute ``distance`` is filled with the value :math:`d(u, b)`.
+        The resulting graph with node, edge, and graph attributes copied.
 
     See Also
     --------
