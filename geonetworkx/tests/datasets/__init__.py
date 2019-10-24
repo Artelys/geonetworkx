@@ -1,0 +1,1 @@
+from geonetworkx.tests.datasets.import_datasets import *

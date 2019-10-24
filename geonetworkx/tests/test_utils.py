@@ -7,6 +7,7 @@ from nose.plugins.attrib import attr
 import geonetworkx.testing.utils as gnx_tu
 from geonetworkx.utils.voronoi_utils import *
 from geonetworkx.generators import extended_ego_graph
+from geonetworkx.tests import datasets
 import os
 
 gnx_tu.SEED = 70595
@@ -24,9 +25,7 @@ class TestUtils(unittest.TestCase):
         pass
 
     def test_voronoi_edges(self):
-        mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_mdg.gpickle"))
-        mg = mdg.to_undirected()
-        gmg = gnx.read_geograph_with_coordinates_attributes(mg)
+        gmg = datasets.get_grenoble_streets_200()
         gnx.fill_edges_missing_geometry_attributes(gmg)
         edge_as_lines = gmg.get_edges_as_line_series()
         lines = list(edge_as_lines)
@@ -42,9 +41,7 @@ class TestUtils(unittest.TestCase):
                 assert_true(False, "A edge geometry '%s' is not in any voronoi cells" % str(e))
 
     def test_extented_ego_graph(self):
-        mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_mdg.gpickle"))
-        mg = mdg.to_undirected()
-        gmg = gnx.read_geograph_with_coordinates_attributes(mg)
+        gmg = datasets.get_grenoble_streets_200()
         gnx.fill_edges_missing_geometry_attributes(gmg)
         gnx.fill_length_attribute(gmg, "length", only_missing=True)
         source = 312173744

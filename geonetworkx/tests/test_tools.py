@@ -10,6 +10,7 @@ from nose.tools import assert_in, assert_less
 import unittest
 from nose.plugins.attrib import attr
 import geonetworkx.testing.utils as gnx_tu
+from geonetworkx.tests import datasets
 
 gnx_tu.SEED = 70595
 data_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), "datasets")
@@ -29,28 +30,22 @@ class TestTools(unittest.TestCase):
 
     def test_spatial_points_merge(self):
         # test a spatial merge
-        mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_mdg.gpickle"))
-        graph = gnx.read_geograph_with_coordinates_attributes(mdg, crs=gnx.WGS84_CRS)
+        graph = datasets.get_copenhagen_street_net()
         gnx.utils.fill_edges_missing_geometry_attributes(graph)
-        points_gdf = gpd.read_file(os.path.join(data_directory, "grenoble200_buildings.geojson"), driver="GeoJSON")
+        points_gdf = datasets.get_copenhagen_buildings()
         gnx.tools.spatial_points_merge(graph, points_gdf, inplace=True)
         for p in points_gdf.index:
             assert_in(p, graph.nodes())
 
     def test_spatial_graph_merge(self):
-        streets_mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_mdg.gpickle"))
-        streets_mdg = streets_mdg.to_undirected()
-        base_graph = gnx.read_geograph_with_coordinates_attributes(streets_mdg, crs=gnx.WGS84_CRS)
+        base_graph = datasets.get_copenhagen_street_net().to_undirected()
         gnx.utils.fill_edges_missing_geometry_attributes(base_graph)
         base_graph.graph["name"] = "streets"
 
-        electrical_dg = nx.read_gpickle(os.path.join(data_directory, "grenoble200_electrical_dg.gpickle"))
-        electrical_dg = nx.MultiDiGraph(electrical_dg)
-        electrical_mg = electrical_dg.to_undirected()
-        other_graph = gnx.read_geograph_with_coordinates_attributes(electrical_mg, crs=gnx.WGS84_CRS)
+        other_graph = datasets.get_copenhagen_ferry_net().to_undirected()
         gnx.order_well_lines(other_graph)
         gnx.join_lines_extremity_to_nodes_coordinates(other_graph)
-        other_graph.graph["name"] = "electrical"
+        other_graph.graph["name"] = "ferry"
         merged_graph = gnx.tools.spatial_graph_merge(base_graph, other_graph, inplace=False)
         merged_graph.graph["name"] = "merged_graph"
         for n in other_graph.nodes():
@@ -141,12 +136,9 @@ class TestTools(unittest.TestCase):
 
     def test_isochrone(self):
         # Read data
-        mdg = nx.read_gpickle(os.path.join(data_directory, "grenoble500_mdg.gpickle"))
-        mg = mdg.to_undirected()
-        gmg = gnx.read_geograph_with_coordinates_attributes(mg)
+        gmg = datasets.get_grenoble_streets_500()
         gnx.fill_edges_missing_geometry_attributes(gmg)
         gnx.fill_length_attribute(gmg, "length", True)
-        gnx.remove_self_loop_edges(gmg)
 
         # Compute Isochrone polygon
         source = 312173744
