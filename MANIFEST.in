@@ -1,17 +1,17 @@
 include README.md
 
-include examples/geograph_merge.py
-include examples/isochrones.py
-include examples/spatial_points_merge.py
+include geonetworkx/examples/geograph_merge.py
+include geonetworkx/examples/isochrones.py
+include geonetworkx/examples/spatial_points_merge.py
 
-include tests/datasets/copenhagen_ferry_net_edges.geojson
-include tests/datasets/copenhagen_ferry_net_nodes.geojson
-include tests/datasets/copenhagen_streets_net_edges.geojson
-include tests/datasets/copenhagen_streets_net_nodes.geojson
-include tests/datasets/copenhagen_buildings.geojson
-include tests/datasets/grenoble_streets_500_nodes.geojson
-include tests/datasets/grenoble_streets_500_edges.geojson
-include tests/datasets/grenoble_streets_200_nodes.geojson
-include tests/datasets/grenoble_streets_200_edges.geojson
-include tests/datasets/grenoble_isere_nodes.geojson
-include tests/datasets/grenoble_isere_edges.geojson
+include geonetworkx/tests/datasets/copenhagen_ferry_net_edges.geojson
+include geonetworkx/tests/datasets/copenhagen_ferry_net_nodes.geojson
+include geonetworkx/tests/datasets/copenhagen_streets_net_edges.geojson
+include geonetworkx/tests/datasets/copenhagen_streets_net_nodes.geojson
+include geonetworkx/tests/datasets/copenhagen_buildings.geojson
+include geonetworkx/tests/datasets/grenoble_streets_500_nodes.geojson
+include geonetworkx/tests/datasets/grenoble_streets_500_edges.geojson
+include geonetworkx/tests/datasets/grenoble_streets_200_nodes.geojson
+include geonetworkx/tests/datasets/grenoble_streets_200_edges.geojson
+include geonetworkx/tests/datasets/grenoble_isere_nodes.geojson
+include geonetworkx/tests/datasets/grenoble_isere_edges.geojson
