@@ -1,3 +1,4 @@
 sphinx==2.2.0
 sphinx-autodoc-typehints==1.8.0
 sphinx-rtd-theme==0.4.3
+-r ../requirements.txt
