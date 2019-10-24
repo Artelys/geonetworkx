@@ -51,7 +51,7 @@ Python version (3.6 or 3.7). You have notably to download:
 - Binary for `PyProj 1.9.6` (mandatory version!)
 
 
-##Documentation
+## Documentation
 
 Online documentation is available here: <https://geonetworkx.readthedocs.io>
 
