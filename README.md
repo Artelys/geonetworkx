@@ -35,6 +35,11 @@ Optional packages:
 
 ``pip install geonetworkx``
 
+Documentation
+-------------
+
+Online documentation is available here: <https://geonetworkx.readthedocs.io>
+
 
 Tests
 -----
