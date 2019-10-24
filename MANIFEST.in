@@ -13,3 +13,5 @@ include tests/datasets/grenoble_streets_500_nodes.geojson
 include tests/datasets/grenoble_streets_500_edges.geojson
 include tests/datasets/grenoble_streets_200_nodes.geojson
 include tests/datasets/grenoble_streets_200_edges.geojson
+include tests/datasets/grenoble_isere_nodes.geojson
+include tests/datasets/grenoble_isere_edges.geojson

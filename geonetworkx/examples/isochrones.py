@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 import geonetworkx as gnx
+from geonetworkx.tests import datasets
 
 
 # Read data set: Street graph sample of Grenoble, France.
-graph = gnx.read_gpickle("../tests/datasets/grenoble_isere_streets.gpickle")
+graph = datasets.get_grenoble_streets_isere()
 
 # Clean data: remove edges orientation, remove self-loops
 graph = graph.to_undirected()

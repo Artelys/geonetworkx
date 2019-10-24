@@ -29,6 +29,7 @@ Optional packages:
 
 * srtm (for elevation data)
 * pyvoronoi (for voronoi utils)
+* osmnx (for OSM data)
 
 **Installation**
 

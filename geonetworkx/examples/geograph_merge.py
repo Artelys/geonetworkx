@@ -4,6 +4,7 @@ network is combined to find the multi-modal shortest path between a source and a
 import os
 import networkx as nx
 import geonetworkx as gnx
+from geonetworkx.tests import datasets
 import osmnx as ox
 from shapely.geometry import box
 
@@ -21,7 +22,10 @@ nx.set_edge_attributes(streets, {e: l / bike_speed for e, l in streets_lengths.i
 
 # Getting the subway network
 dir_path = os.path.dirname(os.path.realpath(__file__))
-subway = gnx.read_gpickle(os.path.join(dir_path, "paris_subway.gpickle"))
+input_path = os.path.join(dir_path, "paris_subway.gpickle")
+if not os.path.exists(input_path):
+    datasets.import_paris_subway_dataset()
+subway = gnx.read_gpickle(input_path)
 # Setting the times on the edges
 gnx.fill_length_attribute(subway)
 subway_lengths = nx.get_edge_attributes(subway, "length")
