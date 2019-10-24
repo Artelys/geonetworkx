@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 
-GeoNetworkX 0.2
+GeoNetworkX 0.4
 ===============
 
 GeoNetworkX is a project to handle geospatial graphs. GeoNetworkX extends the NetworkX package to allow spatial
