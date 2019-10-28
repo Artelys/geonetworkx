@@ -49,7 +49,7 @@ def assert_graphs_have_same_edges_geometry(graph1, graph2, msg='', tol=1e-4):
     assert_equal(len(graph1.edges), len(graph2.edges), msg)
     if graph1.is_directed() and graph2.is_directed():
         assert_directed_graphs_have_same_edges_geometry(graph1, graph2, msg, tol)
-    elif graph1.is_undirected() and graph2.is_undirected():
+    elif not graph1.is_directed() and not graph2.is_directed():
         assert_undirected_graphs_have_same_edges_geometry(graph1, graph2, msg, tol)
     else:
         assert_true(False, "Comparing differently oriented graphs")
