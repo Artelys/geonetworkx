@@ -26,13 +26,33 @@ def assert_lines_almost_equals(line1, line2, msg='', tol=1e-4):
         assert_coordinates_almost_equals(c1, c2, msg, tol)
 
 
-def assert_graphs_have_same_edges_geometry(graph1, graph2, msg='', tol=1e-4):
-    assert_equal(len(graph1.edges), len(graph2.edges), msg)
+def assert_undirected_graphs_have_same_edges_geometry(graph1, graph2, msg='', tol=1e-4):
+    lines1 = nx.get_edge_attributes(graph1, graph1.edges_geometry_key)
+    lines2 = nx.get_edge_attributes(graph2, graph2.edges_geometry_key)
+    for e in lines1:
+        ordered_e2 = e
+        if e not in lines2.keys():
+            ordered_e2 = (e[1], e[0], *e[2:])
+        assert_in(ordered_e2, lines2, msg)
+        assert_lines_almost_equals(lines1[e], lines2[ordered_e2], msg, tol)
+
+
+def assert_directed_graphs_have_same_edges_geometry(graph1, graph2, msg='', tol=1e-4):
     lines1 = nx.get_edge_attributes(graph1, graph1.edges_geometry_key)
     lines2 = nx.get_edge_attributes(graph2, graph2.edges_geometry_key)
     for e in lines1:
         assert_in(e, lines2, msg)
         assert_lines_almost_equals(lines1[e], lines2[e], msg, tol)
+
+
+def assert_graphs_have_same_edges_geometry(graph1, graph2, msg='', tol=1e-4):
+    assert_equal(len(graph1.edges), len(graph2.edges), msg)
+    if graph1.is_directed() and graph2.is_directed():
+        assert_directed_graphs_have_same_edges_geometry(graph1, graph2, msg, tol)
+    elif graph1.is_undirected() and graph2.is_undirected():
+        assert_undirected_graphs_have_same_edges_geometry(graph1, graph2, msg, tol)
+    else:
+        assert_true(False, "Comparing differently oriented graphs")
 
 
 def assert_is_subgraph(base_graph, sub_graph, msg=''):
