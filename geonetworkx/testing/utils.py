@@ -5,6 +5,7 @@ import numpy as np
 from shapely.geometry import LineString, Point
 from nose.tools import assert_true, assert_equal, assert_in
 from geonetworkx.utils import crs_equals
+import importlib
 
 
 ALL_CLASSES = [gnx.GeoGraph, gnx.GeoMultiGraph, gnx.GeoDiGraph, gnx.GeoMultiDiGraph]
@@ -141,3 +142,12 @@ def get_random_geograph_with_wgs84_scale(nb_nodes, graph_type=gnx.GeoGraph):
     g.crs = gnx.settings.WGS84_CRS
     return g
 
+
+def check_optional_package_presence(pkg_name):
+    """Returns true if the given package name is available, false otherwise."""
+    try:
+        importlib.import_module(pkg_name)
+    except ImportError as e:
+        if pkg_name in e.msg:
+            return False
+    return True

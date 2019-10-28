@@ -11,6 +11,7 @@ import unittest
 from nose.plugins.attrib import attr
 import geonetworkx.testing.utils as gnx_tu
 from geonetworkx.tests import datasets
+import warnings
 
 gnx_tu.SEED = 70595
 data_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), "datasets")
@@ -135,6 +136,9 @@ class TestTools(unittest.TestCase):
                     assert_in(e, merged_graph.edges)
 
     def test_isochrone(self):
+        if not gnx_tu.check_optional_package_presence("pyvoronoi"):
+            warnings.warn("Missing optional package for test 'test_isochrone': pyvoronoi")
+            return
         # Read data
         gmg = datasets.get_grenoble_streets_500()
         gnx.fill_edges_missing_geometry_attributes(gmg)
@@ -144,7 +148,6 @@ class TestTools(unittest.TestCase):
         source = 312173744
         limit = 400  # meters
         iso_polygon = gnx.isochrone_polygon(gmg, source, limit, "length")
-
         # Try to compute the distance for a set of point that are in the polygon bounding box
         nb_test_points = 20
         np.random.seed(gnx_tu.SEED)

@@ -9,6 +9,8 @@ from geonetworkx.utils.voronoi_utils import *
 from geonetworkx.generators import extended_ego_graph
 from geonetworkx.tests import datasets
 import os
+import warnings
+
 
 gnx_tu.SEED = 70595
 NB_POINTS = 50
@@ -25,6 +27,9 @@ class TestUtils(unittest.TestCase):
         pass
 
     def test_voronoi_edges(self):
+        if not gnx_tu.check_optional_package_presence("pyvoronoi"):
+            warnings.warn("Missing optional package for test 'test_voronoi_edges': pyvoronoi")
+            return
         gmg = datasets.get_grenoble_streets_200()
         gnx.fill_edges_missing_geometry_attributes(gmg)
         edge_as_lines = gmg.get_edges_as_line_series()
