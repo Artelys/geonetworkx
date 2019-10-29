@@ -2,6 +2,9 @@
 
 Python tools for geographic graphs
 
+[![CircleCI](https://circleci.com/gh/Artelys/geonetworkx.svg?style=svg)](https://circleci.com/gh/Artelys/geonetworkx)
+[![Documentation Status](https://readthedocs.org/projects/geonetworkx/badge/?version=latest)](https://geonetworkx.readthedocs.io/en/latest/?badge=latest)
+[![PyPI Package latest release](https://img.shields.io/pypi/v/geonetworkx.svg)](https://pypi.python.org/pypi/geonetworkx)
 
 ## Introduction
 
