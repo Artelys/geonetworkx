@@ -17,6 +17,7 @@ commands:
                     python3 -m venv --copies venv
                     . venv/bin/activate
                     python3 -m pip install -r requirements.txt
+                    python3 -m pip install -r geonetworkx/tests/requirements_additional.txt
 
             - run:
                 name: install geonetworkx
