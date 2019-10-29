@@ -32,10 +32,10 @@ commands:
 
             - store_artifacts:
                 path: nosetests.xml
-                destination: nosetests_${PYVERS}.xml
+                destination: nosetests.xml
 
             - store_test_results:
-                path: nosetests.xml
+                path: test-results
 
 
 jobs:
@@ -43,8 +43,6 @@ jobs:
         parallelism: 2
         docker:
             - image: circleci/python:3.7
-              environment:
-                  PYVERS: 37
 
         working_directory: ~/repo
 
@@ -55,8 +53,16 @@ jobs:
         parallelism: 2
         docker:
             - image: circleci/python:3.6
-              environment:
-                  PYVERS: 36
+
+        working_directory: ~/repo
+
+        steps:
+            - test_steps_python
+
+    python38:
+        parallelism: 2
+        docker:
+            - image: circleci/python:3.8
 
         working_directory: ~/repo
 
@@ -69,3 +75,4 @@ workflows:
         jobs:
             - python37
             - python36
+            - python38
