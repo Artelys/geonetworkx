@@ -43,7 +43,7 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
         operation. (Default value = no_filter)
     edge_filter :
         An edge filter (lambda) to exclude edges on which the projection will not take place. (Default value = no_filter)
-    intersection_nodes_attr : str
+    intersection_nodes_attr : dict
         A dictionary of attributes (constant for all added intersection nodes). (Default value = None)
 
     Returns
