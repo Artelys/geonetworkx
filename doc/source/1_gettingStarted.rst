@@ -12,7 +12,7 @@ GeoNetworkX can be installed with pip with the following command:
     pip install geonetworkx
 
 .. warning::
-    GeoNetworkX needs packages that have C dependencies that may need to compiled and installed manually
+    GeoNetworkX needs packages that have C dependencies that may need to be compiled and installed manually
     (`shapely`, `fiona`, `pyproj` and `rtree`). For Windows users, wheels can be found at `Christopher Gohlke's
     website <https://www.lfd.uci.edu/~gohlke/pythonlibs/>`_.
 
