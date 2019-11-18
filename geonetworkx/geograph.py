@@ -29,6 +29,7 @@ class GeoGraph(nx.Graph):
     GeoMultiDiGraph
 
     """
+    DEFAULT_NODE_GEOMETRY = Point(0, 0)
 
     def get_default_node_dict(self):
         """Return the default node attribute dictionary."""
@@ -36,7 +37,7 @@ class GeoGraph(nx.Graph):
 
     def __init__(self, incoming_graph_data=None, **attr):
         self.default_node_geometry = attr.get("default_node_geometry",
-                                              Point(0, 0))
+                                              self.DEFAULT_NODE_GEOMETRY)
         self.node_attr_dict_factory = self.get_default_node_dict
         super(GeoGraph, self).__init__(incoming_graph_data, **attr)
         self.check_nodes_validity()
@@ -44,8 +45,12 @@ class GeoGraph(nx.Graph):
     def check_nodes_validity(self):
         """Check that all nodes have geometries."""
         for n, node_data in self.nodes(data=True):
-            if self.nodes_geometry_key not in node_data:
-                raise ValueError("Unable to find geometry for node: '%s'" % str(n))
+            self.node_attr_dict_check(node_data)
+
+    def node_attr_dict_check(self, attr):
+        """Check that the given attribute dictionary contains mandatory fields for a node."""
+        if self.nodes_geometry_key not in attr:
+            raise ValueError("Node geometry must be in node attributes.")
 
     @property
     def nodes_geometry_key(self):
@@ -79,90 +84,6 @@ class GeoGraph(nx.Graph):
     def crs(self, c):
         """Sets the current crs"""
         self.graph['crs'] = c
-
-    def node_attr_dict_check(self, attr) -> bool:
-        """Check that the given attribute dictionary contains mandatory fields for a node."""
-        if self.nodes_geometry_key not in attr:
-            raise ValueError("Node geometry must be in node attributes.")
-
-    def add_node(self, node_for_adding, **attr):
-        """Add a single node `node_for_adding` and update node attributes.
-
-        Note that the geometry attribute must be given (with the current
-        graph node geometry key).
-
-        Raises
-        ------
-        ValueError
-            If the geometry attribute is not passed as argument.
-
-        Examples
-        --------
-        >>> from shapely.geometry import Point
-        >>> g = gnx.GeoGraph()  # or GeoDiGraph, GeoMultiGraph, GeoMultiDiGraph
-        >>> g.add_node('a', geometry=Point(1, 2))
-
-        """
-        self.node_attr_dict_check(attr)
-        super().add_node(node_for_adding, **attr)
-
-    def add_nodes_from(self, nodes_for_adding, **attr):
-        """Add multiple nodes with their geometries.
-
-        Parameters
-        ----------
-        nodes_for_adding : iterable container
-            A container of nodes (list, dict, set, etc.).
-            OR
-            A container of (node, attribute dict) tuples.
-            Node attributes are updated using the attribute dict.
-        attr : keyword arguments, optional (default= no attributes)
-            Update attributes for all nodes in nodes.
-            Node attributes specified in nodes as a tuple take
-            precedence over attributes specified via keyword arguments.
-
-        Note that whether 'attr' or the 'attribute dict' in the iterable
-        must have the node geometry key.
-
-        See Also
-        --------
-        add_node
-
-        Examples
-        --------
-        >>> from shapely.geometry import Point
-        >>> g = gnx.GeoGraph()  # or GeoDiGraph, GeoMultiGraph, GeoMultiDiGraph
-        >>> # Version with a default geometry for all the new nodes
-        >>> g.add_nodes_from('Hello', geometry=Point(1, 2))
-        >>> # Version with a specific geometry for all the new nodes
-        >>> g.add_nodes_from([("H", dict(geometry=Point(2, 3))),
-        >>>                   (2, dict(geometry=Point(5, 2)))])
-
-        """
-        for n in nodes_for_adding:
-            try:
-                if n not in self._node:
-                    self._adj[n] = self.adjlist_inner_dict_factory()
-                    attr_dict = self.node_attr_dict_factory()
-                    attr_dict.update(attr)
-                    self.node_attr_dict_check(attr)
-                    self._node[n] = attr_dict
-                else:
-                    self._node[n].update(attr)
-            except TypeError:
-                nn, ndict = n
-                if nn not in self._node:
-                    self._adj[nn] = self.adjlist_inner_dict_factory()
-                    newdict = attr.copy()
-                    newdict.update(ndict)
-                    attr_dict = self.node_attr_dict_factory()
-                    attr_dict.update(newdict)
-                    self.node_attr_dict_check(attr_dict)
-                    self._node[nn] = attr_dict
-                else:
-                    olddict = self._node[nn]
-                    olddict.update(attr)
-                    olddict.update(ndict)
 
     def get_node_coordinates(self, node_name) -> list:
         """Return the coordinates of the given node.

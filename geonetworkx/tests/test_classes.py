@@ -7,7 +7,7 @@ import geonetworkx as gnx
 import geonetworkx.settings as settings
 import os
 import shutil
-from nose.tools import assert_is_instance, assert_equal, assert_in
+from nose.tools import assert_is_instance, assert_equal, assert_in, assert_is
 from nose.plugins.attrib import attr
 import unittest
 from shapely.geometry import Point
@@ -30,22 +30,23 @@ class TestClasses(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.results_dir)
 
-    def test_geograph_wrong_node_addition(self):
-        """This should fail because no geometry is given."""
+    def test_default_node_geometry(self):
+        """Try adding nodes without geometries and then change the geometry."""
         for graph_type in ALL_CLASSES:
             with self.subTest(graph_type=graph_type):
                 g = graph_type()
-                with self.assertRaises(ValueError):
-                    g.add_node("A")
-
-    def test_geograph_wrong_nodes_addition(self):
-        """This should fail because no geometry is given."""
-        for graph_type in ALL_CLASSES:
-            with self.subTest(graph_type=graph_type):
-                g = graph_type()
-                with self.assertRaises(ValueError):
-                    g.add_nodes_from([("H", {g.nodes_geometry_key: Point(2, 3)}),
-                                     2])
+                g.add_nodes_from('Hello')
+                for p in g.get_nodes_as_point_series():
+                    assert_is(p, g.default_node_geometry)
+                old_default_point = g.default_node_geometry
+                new_default_point = Point(12, 21)
+                g.default_node_geometry = new_default_point
+                g.add_nodes_from([1, 2, 3])
+                for n, p in g.get_nodes_as_point_series().items():
+                    if str(n) in 'Hello':
+                        assert_is(old_default_point, p)
+                    else:
+                        assert_is(new_default_point, p)
 
     def test_geograph_node_addition(self):
         """Try to add nodes an empty graph"""
