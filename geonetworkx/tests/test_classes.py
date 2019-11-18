@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 from geonetworkx.testing import get_random_geograph_with_wgs84_scale, get_random_geograph_subclass
 from geonetworkx.testing import assert_graphs_have_same_edges_geometry, assert_graphs_have_same_geonodes, ALL_CLASSES, \
-                                assert_graphs_have_same_spatial_keys
+                                assert_graphs_have_same_spatial_keys, assert_points_almost_equals
 import geonetworkx.testing.utils as gnx_tu
 import geonetworkx as gnx
 import geonetworkx.settings as settings
 import os
 import shutil
-from nose.tools import assert_is_instance, assert_equal
+from nose.tools import assert_is_instance, assert_equal, assert_in
 from nose.plugins.attrib import attr
 import unittest
+from shapely.geometry import Point
+from itertools import chain
 
 
 gnx_tu.SEED = 70595
@@ -27,6 +29,38 @@ class TestClasses(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.results_dir)
+
+    def test_geograph_wrong_node_addition(self):
+        """This should fail because no geometry is given."""
+        for graph_type in ALL_CLASSES:
+            with self.subTest(graph_type=graph_type):
+                g = graph_type()
+                with self.assertRaises(ValueError):
+                    g.add_node("A")
+
+    def test_geograph_wrong_nodes_addition(self):
+        """This should fail because no geometry is given."""
+        for graph_type in ALL_CLASSES:
+            with self.subTest(graph_type=graph_type):
+                g = graph_type()
+                with self.assertRaises(ValueError):
+                    g.add_nodes_from([("H", {g.nodes_geometry_key: Point(2, 3)}),
+                                     2])
+
+    def test_geograph_node_addition(self):
+        """Try to add nodes an empty graph"""
+        for graph_type in ALL_CLASSES:
+            with self.subTest(graph_type=graph_type):
+                g = graph_type()
+                g.add_nodes_from('Hello', **{g.nodes_geometry_key: Point(1, 2)})
+                for n in 'Hello':
+                    assert_in(n, g.nodes(), "Unable to find added node %s" % str(n))
+                g.add_nodes_from([("H", {g.nodes_geometry_key: Point(2, 3)}),
+                                  (2, {g.nodes_geometry_key: Point(5, 2)})])
+                for n in chain('Hello', [2]):
+                    assert_in(n, g.nodes(), "Unable to find added node %s" % str(n))
+                assert_points_almost_equals(g.get_node_as_point("H"), Point(2, 3),
+                                            "Replaced node geometry is not effective.")
 
     def test_graph_to_directed(self):
         graphs_directed_match = {gnx.GeoGraph: gnx.GeoDiGraph, gnx.GeoMultiGraph: gnx.GeoMultiDiGraph,

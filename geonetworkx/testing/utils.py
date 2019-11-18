@@ -20,6 +20,10 @@ def assert_coordinates_almost_equals(coordinates1, coordinates2, msg='', tol=1e-
     assert_true(gnx.coordinates_almost_equal(coordinates1, coordinates2, tol), msg)
 
 
+def assert_points_almost_equals(point1, point2, msg='', tol=1e-4):
+    assert_coordinates_almost_equals(point1.coords[0], point2.coords[0], msg, tol)
+
+
 def assert_lines_almost_equals(line1, line2, msg='', tol=1e-4):
     assert_equal(len(line1.coords), len(line2.coords), msg)
     for c1, c2 in zip(line1.coords, line2.coords):
