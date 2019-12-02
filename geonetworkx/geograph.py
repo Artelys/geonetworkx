@@ -5,6 +5,7 @@ import geopandas as gpd
 from shapely.geometry import Point, LineString
 import geonetworkx as gnx
 import geonetworkx.settings as settings
+import itertools
 
 
 class GeoGraph(nx.Graph):
@@ -296,6 +297,112 @@ class GeoGraph(nx.Graph):
         graph.crs = transformed_nodes.crs
         if not inplace:
             return graph
+
+    def _get_nodes_geometries_from_edge_geometry(self, u, v, geometry):
+        """For each node of the edge, return the node geometry deduced from the linestring if it not already present."""
+        u_geometry = v_geometry = None
+        if isinstance(geometry, LineString):
+            if u not in self._node:
+                u_geometry = Point(geometry.coords[0])
+            if v not in self._node:
+                v_geometry = Point(geometry.coords[-1])
+        return u_geometry, v_geometry
+
+    def add_edge(self, u_of_edge, v_of_edge, **attr):
+        """Add an edge between u and v.
+
+        If one of the node is not already in the graph and a geometry is provided, the node geometry is deduced from
+        the first or last point of the linestring.
+
+        Examples
+        --------
+        >>> import geonetworkx as gnx
+        >>> g = gnx.GeoGraph()
+        >>> g.add_edge(1, 2, geometry=gnx.LineString([(0, 0), (1, 1)]))
+        >>> print(g.nodes[2]["geometry"])
+        POINT (1 1)
+        """
+        u_geometry, v_geometry = self._get_nodes_geometries_from_edge_geometry(u_of_edge, v_of_edge,
+                                                                               attr.get(self.edges_geometry_key, None))
+        self.to_nx_class().add_edge(self, u_of_edge, v_of_edge, **attr)
+        if u_geometry is not None:
+            self.nodes[u_of_edge][self.nodes_geometry_key] = u_geometry
+        if v_geometry is not None:
+            self.nodes[v_of_edge][self.nodes_geometry_key] = v_geometry
+
+    def _get_nodes_geometries_to_set_for_edges_adding(self, ebunch_to_add, attr):
+        """Return a dictionary of nodes geometries to set when adding a set of edges."""
+        nodes_geometry_to_set = dict()
+        for e in ebunch_to_add:
+            ne = len(e)
+            edge_geometry = attr.get(self.edges_geometry_key, None)
+            if ne == 3:
+                try:
+                    edge_geometry = e[2].get(self.edges_geometry_key, None)
+                except:
+                    pass
+            elif ne == 4 and self.edges_geometry_key in e[3]:
+                edge_geometry = e[3][self.edges_geometry_key]
+            u, v = e[0], e[1]
+            u_geometry, v_geometry = self._get_nodes_geometries_from_edge_geometry(u, v, edge_geometry)
+            if u_geometry is not None and u not in nodes_geometry_to_set:
+                nodes_geometry_to_set[u] = u_geometry
+            if v_geometry is not None and v not in nodes_geometry_to_set:
+                nodes_geometry_to_set[v] = v_geometry
+        return nodes_geometry_to_set
+
+    def add_edges_from(self, ebunch_to_add, **attr):
+        """Add all the edges in ebunch_to_add and add nodes geometry if they are not present.
+
+        If one of the node is not already in the graph and a geometry is provided, the node geometry is deduced from
+        the first or last point of the linestring.
+
+        Examples
+        --------
+        >>> import geonetworkx as gnx
+        >>> g = gnx.GeoGraph()
+        >>> g.add_edges_from([(0, 1, dict(geometry=gnx.LineString([(0, 0), (1, 1)]))),
+        ...                  (1, 2, dict(geometry=gnx.LineString([(1, 1), (2, 2)])))])
+        >>> print(g.nodes[2]["geometry"])
+        POINT (2 2)
+
+        >>> g = gnx.GeoMultiGraph()
+        >>> g.add_edges_from([(0, 1, 7, dict(geometry=gnx.LineString([(-1, 0), (1, 1)]))),
+        ...                   (1, 2, 8, dict(geometry=gnx.LineString([(1, 1), (2, 2)])))])
+        [7, 8]
+        >>> print(g.nodes[1]["geometry"])
+        POINT (1 1)
+
+        See Also
+        --------
+        add_edge
+        nx.Graph.add_edges_from
+
+        """
+        r1, r2 = itertools.tee(ebunch_to_add)  # in case a generator is passed
+        nodes_geometry_to_set = self._get_nodes_geometries_to_set_for_edges_adding(r1, attr)
+        result = super().add_edges_from(r2, **attr)
+        for u, g in nodes_geometry_to_set.items():
+            self.nodes[u][self.nodes_geometry_key] = g
+        if result is not None:
+            return result
+
+    def to_utm(self):
+        """Project graph coordinates to the corresponding UTM (Universal Transverse Mercator)
+
+        Example
+        -------
+        >>>import geonetworkx as gnx
+        >>>from shapely.geometry import Point
+        >>>g = gnx.GeoGraph(crs={"init":"epsg:4326"})
+        >>>g.add_nodes_from([(1, dict(geometry=Point(4.3, 51.5))),
+        ...                  (2, dict(geometry=Point(4.32, 51.48)))])
+
+        See Also
+        --------
+        to_crs
+        """
+        pass
 
     def nodes_to_gdf(self) -> gpd.GeoDataFrame:
         """Create a ``geopandas.GeoDataFrame`` from nodes of the current graph. The column representing the geometry is

@@ -48,6 +48,34 @@ class TestClasses(unittest.TestCase):
                     else:
                         assert_is(new_default_point, p)
 
+    def test_add_edge(self):
+        """Test the add edge method for all graph types."""
+        for graph_type in ALL_CLASSES:
+            with self.subTest(graph_type=graph_type):
+                g = graph_type()
+                g.add_edge(1, 2, geometry=gnx.LineString([(5, 4), (2, 7)]))
+                assert_points_almost_equals(g.nodes[1]["geometry"], Point(5, 4))
+                if g.is_multigraph():
+                    new_key = g.add_edge(5, 3, 2, geometry=gnx.LineString([(5, 4), (9, 8)]))
+                    assert_equal(new_key, 2, "Returned key is not the one provided")
+                    assert_points_almost_equals(g.nodes[3]["geometry"], Point(9, 8))
+
+    def test_add_edges_from(self):
+        """Test the add edge method for all graph types."""
+        for graph_type in ALL_CLASSES:
+            with self.subTest(graph_type=graph_type):
+                g = graph_type()
+                g.add_edges_from([(0, 1, dict(geometry=gnx.LineString([(0, 0), (1, 1)]))),
+                                  (1, 2, dict(geometry=gnx.LineString([(1, 2), (2, 2)])))])
+                assert_points_almost_equals(g.nodes[1]["geometry"], Point(1, 1))
+                if g.is_multigraph():
+                    g = graph_type()
+                    new_keys = g.add_edges_from([(0, 1, 7, dict(geometry=gnx.LineString([(-1, 0), (1, 1)]))),
+                                                 (1, 2, 8, dict(geometry=gnx.LineString([(1, 1), (2, 2)])))])
+                    for k, vk in zip(new_keys, [7, 8]):
+                        assert_equal(k, vk, "Returned key is not the one provided")
+                    assert_points_almost_equals(g.nodes[2]["geometry"], Point(2, 2))
+
     def test_geograph_node_addition(self):
         """Try to add nodes an empty graph"""
         for graph_type in ALL_CLASSES:

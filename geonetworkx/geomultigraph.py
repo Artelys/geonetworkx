@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import networkx as nx
-from .geograph import GeoGraph
 import geonetworkx as gnx
 
 
-class GeoMultiGraph(GeoGraph, nx.MultiGraph):
+class GeoMultiGraph(gnx.GeoGraph, nx.MultiGraph):
     """A undirected geographic graph class that can store multiedges."""
 
     def to_nx_class(self):
@@ -36,3 +35,26 @@ class GeoMultiGraph(GeoGraph, nx.MultiGraph):
     def to_undirected_class(self):
         """Returns the class to use for empty undirected copies (see ``networkx.MultiGraph.to_undirected_class``).."""
         return GeoMultiGraph
+
+    def add_edge(self, u_for_edge, v_for_edge, key=None, **attr):
+        """Add a single edge.
+
+        This method exists only for reflecting nx.MultiGraph method so that the multiple inheritance scheme works.
+
+        Examples
+        --------
+        >>> import geonetworkx as gnx
+        >>> g = gnx.GeoMultiGraph()
+        >>> g.add_edge(1, 2, 0, geometry=gnx.LineString([(5, 4), (2, 7)]))
+        0
+        >>> print(g.nodes[1]["geometry"])
+        POINT (5 4)
+        """
+        u_geometry, v_geometry = self._get_nodes_geometries_from_edge_geometry(u_for_edge, v_for_edge,
+                                                                               attr.get(self.edges_geometry_key, None))
+        result = self.to_nx_class().add_edge(self, u_for_edge, v_for_edge, key, **attr)
+        if u_geometry is not None:
+            self.nodes[u_for_edge][self.nodes_geometry_key] = u_geometry
+        if v_geometry is not None:
+            self.nodes[v_for_edge][self.nodes_geometry_key] = v_geometry
+        return result

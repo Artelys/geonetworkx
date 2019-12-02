@@ -31,3 +31,5 @@ from geonetworkx.tools import *
 
 import geonetworkx.generators
 from geonetworkx.generators import *
+
+from shapely.geometry import Point, LineString
