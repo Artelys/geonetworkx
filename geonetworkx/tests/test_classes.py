@@ -118,6 +118,17 @@ class TestClasses(unittest.TestCase):
         assert_graphs_have_same_geonodes(graph, re_modified_graph, "Some nodes seems to be different after "
                                                                    "re-modification")
 
+    def test_crs_to_utm(self):
+        for graph_type in ALL_CLASSES:
+            with self.subTest(graph_type=graph_type, SEED=gnx_tu.SEED):
+                graph = get_random_geograph_with_wgs84_scale(NB_POINTS, graph_type)
+                modified_graph = graph.to_utm(inplace=False)
+                re_modified_graph = modified_graph.to_crs(crs=gnx.settings.WGS84_CRS, inplace=False)
+                assert_graphs_have_same_edges_geometry(graph, re_modified_graph, "Some edge geometries seems to be different"
+                                                                                 " after re-modification", tol=1e-2)
+                assert_graphs_have_same_geonodes(graph, re_modified_graph, "Some nodes seems to be different after "
+                                                                           "re-modification")
+
     def test_nodes_to_gdf(self):
         for graph_type in ALL_CLASSES:
             with self.subTest(graph_type=graph_type, SEED=gnx_tu.SEED):

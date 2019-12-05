@@ -2,7 +2,7 @@
 """Base class for geographic graphs"""
 import networkx as nx
 import geopandas as gpd
-from shapely.geometry import Point, LineString
+from shapely.geometry import Point, LineString, MultiPoint
 import geonetworkx as gnx
 import geonetworkx.settings as settings
 import itertools
@@ -175,6 +175,16 @@ class GeoGraph(nx.Graph):
         point_series = gpd.GeoSeries(nodes_as_points)
         point_series.crs = self.crs
         return point_series
+
+    def get_nodes_as_multipoint(self) -> MultiPoint:
+        """Return nodes geometries as a ``shapely.geometry.MultiPoint``.
+
+        Returns
+        -------
+        MultiPoint
+            MutltiPoint containing all nodes geometries.
+        """
+        return MultiPoint([self.get_node_as_point(n) for n in self.nodes])
 
     def get_edges_as_line_series(self) -> gpd.GeoSeries:
         """Return the edges as a ``geopandas.GeoSeries`` of ``shapely.geometry.LineString``.
@@ -387,22 +397,36 @@ class GeoGraph(nx.Graph):
         if result is not None:
             return result
 
-    def to_utm(self):
+    def to_utm(self, inplace=False):
         """Project graph coordinates to the corresponding UTM (Universal Transverse Mercator)
+
+        Parameters
+        ----------
+        inplace : bool
+             If True, the modification is done inplace, otherwise a new graph is returned (Default value = False).
 
         Example
         -------
-        >>>import geonetworkx as gnx
-        >>>from shapely.geometry import Point
-        >>>g = gnx.GeoGraph(crs={"init":"epsg:4326"})
-        >>>g.add_nodes_from([(1, dict(geometry=Point(4.3, 51.5))),
-        ...                  (2, dict(geometry=Point(4.32, 51.48)))])
+        >>> import geonetworkx as gnx
+        >>> from shapely.geometry import Point
+        >>> g = gnx.GeoGraph(crs=gnx.WGS84_CRS)
+        >>> g.add_edge(1, 2, geometry=gnx.LineString([(4.28, 45.5), (4.32, 45.48)]))
+        >>> g.to_utm(inplace=True)
+        >>> print(g.crs)
+        +proj=utm +zone=31 +ellps=WGS84 +datum=WGS84 +units=m +no_defs +type=crs
+        >>> print(g.nodes[1]["geometry"])
+        POINT (600002.1723317318 5039293.296216004)
 
         See Also
         --------
         to_crs
         """
-        pass
+        graph_centroid = self.get_nodes_as_multipoint().centroid
+        utm_crs = gnx.get_utm_crs(graph_centroid)
+        if inplace:
+            self.to_crs(utm_crs, inplace=True)
+        else:
+            return self.to_crs(utm_crs, inplace=False)
 
     def nodes_to_gdf(self) -> gpd.GeoDataFrame:
         """Create a ``geopandas.GeoDataFrame`` from nodes of the current graph. The column representing the geometry is

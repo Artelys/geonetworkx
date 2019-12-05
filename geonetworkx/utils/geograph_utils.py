@@ -39,6 +39,13 @@ def crs_equals(crs1, crs2) -> bool:
     return get_crs_as_str(crs1) == get_crs_as_str(crs2)
 
 
+def get_utm_crs(p: Point):
+    """Return the Universal Transverse Mercator CRS with a given in point in long-lat format."""
+    longitude = p.x
+    utm_zone = int(math.floor((longitude + 180) / 6.0) + 1)
+    return pyproj.CRS("+proj=utm +zone=%d +ellps=WGS84 +datum=WGS84 +units=m +no_defs" % utm_zone)
+
+
 def compute_vincenty(p1, p2) -> float:
     """Returns the vincenty distance in meters given points with the format (longitude, latitude) in the WGS84
     crs."""
