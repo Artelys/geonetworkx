@@ -9,6 +9,7 @@ from geonetworkx.geometry_operations import coordinates_almost_equal, insert_poi
 from geonetworkx.geograph import GeoGraph
 import geonetworkx.settings as settings
 from typing import Iterable
+from scipy.spatial import cKDTree
 try:
     import srtm
 except ImportError:
@@ -394,3 +395,59 @@ def get_graph_bounding_box(graph: GeoGraph):
         if y_max < y_e_max:
             bb[1][1] = y_e_max
     return bb
+
+
+def get_closest_nodes(graph: GeoGraph, point: Point, k: int, **kwargs) -> list:
+    """Return the ``k`` closest nodes from the given point.
+
+    Euclidian distance is used here by default.
+
+    Parameters
+    ----------
+    graph:
+        Geograph on which nodes are browsed
+    point :
+        Query point on which the distances from nodes are computed.
+    k :
+        Number of nodes to return.
+    kwargs :
+        Additional parameters to send to `scipy.spatial.cKDTree.query` method.
+
+    Returns
+    -------
+    list
+        A list containing closest nodes labels.
+    """
+    nodes = graph.get_nodes_as_point_series()
+    nodes_coords = np.array([[p.x, p.y] for p in nodes.values])
+    kd_tree = cKDTree(nodes_coords)
+    _, nodes_ix = kd_tree.query(point, k, **kwargs)
+    return [nodes.index[i] for i in nodes_ix]
+
+
+def get_surrounding_nodes(graph: GeoGraph, point: Point, r: float, **kwargs) -> list:
+    """Return all nodes that are within distance ``r`` of given point.
+
+    Euclidian distance is used here by default.
+
+    Parameters
+    ----------
+    graph:
+        Geograph on which nodes are browsed
+    point :
+        Query point on which the distances from nodes are computed.
+    r :
+        Maximum distance between point and nodes to return.
+    kwargs :
+        Additional parameters to send to scipy.spatial.cKDTree.query_ball_point method.
+
+    Returns
+    -------
+    list
+        A list containing nodes labels that are within the distance.
+    """
+    nodes = graph.get_nodes_as_point_series()
+    nodes_coords = np.array([[p.x, p.y] for p in nodes.values])
+    kd_tree = cKDTree(nodes_coords)
+    nodes_ix = kd_tree.query_ball_point(point, r, **kwargs)
+    return [nodes.index[i] for i in nodes_ix]
