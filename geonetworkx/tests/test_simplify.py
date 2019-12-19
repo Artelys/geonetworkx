@@ -30,7 +30,7 @@ class TestSimplify(unittest.TestCase):
                                        [bounds[2], bounds[3]],
                                        [bounds[2], bounds[1]]]
                 polygon = Polygon(polygon_coordinates)
-                new_graph = gnx.trim_graph_with_polygon(g, polygon, copy=True, method=method)
+                new_graph = gnx.trim_graph_with_polygon(g, polygon, as_view=True, method=method)
                 assert_less(len(new_graph.nodes), len(g.nodes), "Half bounding box trimming must remove some nodes")
                 assert_is_subgraph(g, new_graph, "The trimmed graph must be a sub graph of the original graph")
 

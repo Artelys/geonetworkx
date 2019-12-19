@@ -74,8 +74,8 @@ def remove_small_connected_components(graph: nx.Graph, minimum_allowed_size: int
     return nb_removed_cc
 
 
-def trim_graph_with_polygon(graph: GeoGraph, polygon: Union[Polygon, MultiPolygon], copy=False, method="intersects"):
-    """Trim a graph with a given polygon. Keep only the nodes and edges that intersect (or are within) the polygon.
+def trim_graph_with_polygon(graph: GeoGraph, polygon: Union[Polygon, MultiPolygon], as_view=False, method="intersects"):
+    """Trim a graph with a given polygon. Keep only the nodes that intersect (or are within) the polygon.
 
     Parameters
     ----------
@@ -83,8 +83,8 @@ def trim_graph_with_polygon(graph: GeoGraph, polygon: Union[Polygon, MultiPolygo
         A GeoGraph (or subclass)
     polygon : Polygon or MultiPolygon
         A ``shapely.Polygon`` describing the area to keep
-    copy : bool
-        If ``True``, a deep copy is done and a new graph is returned. (Default value = False)
+    as_view : bool
+        If ``True``, a view of the given graph is returned
     method : str
         If set to ``"intersects"``, the ``shapely.intersects`` is used (keeps nodes and edges that
         intersects the polygon). If set to ``"within"``, the ``shapely.within`` is used (keep nodes and edges that are
@@ -93,29 +93,21 @@ def trim_graph_with_polygon(graph: GeoGraph, polygon: Union[Polygon, MultiPolygo
     Returns
     -------
     None or GeoGraph
-        The modified graph if ``copy`` is ``True``.
+        The modified graph if ``as_view`` is ``True``.
 
     """
-    if copy:
-        used_graph = graph.copy()
-    else:
-        used_graph = graph
     if method not in ["intersects", "within"]:
         raise ValueError("Unknown method for trimming : '%s'" % str(method))
-    nodes_series = used_graph.get_nodes_as_point_series()
-    edges_as_series = used_graph.get_edges_as_line_series()
+    nodes_series = graph.get_nodes_as_point_series()
     if method == 'intersects':
-        nodes_criteria = ~ nodes_series.intersects(polygon)
-        edges_criteria = ~ edges_as_series.intersects(polygon)
+        nodes_criteria = nodes_series.intersects(polygon)
     else:
-        nodes_criteria = ~ nodes_series.within(polygon)
-        edges_criteria = ~ edges_as_series.within(polygon)
-    nodes_to_remove = nodes_series[nodes_criteria].index
-    edges_to_remove = edges_as_series[edges_criteria].index
-    used_graph.remove_nodes_from(nodes_to_remove)
-    used_graph.remove_edges_from(edges_to_remove)
-    if copy:
-        return used_graph
+        nodes_criteria = nodes_series.within(polygon)
+    if as_view:
+        return graph.subgraph(nodes_series[nodes_criteria].index)
+    else:
+        nodes_to_remove = nodes_series[~ nodes_criteria].index
+        graph.remove_nodes_from(nodes_to_remove)
 
 
 def remove_nan_attributes(graph: nx.Graph, remove_nan=True, remove_none=True, copy=False):
