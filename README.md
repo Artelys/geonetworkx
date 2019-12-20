@@ -66,6 +66,6 @@ python -m unittest discover -v geonetworkx
 ```
 Or with `nose` like this:
 ```
-nosetests geonetworkx -v
+nosetests geonetworkx -v --with-doctest
 ```
 
