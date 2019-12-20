@@ -58,14 +58,3 @@ class TestUtils(unittest.TestCase):
         for n, length in path_lengths.items():
             assert_less_equal(length, limit, "A path in the ego graph is too long: %f > %f" % (length, limit))
 
-    def test_get_closest_nodes(self):
-        """Test the method get_closest_nodes."""
-        g = gnx.GeoGraph()
-        g.add_nodes_from([(1, dict(geometry=gnx.Point(1, 1))),
-                          (2, dict(geometry=gnx.Point(-1, 3))),
-                          (3, dict(geometry=gnx.Point(-1, -4))),
-                          (4, dict(geometry=gnx.Point(-1, -1))),
-                          (5, dict(geometry=gnx.Point(-10, 10)))])
-        cn = gnx.get_closest_nodes(g, gnx.Point(0, 0), 3)
-
-
