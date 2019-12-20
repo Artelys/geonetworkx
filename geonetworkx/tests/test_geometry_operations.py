@@ -18,14 +18,13 @@ class TestGeometryOperations(unittest.TestCase):
 
     def test_discretize_lines(self):
         # Test that a discretization of lines is well set for each line
-        settings.DISCRETIZATION_TOLERANCE = 1e-1
         nb_lines = 20
         lines = []
         for l in range(nb_lines):
             line_nb_points = np.random.randint(5, 30)
             points = np.random.rand(line_nb_points, 2)
             lines.append(LineString(points))
-        discretized_points, points_line_association = discretize_lines(lines)
+        discretized_points, points_line_association = discretize_lines(lines, 1e-1)
         for l in points_line_association:
             line = lines[l]
             for p in points_line_association[l]:

@@ -6,23 +6,23 @@ import geopandas as gpd
 from shapely.geometry import LineString
 from geonetworkx.geograph import GeoGraph
 import geonetworkx.settings as settings
-from geonetworkx.geometry_operations import get_closest_line_from_points, split_line, coordinates_almost_equal
+from geonetworkx.geometry_operations import get_closest_line_from_points, split_line, coordinates_almost_equal, \
+                                            get_default_discretization_tolerance
 from geonetworkx.utils import get_new_node_unique_name, euclidian_distance, get_line_ordered_edge, is_nan, compose
 from collections import defaultdict
 
 
 def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=False, merge_direction="both",
-                         node_filter=no_filter, edge_filter=no_filter, intersection_nodes_attr=None) -> GeoGraph:
+                         node_filter=no_filter, edge_filter=no_filter, intersection_nodes_attr=None,
+                         discretization_tol=None) -> GeoGraph:
     """Merge given points as node with a spatial merge. Points are projected on the closest edge of the
     graph and an intersection node is added if necessary. If two nodes a given point and a node have the same name, with
-    equal coordinates, then the node is considered as already in the graph. A discretization tolerance
-    (``settings.DISCRETIZATION_TOLERANCE``) is used for edges lines and is set by default to a constant matching the
-    WGS84 crs. If another crs is used, results may be inconsistent (high computational time or inaccuracy). New nodes
-    created from the geodataframe have attributes described by other columns (except if an attribute value is `nan`).
-    When a point is projected on an edge, this edge is removed and replaced by two others that connect the extremities
-    to the intersection node. A reference to the original edge is kept on theses new edges with the attribute
-    ``settings.ORIGINAL_EDGE_KEY``. The original edge is the oldest parent of the new edge, to have the direct parent,
-    the attribute has to be cleant first.
+    equal coordinates, then the node is considered as already in the graph. A discretization tolerance is used for
+    indexing edges lines. New nodes created from the geodataframe have attributes described by other columns (except if
+    an attribute value is `nan`). When a point is projected on an edge, this edge is removed and replaced by two others
+    that connect the extremities to the intersection node. A reference to the original edge is kept on theses new edges
+    with the attribute ``settings.ORIGINAL_EDGE_KEY``. The original edge is the oldest parent of the new edge, to have
+    the direct parent, the attribute has to be cleant first.
 
     Parameters
     ----------
@@ -45,6 +45,10 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
         An edge filter (lambda) to exclude edges on which the projection will not take place. (Default value = no_filter)
     intersection_nodes_attr : dict
         A dictionary of attributes (constant for all added intersection nodes). (Default value = None)
+    discretization_tol: float
+        A custom discretization tolerance for lines. If None, tolerance with the right order of magnitude is
+        pre-defined for some CRS. For more details, see ``gnx.get_default_discretization_tolerance`` method.
+        (Default value = None)
 
     Returns
     -------
@@ -54,7 +58,7 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
 
     See Also
     --------
-    spatial_graph_merge
+    spatial_graph_merge gnx.get_default_discretization_tolerance
 
     """
     if not inplace:
@@ -67,7 +71,9 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
                          " required for a merge operation")
     points = points_gdf.geometry
     points_coords = np.array([[p.x, p.y] for p in points])
-    lines_indexes = get_closest_line_from_points(points_coords, edges_as_lines.values())
+    if discretization_tol is None:
+        discretization_tol = get_default_discretization_tolerance(graph.crs)
+    lines_indexes = get_closest_line_from_points(points_coords, edges_as_lines.values(), discretization_tol)
     edges_to_split = defaultdict(dict)
     # Add node, intersection node and edge (node, intersection node)
     for p, p_index, point in zip(range(len(points_gdf)), points_gdf.index, points):
@@ -156,7 +162,8 @@ def spatial_points_merge(graph: GeoGraph, points_gdf: gpd.GeoDataFrame, inplace=
 
 
 def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
-                        inplace=False, merge_direction="both", node_filter=None, intersection_nodes_attr=None):
+                        inplace=False, merge_direction="both", node_filter=None, intersection_nodes_attr=None,
+                        discretization_tol=None):
     """Operates spatial merge between two graphs. Spatial edge projection is used on merging nodes (see
     ``spatial_points_merge``). The ``base_graph`` attributes have higher priority than the ``other_graph`` attributes (
     i.e. if graphs have common graph attributes, nodes or edges, the ``base_graph`` attributes will be kept).
@@ -175,7 +182,10 @@ def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
         Lambda returning if a given node (from the ``other_graph`` graph) has to be merged. (Default value = None)
     intersection_nodes_attr : str
         A dictionary of attributes (constant for all added intersection nodes). (Default value = None)
-
+    discretization_tol: float
+        A custom discretization tolerance for lines. If None, tolerance with the right order of magnitude is
+        pre-defined for some CRS. For more details, see ``gnx.get_default_discretization_tolerance`` method.
+        (Default value = None)
 
     Returns
     -------
@@ -200,11 +210,13 @@ def spatial_graph_merge(base_graph: GeoGraph, other_graph: GeoGraph,
     nodes_gdf = other_graph_view.nodes_to_gdf()
     if inplace:
         spatial_points_merge(base_graph, nodes_gdf, inplace=inplace, merge_direction=merge_direction,
-                             intersection_nodes_attr=intersection_nodes_attr)
+                             intersection_nodes_attr=intersection_nodes_attr,
+                             discretization_tol=discretization_tol)
         merged_graph = base_graph
     else:
         merged_graph = spatial_points_merge(base_graph, nodes_gdf, inplace=inplace, merge_direction=merge_direction,
-                                            intersection_nodes_attr=intersection_nodes_attr)
+                                            intersection_nodes_attr=intersection_nodes_attr,
+                                            discretization_tol=discretization_tol)
     merged_graph = compose(other_graph, merged_graph)
     if not inplace:
         return merged_graph

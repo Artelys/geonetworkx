@@ -60,6 +60,8 @@ class TestTools(unittest.TestCase):
         # base graph definition
         nb_nodes = 20
         base_graph = gnx_tu.get_random_geograph(nb_nodes)
+        bb = gnx.get_graph_bounding_box(base_graph)
+        discretization_tol = (bb[1][0] - bb[0][0]) / 50.0
         gnx.fill_edges_missing_geometry_attributes(base_graph)
 
         # other graph definition
@@ -83,7 +85,8 @@ class TestTools(unittest.TestCase):
         # nx.draw_networkx(other_graph, pos=other_graph.get_nodes_coordinates(),
         #                  node_color=[2 if n in base_graph.nodes() else 3 for n in g2.nodes()])
 
-        merged_graph = gnx.spatial_graph_merge(base_graph, other_graph, inplace=False)
+        merged_graph = gnx.spatial_graph_merge(base_graph, other_graph, inplace=False,
+                                               discretization_tol=discretization_tol)
         # origins = nx.get_node_attributes(merged_graph, "origin")
         # nc = [origins[n] if n in origins else 4 for n in merged_graph.nodes()]
         # nx.draw_networkx(merged_graph, pos=merged_graph.get_nodes_coordinates(), node_color=nc)
@@ -99,7 +102,12 @@ class TestTools(unittest.TestCase):
         points_gdf.index = range(nb_nodes, nb_nodes + nb_points)
         # node filter
         node_filter = lambda n: n > 5
-        merged_graph = gnx.spatial_points_merge(graph, points_gdf, node_filter=node_filter, inplace=False)
+        bb = gnx.get_graph_bounding_box(graph)
+        discretization_tol = (bb[1][0] - bb[0][0]) / 50.0
+        merged_graph = gnx.spatial_points_merge(graph, points_gdf,
+                                                node_filter=node_filter,
+                                                inplace=False,
+                                                discretization_tol=discretization_tol)
         for n in graph.nodes:
             assert_in(n, merged_graph.nodes)
         for n in points_gdf.index:
@@ -111,7 +119,8 @@ class TestTools(unittest.TestCase):
                     assert_in(e, merged_graph.edges)
         # edge filter
         edge_filter = lambda u, v: u not in range(5, 10) and v not in range(12, 20)
-        merged_graph = gnx.spatial_points_merge(graph, points_gdf, edge_filter=edge_filter, inplace=False)
+        merged_graph = gnx.spatial_points_merge(graph, points_gdf, edge_filter=edge_filter, inplace=False,
+                                                discretization_tol=discretization_tol)
         for n in graph.nodes:
             assert_in(n, merged_graph.nodes)
         for n in points_gdf.index:
@@ -121,7 +130,7 @@ class TestTools(unittest.TestCase):
                 assert_in(e, merged_graph.edges)
         # node filter and edge filter
         merged_graph = gnx.spatial_points_merge(graph, points_gdf, edge_filter=edge_filter, node_filter=node_filter,
-                                                inplace=False)
+                                                inplace=False, discretization_tol=discretization_tol)
         for n in graph.nodes:
             assert_in(n, merged_graph.nodes)
         for n in points_gdf.index:

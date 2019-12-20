@@ -7,6 +7,7 @@ from scipy.spatial import cKDTree
 from collections import defaultdict
 from typing import Union, Iterable
 import geonetworkx.settings as settings
+import geonetworkx as gnx
 
 
 PointCoordinatesLike = Iterable[float]
@@ -112,7 +113,7 @@ def convert_multilinestring_to_linestring(gdf: gpd.GeoDataFrame) -> int:
     return nb_converted_multilinestring
 
 
-def discretize_line(line: LineString) -> list:
+def discretize_line(line: LineString, discretization_tol) -> list:
     """Takes a shapely LineString and discretize it into a list of shapely Points. Each point is at most at the
     discretization tolerance distance of the following point.
 
@@ -120,6 +121,8 @@ def discretize_line(line: LineString) -> list:
     ----------
     line : LineString
         Line to discretize
+    discretization_tol : float
+        Maximum distance between two points on the line.
 
     Returns
     -------
@@ -131,24 +134,28 @@ def discretize_line(line: LineString) -> list:
     discretize_lines
 
     """
+    if discretization_tol <= 0.0:
+        raise ValueError("Discretization tolerance must be strictly positive.")
     points_list = []
-    current_dist = settings.DISCRETIZATION_TOLERANCE
+    current_dist = discretization_tol
     line_length = line.length
     points_list.append(Point(list(line.coords)[0]))
     while current_dist < line_length:
         points_list.append(line.interpolate(current_dist))
-        current_dist += settings.DISCRETIZATION_TOLERANCE
+        current_dist += discretization_tol
     points_list.append(Point(list(line.coords)[-1]))
     return points_list
 
 
-def discretize_lines(lines: Iterable[LineString]):
+def discretize_lines(lines: Iterable[LineString], discretization_tol):
     """Discretize some line into points.
 
     Parameters
     ----------
     lines: Iterable[LineString] :
         Lines to discretize
+    discretization_tol : float
+        Maximum distance between two points on the line.
 
     Returns
     -------
@@ -165,7 +172,7 @@ def discretize_lines(lines: Iterable[LineString]):
     all_points = []
     nb_points = 0
     for line_index, line in enumerate(lines):
-        discretized_points = discretize_line(line)
+        discretized_points = discretize_line(line, discretization_tol)
         nb_discretized_points = len(discretized_points)
         all_points.extend(discretized_points)
         points_line_association[line_index] = list(range(nb_points, nb_points + nb_discretized_points))
@@ -201,13 +208,16 @@ def get_closest_point_from_points(points_from: PointsCoordinatesLike, points_to:
     return kd_tree.query(points_from)
 
 
-def get_closest_point_from_line(line_from: LineString, points_to: list = None, kd_tree: cKDTree = None):
+def get_closest_point_from_line(line_from: LineString, discretization_tol: float,
+                                points_to: list = None, kd_tree: cKDTree = None):
     """Return the closest point from a given line and its distance.
 
     Parameters
     ----------
     line_from : LineString
         A shapely LineString (Default value = None)
+    discretization_tol : float
+        Maximum distance between two discretized points on the line.
     points_to : list
         A list of points among which the closest to the line has to be found (optional is ``kdtree`` is
         given)
@@ -227,7 +237,7 @@ def get_closest_point_from_line(line_from: LineString, points_to: list = None, k
         raise ValueError("Must provide at least argument 'points_to' or 'kd_tree'")
     if kd_tree is None:
         kd_tree = cKDTree(points_to)
-    discretized_points = discretize_line(line_from)
+    discretized_points = discretize_line(line_from, discretization_tol)
     distances, closest_points_indexes = kd_tree.query(MultiPoint(discretized_points))
     smallest_distance_index = np.argmin(distances)
     return distances[smallest_distance_index], closest_points_indexes[smallest_distance_index]
@@ -331,6 +341,7 @@ def get_closest_point_from_shapes(shapes_from, points_to):
 
 def get_closest_line_from_point(point_from: PointCoordinatesLike,
                                 lines_to=None,
+                                discretization_tol=None,
                                 kd_tree=None,
                                 points_line_association=None):
     """Find the closest line from a given point.
@@ -341,6 +352,9 @@ def get_closest_line_from_point(point_from: PointCoordinatesLike,
         Point coordinate to find the closest line.
     lines_to : list
         Group of lines among which the closest has to be found (optional if ``kdtree`` and
+        ``points_line_association`` are given). (Default value = None)
+    discretization_tol: float
+        Maximum distance between discretized points (optional if ``kdtree`` and
         ``points_line_association`` are given). (Default value = None)
     kd_tree : cKDTree
         An optional pre-computed kd_tree of discretized lines. (Default value = None)
@@ -360,7 +374,9 @@ def get_closest_line_from_point(point_from: PointCoordinatesLike,
     elif kd_tree is None and points_line_association is None:
         raise ValueError("If a kd-tree is given, a point line association dictionary must provided")
     if kd_tree is None:
-        points_to, points_line_association = discretize_lines(lines_to)
+        if discretization_tol is None:
+            raise ValueError("If no kd-tree is given, a discretization tolerance must be provided.")
+        points_to, points_line_association = discretize_lines(lines_to, discretization_tol)
         kd_tree = cKDTree(points_to)
     distance, closest_point_index = get_closest_point_from_points([point_from], kd_tree=kd_tree)
     for line_index in points_line_association:
@@ -369,7 +385,7 @@ def get_closest_line_from_point(point_from: PointCoordinatesLike,
     assert False
 
 
-def get_closest_line_from_points(points_from, lines_to):
+def get_closest_line_from_points(points_from, lines_to, discretization_tol):
     """Find the closest line for each given points.
 
     Parameters
@@ -378,6 +394,8 @@ def get_closest_line_from_points(points_from, lines_to):
         Points coordinates.
     lines_to : list
         Group of lines among which the closest has to be found.
+    discretization_tol: float
+        Maximum distance between discretized points
 
     Returns
     -------
@@ -385,7 +403,7 @@ def get_closest_line_from_points(points_from, lines_to):
         A list of closest lines indexes.
 
     """
-    points_to, points_line_association = discretize_lines(lines_to)
+    points_to, points_line_association = discretize_lines(lines_to, discretization_tol)
     kd_tree = cKDTree(points_to)
     lines_indexes = []
     for point in points_from:
@@ -475,3 +493,17 @@ def insert_point_in_line(line: LineString, point_coords: list, position: int) ->
     new_line_coordinates.append((point_coords[0], point_coords[1]))
     new_line_coordinates.extend(line.coords[position:])
     return LineString(new_line_coordinates)
+
+
+def get_default_discretization_tolerance(crs):
+    """Return a discretization tolerance with the right order of magnitude for
+    the given crs."""
+    if not gnx.is_null_crs(crs):
+        if gnx.crs_equals(crs, gnx.WGS84_CRS):
+            return 1e-4  # in degree
+        elif crs.axis_info is not None and len(crs.axis_info) > 0:
+            first_axis = crs.axis_info[0]
+            if first_axis.unit_name == "metre":
+                return 3.0  # in meters
+    raise ValueError("Impossible to provide a valid discretization tolerance"
+                     "for the given crs. A custom one can be set.")

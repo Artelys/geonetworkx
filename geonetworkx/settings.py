@@ -4,8 +4,6 @@ WGS84_CRS = {'init': 'epsg:4326'}
 USED_CRS = WGS84_CRS
 DEFAULT_CRS = None
 
-# default discretization parameter for extended projection methods
-DISCRETIZATION_TOLERANCE = 1e-4
 
 # Graph default spatial keys
 NODES_GEOMETRY_DEFAULT_KEY = "geometry"
