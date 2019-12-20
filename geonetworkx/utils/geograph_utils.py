@@ -417,6 +417,19 @@ def get_closest_nodes(graph: GeoGraph, point: Point, k: int, **kwargs) -> list:
     -------
     list
         A list containing closest nodes labels.
+
+    Examples
+    --------
+    >>> import geonetworkx as gnx
+    >>> g = gnx.GeoGraph()
+    >>> g.add_nodes_from([(1, gnx.Point(1, 1)),
+    ...                   (2, gnx.Point(-1, 3)),
+    ...                   (3, gnx.Point(-1, -4)),
+    ...                   (4, gnx.Point(-1, -1)),
+    ...                   (5, gnx.Point(-10, 10))])
+    >>> cns = gnx.get_closest_nodes(g, gnx.Point(0, 0), 3)
+    >>> print(cns)
+    [1, 4, 2]
     """
     nodes = graph.get_nodes_as_point_series()
     nodes_coords = np.array([[p.x, p.y] for p in nodes.values])
@@ -445,6 +458,19 @@ def get_surrounding_nodes(graph: GeoGraph, point: Point, r: float, **kwargs) -> 
     -------
     list
         A list containing nodes labels that are within the distance.
+
+    Examples
+    --------
+    >>> import geonetworkx as gnx
+    >>> g = gnx.GeoGraph()
+    >>> g.add_nodes_from([(1, gnx.Point(1, 1)),
+    ...                   (2, gnx.Point(-1, 3)),
+    ...                   (3, gnx.Point(-1, -4)),
+    ...                   (4, gnx.Point(-1, -1)),
+    ...                   (5, gnx.Point(-10, 10))])
+    >>> sns = gnx.get_surrounding_nodes(g, gnx.Point(0, 0), 1.5)
+    >>> print(sns)
+    [1, 4]
     """
     nodes = graph.get_nodes_as_point_series()
     nodes_coords = np.array([[p.x, p.y] for p in nodes.values])
