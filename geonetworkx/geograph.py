@@ -308,6 +308,58 @@ class GeoGraph(nx.Graph):
         if not inplace:
             return graph
 
+    def add_node(self, node_for_adding, geometry=None, **attr):
+        """Add a single node `node_for_adding` with its given geometry.
+
+        See Also
+        --------
+        nx.Graph.add_node add_nodes_from
+
+        Examples
+        --------
+        >>> import geonetworkx as gnx
+        >>> g = gnx.GeoGraph()
+        >>> g.add_node(1, gnx.Point(2, 3))
+        >>> print(g.nodes[1]["geometry"])
+        POINT (2 3)
+        """
+        if geometry is not None:
+            attr.update({self.nodes_geometry_key: geometry})
+        super().add_node(node_for_adding, **attr)
+
+    def add_nodes_from(self, nodes_for_adding, **attr):
+        """Add multiple nodes with potentially given geometries.
+
+        If no geometry is provided, behaviour is same as the
+        ``nx.Graph.add_nodes_from`` method.
+
+        See Also
+        --------
+        nx.Graph.add_nodes_from add_node
+
+        Examples
+        --------
+        >>> import geonetworkx as gnx
+        >>> g = gnx.GeoGraph()
+        >>> g.add_nodes_from([(1, gnx.Point(1, 1)),
+        ...                   (2, gnx.Point(2, 1)),
+        ...                   (3, gnx.Point(3, 1))])
+        >>> print(g.nodes[2]["geometry"])
+        POINT (2 1)
+        """
+        geom_key = self.nodes_geometry_key
+
+        def format_element(n):
+            try:
+                nn, p = n
+                if isinstance(p, Point):
+                    return nn, {geom_key: p}
+            except (TypeError, ValueError):
+                pass
+            return n
+        nodes_for_adding_formatted = map(format_element, nodes_for_adding)
+        super().add_nodes_from(nodes_for_adding_formatted, **attr)
+
     def _get_nodes_geometries_from_edge_geometry(self, u, v, geometry):
         """For each node of the edge, return the node geometry deduced from the linestring if it not already present."""
         u_geometry = v_geometry = None
