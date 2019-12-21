@@ -4,6 +4,8 @@ WGS84_CRS = {'init': 'epsg:4326'}
 USED_CRS = WGS84_CRS
 DEFAULT_CRS = None
 
+# Distance measurement methods. This setting is set in the code.
+DISTANCE_MEASUREMENT_METHODS = dict()
 
 # Graph default spatial keys
 NODES_GEOMETRY_DEFAULT_KEY = "geometry"

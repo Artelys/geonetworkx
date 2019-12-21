@@ -47,26 +47,134 @@ def get_utm_crs(p: Point):
     return pyproj.CRS("+proj=utm +zone=%d +ellps=WGS84 +datum=WGS84 +units=m +no_defs" % utm_zone)
 
 
-def compute_vincenty(p1, p2) -> float:
-    """Returns the vincenty distance in meters given points with the format (longitude, latitude) in the WGS84
-    crs."""
-    return geopy.distance.distance((p1[1], p1[0]), (p2[1], p2[0])).meters
+def vincenty_distance_coordinates(p1, p2) -> float:
+    """Returns the vincenty distance in meters with given coordinates."""
+    return geopy.distance.vincenty((p1[1], p1[0]), (p2[1], p2[0])).meters
 
 
-def compute_vincenty_from_points(p1: Point, p2: Point) -> float:
-    return compute_vincenty([p1.x, p1.y], [p2.x, p2.y])
+def vincenty_distance(p1: Point, p2: Point) -> float:
+    """Return ``geopy`` great circle distance with two given point in the
+     long/lat format.
+
+    Parameters
+    ----------
+    p1
+        First 2D point
+    p2
+        Second 2D point
+
+    Returns
+    -------
+    The vincenty distance in meters.
+
+    Examples
+    --------
+
+    >>> import geonetworkx as gnx
+    >>> p1 = gnx.Point(-73.614, 45.504)  # long/lat format
+    >>> p2 = gnx.Point(-73.632, 45.506)
+    >>> gnx.vincenty_distance(p1, p2)
+    1424.1744072667364
+    """
+    return vincenty_distance_coordinates([p1.x, p1.y], [p2.x, p2.y])
 
 
-def approx_map_unit_factor(points_coordinates, tolerance=1e-7) -> float:
-    """Compute a linear approximation of the map unit factor for 1 meter. Works only for the WGS84 CRS."""
-    centroid = np.array(points_coordinates)
+def great_circle_distance(p1: Point, p2: Point) -> float:
+    """Return ``geopy`` great circle distance with two given point in the
+     long/lat format.
+
+    Parameters
+    ----------
+    p1
+        First 2D point
+    p2
+        Second 2D point
+
+    Returns
+    -------
+    The great circle distance in meters.
+
+    Examples
+    --------
+
+    >>> import geonetworkx as gnx
+    >>> p1 = gnx.Point(-73.614, 45.504)  # long/lat format
+    >>> p2 = gnx.Point(-73.632, 45.506)
+    >>> gnx.great_circle_distance(p1, p2)
+    1420.2726507095967
+    """
+    return geopy.distance.great_circle((p1.y, p1.x), (p2.y, p2.x)).meters
+
+
+def geodesic_distance(p1: Point, p2: Point) -> float:
+    """Return ``geopy`` geodesic distance with two given point in the
+     long/lat format.
+
+    Parameters
+    ----------
+    p1
+        First 2D point
+    p2
+        Second 2D point
+
+    Returns
+    -------
+    The geodesic distance in meters.
+
+    Examples
+    --------
+
+    >>> import geonetworkx as gnx
+    >>> p1 = gnx.Point(-73.614, 45.504)  # long/lat format
+    >>> p2 = gnx.Point(-73.632, 45.506)
+    >>> gnx.geodesic_distance(p1, p2)
+    1424.174413518016
+    """
+    return geopy.distance.geodesic((p1.y, p1.x), (p2.y, p2.x)).meters
+
+
+def approx_map_unit_factor(point: Point, tolerance=1e-7, method="geodesic") -> float:
+    """Compute a  linear approximation of the map unit factor ``u`` for 1 meter:
+
+    .. math:: d(p_1, p_2) \approx ||p1 - p2||_2 \times u
+
+    This can be useful to not change the CRS of geograph. The approximation
+    can be very wrong for long distances.
+
+    Parameters
+    ----------
+    point
+        Point where the approximation is computed.
+    tolerance
+        Precision for the iterative method
+    method
+        Distance method (geodesic, great_circle, vincenty)
+
+    Returns
+    -------
+    The linear approximation unit factor.
+
+    Examples
+    --------
+    >>> import geonetworkx as gnx
+    >>> p1 = gnx.Point(-73.614, 45.504)
+    >>> u = gnx.approx_map_unit_factor(p1)
+    >>> p2 = gnx.Point(-73.613, 45.502)
+    >>> gnx.geodesic_distance(p1, p2)
+    235.62228597638102
+    >>> gnx.euclidian_distance(p1, p2) / u
+    214.82711341474953
+
+    """
+    def f(c1, c2): return get_distance(Point(c1), Point(c2), method)
+    centroid = np.array(point)
     lower_bound = centroid
     initial_gap = tolerance
-    while compute_vincenty(centroid, centroid + initial_gap) < 1.0:
+    while f(centroid, centroid + initial_gap) < 1.0:
         initial_gap *= 2
     upper_bound = centroid + initial_gap
     unit_point = (lower_bound + upper_bound) / 2
-    distance = compute_vincenty(centroid, unit_point)
+    distance = f(centroid, unit_point)
     iteration = 0
     max_iterations = 10000
     while np.abs(distance - 1.0) > tolerance:
@@ -75,7 +183,7 @@ def approx_map_unit_factor(points_coordinates, tolerance=1e-7) -> float:
         else:
             lower_bound = unit_point
         unit_point = (lower_bound + upper_bound) / 2
-        distance = compute_vincenty(centroid, unit_point)
+        distance = f(centroid, unit_point)
         iteration += 1
         if iteration > max_iterations:
             break
@@ -103,7 +211,7 @@ def measure_line_distance(line: LineString) -> float:
     total_distance = 0.0
     for i in range(1, len(coords)):
         v = coords[i]
-        total_distance += compute_vincenty(u, v)
+        total_distance += vincenty_distance_coordinates(u, v)
         u = v
     return total_distance
 
@@ -346,19 +454,30 @@ def compose(G: GeoGraph, H: GeoGraph) -> GeoGraph:
     return R
 
 
-def geographical_distance(graph: GeoGraph, node1, node2, method="vincenty") -> float:
+def get_distance(p1: Point, p2: Point, method: str) -> float:
+    """Return the distance between the two given points with the given method.
+    """
+    try:
+        return settings.DISTANCE_MEASUREMENT_METHODS[method](p1, p2)
+    except KeyError:
+        raise ValueError("Unknown method: '%s'. Known methods are: %s" %
+                         (str(method),
+                          str(list(settings.DISTANCE_MEASUREMENT_METHODS.keys()))))
+
+
+def geographical_distance(graph: GeoGraph, node1, node2, method="great_circle") -> float:
     """Return the geographical distance between the two given nodes.
 
     Parameters
     ----------
     graph : Geograph
         Geograph
-    node1 :
+    node1
         First node label
-    node2 :
+    node2
         Second node label
-    method :
-        vincenty", "euclidian", "great_circle" (Default value = "vincenty")
+    method : str
+        "vincenty", "euclidian", "great_circle" (Default value = "great_circle")
 
     Returns
     -------
@@ -368,12 +487,7 @@ def geographical_distance(graph: GeoGraph, node1, node2, method="vincenty") -> f
     """
     point1 = graph.nodes[node1][graph.nodes_geometry_key]
     point2 = graph.nodes[node2][graph.nodes_geometry_key]
-    if method == "vincenty":
-        return compute_vincenty_from_points(point1, point2)
-    elif method == "euclidian":
-        return euclidian_distance(point1, point2)
-    else:
-        raise ValueError("Unknown distance method: '%s'" % str(method))
+    return get_distance(point1, point2, method)
 
 
 def get_graph_bounding_box(graph: GeoGraph):
@@ -477,3 +591,10 @@ def get_surrounding_nodes(graph: GeoGraph, point: Point, r: float, **kwargs) -> 
     kd_tree = cKDTree(nodes_coords)
     nodes_ix = kd_tree.query_ball_point(point, r, **kwargs)
     return [nodes.index[i] for i in nodes_ix]
+
+
+# Distance measurement method indexing
+settings.DISTANCE_MEASUREMENT_METHODS["euclidian"] = euclidian_distance
+settings.DISTANCE_MEASUREMENT_METHODS["geodesic"] = geodesic_distance
+settings.DISTANCE_MEASUREMENT_METHODS["great_circle"] = great_circle_distance
+settings.DISTANCE_MEASUREMENT_METHODS["vincenty"] = euclidian_distance
