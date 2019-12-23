@@ -26,9 +26,9 @@ def is_null_crs(crs) -> bool:
     """Test for null crs values."""
     if crs is None:
         return True
-    if crs == dict():
+    if isinstance(crs, dict) and crs == dict():
         return True
-    if crs == '':
+    if isinstance(crs, str) and crs == '':
         return True
     return False
 
@@ -190,13 +190,15 @@ def approx_map_unit_factor(point: Point, tolerance=1e-7, method="geodesic") -> f
     return np.linalg.norm(centroid - unit_point)
 
 
-def measure_line_distance(line: LineString) -> float:
+def measure_line_distance(line: LineString, method: str) -> float:
     """Measure the length of a shapely LineString object using the vincenty distance.
 
     Parameters
     ----------
-    line : LineString
+    line
         Linestring to measure. Coordinates have to be (in the WGS-84 ellipsoid model)
+    method
+        Method to compute the distance
 
     Returns
     -------
@@ -207,11 +209,11 @@ def measure_line_distance(line: LineString) -> float:
     coords = line.coords
     if len(coords) < 2:
         return 0.0
-    u = coords[0]
+    u = Point(coords[0])
     total_distance = 0.0
     for i in range(1, len(coords)):
-        v = coords[i]
-        total_distance += vincenty_distance_coordinates(u, v)
+        v = Point(coords[i])
+        total_distance += get_distance(u, v, method)
         u = v
     return total_distance
 
@@ -288,9 +290,8 @@ def fill_edges_missing_geometry_attributes(graph: GeoGraph):
                 graph.edges[s][graph.edges_geometry_key] = LineString([p1, p2])
 
 
-def fill_length_attribute(graph: GeoGraph, attribute_name="length", only_missing=True):
-    """Fill the ``'length'`` attribute of the given networkX Graph. The length is computed in meters using the vincenty
-    formula. Method won't be consistent if the graph crs is not WGS84.
+def fill_length_attribute(graph: GeoGraph, attribute_name="length", only_missing=True, method=None):
+    """Fill the ``'length'`` attribute of the given networkX Graph.
 
     Parameters
     ----------
@@ -300,15 +301,29 @@ def fill_length_attribute(graph: GeoGraph, attribute_name="length", only_missing
         The length attribute name to set (Default value = "length")
     only_missing : bool
         Compute the length only if the attribute is missing (Default value = True)
+    method: str
+        Method to compute the distance
+
+    Examples
+    --------
+    >>> import geonetworkx as gnx
+    >>> g = gnx.GeoGraph(crs=gnx.WGS84_CRS)
+    >>> g.add_edge(1, 2, geometry=gnx.LineString([(-73.614, 45.504), (-73.632, 45.506)]))
+    >>> gnx.fill_length_attribute(g)  # using geodesic distance
+    >>> print(g.edges[(1, 2)]["length"])
+    1424.174413518016
+    >>> g.to_utm(inplace=True)
+    >>> gnx.fill_length_attribute(g, only_missing=False)
+    >>> print(g.edges[(1, 2)]["length"])  # using euclidian distance in UTM
+    1423.8073619096585
     """
-    if not crs_equals(graph.crs, settings.USED_CRS):
-        raise ValueError("Impossible to compute distance for graph with different"
-                         " crs than '%s'. Graph crs: '%s' " % (str(settings.USED_CRS), str(graph.crs)))
+    if method is None:
+        method = get_default_distance_method_from_crs(graph.crs)
     edges_geometry = nx.get_edge_attributes(graph, graph.edges_geometry_key)
-    for e in edges_geometry:
+    for e, line in edges_geometry.items():
         edge_data = graph.edges[e]
         if (not only_missing) or attribute_name not in edge_data:
-            edge_data[attribute_name] = measure_line_distance(edges_geometry[e])
+            edge_data[attribute_name] = measure_line_distance(line, method)
 
 
 def fill_elevation_attribute(graph: GeoGraph, attribute_name="elevation[m]", only_missing=True):
@@ -591,6 +606,22 @@ def get_surrounding_nodes(graph: GeoGraph, point: Point, r: float, **kwargs) -> 
     kd_tree = cKDTree(nodes_coords)
     nodes_ix = kd_tree.query_ball_point(point, r, **kwargs)
     return [nodes.index[i] for i in nodes_ix]
+
+
+def get_default_distance_method_from_crs(crs) -> str:
+    """Return the default method for computing distances for the given CRS.
+
+    Parameters
+    ----------
+    crs
+        Coordinate Reference System
+    Returns
+    -------
+        String representing the distance calculation method.
+    """
+    if crs_equals(crs, settings.WGS84_CRS):
+        return "geodesic"
+    return "euclidian"
 
 
 # Distance measurement method indexing
