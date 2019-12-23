@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # default CRS to set when creating graphs
 WGS84_CRS = {'init': 'epsg:4326'}
-USED_CRS = WGS84_CRS
 DEFAULT_CRS = None
 
 # Distance measurement methods. This setting is set in the code.
