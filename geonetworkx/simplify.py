@@ -232,9 +232,10 @@ def _clean_merge_mapping(edge_mapping: dict, new_edge: tuple, old_edges: list, d
             del edge_mapping[old_edge]
 
 
-def two_degree_node_merge_for_directed_graphs(graph: GeoDiGraph, node_filter=no_filter) -> dict:
+def two_degree_node_merge_for_directed_graphs(graph: GeoDiGraph, node_filter=no_filter):
     """Merge edges that connects two nodes with a unique third node. A potential node to merge `n` must have exactly two
     different neighbors `u` and `v` with one of the following set of edges:
+
         * `(u, n)` and `(n, v)`
         * `(u, n)`, `(n, u)`, `(n, v)` and `(v, n)`
     
@@ -253,7 +254,7 @@ def two_degree_node_merge_for_directed_graphs(graph: GeoDiGraph, node_filter=no_
 
     Returns
     -------
-    dict
+    merged_edges: dict
         Dictionary indicating for each new edge the merged ones.
 
     """
