@@ -31,8 +31,10 @@ GeoNetworkX provides data structures that extends the networkx classes with this
    :caption: Contents:
 
    1_gettingStarted
-   2_spatial_merge
-   3_Isochrones
+   2_reading_and_writing_files
+   3_supplement_data
+   4_spatial_merge
+   5_Isochrones
    reference/index
 
 
