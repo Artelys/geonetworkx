@@ -3,3 +3,9 @@
 {% extends "!layout.html" %}
 
 {% set css_files = css_files + ['_static/pygments.css'] %}
+
+{% block menu %}
+<a href="index.html">GeoNetworkX</a>
+{{ super() }}
+<a href="genindex.html">Index</a>
+{% endblock %}
