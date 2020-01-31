@@ -339,6 +339,15 @@ def fill_elevation_attribute(graph: GeoGraph, attribute_name="elevation[m]", onl
     only_missing : bool
         Get the elevation and set it only if the node attribute is missing. (Default value = True)
 
+    Examples
+    --------
+    >>> import geonetworkx as gnx
+    >>> g = gnx.GeoGraph(crs=gnx.WGS84_CRS)
+    >>> g.add_edge(1, 2, geometry=gnx.LineString([(5.15, 45.504), (5.167, 45.506)]))
+    >>> gnx.fill_elevation_attribute(g)
+    >>> print(g.nodes[1]["elevation[m]"])
+    393
+
     """
     if srtm is None:
         raise ImportError("Impossible to get elevation data, `srtm` package not found.")
