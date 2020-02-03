@@ -29,7 +29,7 @@ commands:
                 name: run tests
                 command: |
                     . venv/bin/activate
-                    python -m nose --with-xunit -v
+                    python -m nose --with-xunit -v --with-doctest
 
             - store_artifacts:
                 path: nosetests.xml
