@@ -128,7 +128,7 @@ def geodesic_distance(p1: Point, p2: Point) -> float:
     >>> p1 = gnx.Point(-73.614, 45.504)  # long/lat format
     >>> p2 = gnx.Point(-73.632, 45.506)
     >>> gnx.geodesic_distance(p1, p2)
-    1424.174413518016
+    1424.1744135183696
     """
     return geopy.distance.geodesic((p1.y, p1.x), (p2.y, p2.x)).meters
 
@@ -311,11 +311,11 @@ def fill_length_attribute(graph: GeoGraph, attribute_name="length", only_missing
     >>> g.add_edge(1, 2, geometry=gnx.LineString([(-73.614, 45.504), (-73.632, 45.506)]))
     >>> gnx.fill_length_attribute(g)  # using geodesic distance
     >>> print(g.edges[(1, 2)]["length"])
-    1424.174413518016
+    1424.1744135183696
     >>> g.to_utm(inplace=True)
     >>> gnx.fill_length_attribute(g, only_missing=False)
     >>> print(g.edges[(1, 2)]["length"])  # using euclidian distance in UTM
-    1423.8073619096585
+    1423.807361909543
     """
     if method is None:
         method = get_default_distance_method_from_crs(graph.crs)
