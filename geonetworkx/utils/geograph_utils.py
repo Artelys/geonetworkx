@@ -573,6 +573,8 @@ def get_closest_nodes(graph: GeoGraph, point: Point, k: int, **kwargs) -> list:
     nodes_coords = np.array([[p.x, p.y] for p in nodes.values])
     kd_tree = cKDTree(nodes_coords)
     _, nodes_ix = kd_tree.query(point, k, **kwargs)
+    if k == 1:
+        return nodes.index[nodes_ix]
     return [nodes.index[i] for i in nodes_ix]
 
 
