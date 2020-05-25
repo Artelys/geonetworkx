@@ -51,7 +51,6 @@ Python version (3.6 or 3.7). You have notably to download:
 
 - Binary for `Rtree`
 - Binary for `Fiona`
-- Binary for `PyProj 1.9.6` (mandatory version!)
 
 
 ## Documentation
