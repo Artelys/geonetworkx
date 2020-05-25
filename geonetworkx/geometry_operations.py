@@ -6,6 +6,7 @@ from shapely.geometry import Point, MultiPoint, LineString, MultiLineString
 from scipy.spatial import cKDTree
 from collections import defaultdict
 from typing import Union, Iterable
+import pyproj
 import geonetworkx.settings as settings
 import geonetworkx as gnx
 
@@ -497,12 +498,20 @@ def insert_point_in_line(line: LineString, point_coords: list, position: int) ->
 
 def get_default_discretization_tolerance(crs):
     """Return a discretization tolerance with the right order of magnitude for
-    the given crs."""
+    the given crs.
+
+    Examples
+    --------
+    >>> import geonetworkx as gnx
+    >>> print(gnx.get_default_discretization_tolerance("epsg:3857"))
+    3.0
+    """
     if not gnx.is_null_crs(crs):
-        if gnx.crs_equals(crs, gnx.WGS84_CRS):
+        pp_crs = pyproj.CRS(crs)
+        if gnx.crs_equals(pp_crs, gnx.WGS84_CRS):
             return 1e-4  # in degree
-        elif crs.axis_info is not None and len(crs.axis_info) > 0:
-            first_axis = crs.axis_info[0]
+        elif pp_crs.axis_info is not None and len(pp_crs.axis_info) > 0:
+            first_axis = pp_crs.axis_info[0]
             if first_axis.unit_name == "metre":
                 return 3.0  # in meters
     raise ValueError("Impossible to provide a valid discretization tolerance"
