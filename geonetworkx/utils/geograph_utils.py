@@ -73,8 +73,8 @@ def vincenty_distance(p1: Point, p2: Point) -> float:
     >>> import geonetworkx as gnx
     >>> p1 = gnx.Point(-73.614, 45.504)  # long/lat format
     >>> p2 = gnx.Point(-73.632, 45.506)
-    >>> gnx.vincenty_distance(p1, p2)
-    1424.1744072667364
+    >>> "%.2f" % gnx.vincenty_distance(p1, p2)
+    '1424.17'
     """
     return vincenty_distance_coordinates([p1.x, p1.y], [p2.x, p2.y])
 
@@ -100,8 +100,8 @@ def great_circle_distance(p1: Point, p2: Point) -> float:
     >>> import geonetworkx as gnx
     >>> p1 = gnx.Point(-73.614, 45.504)  # long/lat format
     >>> p2 = gnx.Point(-73.632, 45.506)
-    >>> gnx.great_circle_distance(p1, p2)
-    1420.2726507095967
+    >>> "%.2f" % gnx.great_circle_distance(p1, p2)
+    '1420.27'
     """
     return geopy.distance.great_circle((p1.y, p1.x), (p2.y, p2.x)).meters
 
@@ -127,8 +127,8 @@ def geodesic_distance(p1: Point, p2: Point) -> float:
     >>> import geonetworkx as gnx
     >>> p1 = gnx.Point(-73.614, 45.504)  # long/lat format
     >>> p2 = gnx.Point(-73.632, 45.506)
-    >>> gnx.geodesic_distance(p1, p2)
-    1424.1744135183696
+    >>> "%.2f" % gnx.geodesic_distance(p1, p2)
+    '1424.17'
     """
     return geopy.distance.geodesic((p1.y, p1.x), (p2.y, p2.x)).meters
 
@@ -160,10 +160,10 @@ def approx_map_unit_factor(point: Point, tolerance=1e-7, method="geodesic") -> f
     >>> p1 = gnx.Point(-73.614, 45.504)
     >>> u = gnx.approx_map_unit_factor(p1)
     >>> p2 = gnx.Point(-73.613, 45.502)
-    >>> gnx.geodesic_distance(p1, p2)
-    235.62228597638102
-    >>> gnx.euclidian_distance(p1, p2) / u
-    214.82711341474953
+    >>> "%.2f" % gnx.geodesic_distance(p1, p2)
+    '235.62'
+    >>> "%.2f" % (gnx.euclidian_distance(p1, p2) / u)
+    '214.83'
 
     """
     def f(c1, c2): return get_distance(Point(c1), Point(c2), method)
@@ -310,12 +310,12 @@ def fill_length_attribute(graph: GeoGraph, attribute_name="length", only_missing
     >>> g = gnx.GeoGraph(crs=gnx.WGS84_CRS)
     >>> g.add_edge(1, 2, geometry=gnx.LineString([(-73.614, 45.504), (-73.632, 45.506)]))
     >>> gnx.fill_length_attribute(g)  # using geodesic distance
-    >>> print(g.edges[(1, 2)]["length"])
-    1424.1744135183696
+    >>> "%.2f" % g.edges[(1, 2)]["length"]
+    '1424.17'
     >>> g.to_utm(inplace=True)
     >>> gnx.fill_length_attribute(g, only_missing=False)
-    >>> print(g.edges[(1, 2)]["length"])  # using euclidian distance in UTM
-    1423.807361909543
+    >>> "%.2f" % g.edges[(1, 2)]["length"]  # using euclidian distance in UTM
+    '1423.81'
     """
     if method is None:
         method = get_default_distance_method_from_crs(graph.crs)
