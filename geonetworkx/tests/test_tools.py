@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import sys
 import os
 import shutil
 import geopandas as gpd
@@ -147,6 +148,9 @@ class TestTools(unittest.TestCase):
     def test_isochrone(self):
         if not gnx_tu.check_optional_package_presence("pyvoronoi"):
             warnings.warn("Missing optional package for test 'test_isochrone': pyvoronoi")
+            return
+        if sys.version_info.major >= 3 and sys.version_info.minor >= 8:
+            warnings.warn("'pyvoronoi' package is not compatible with python 3.8 or later.")
             return
         # Read data
         gmg = datasets.get_grenoble_streets_500()

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import sys
 import networkx as nx
 import geonetworkx as gnx
 import unittest
@@ -29,6 +30,9 @@ class TestUtils(unittest.TestCase):
     def test_voronoi_edges(self):
         if not gnx_tu.check_optional_package_presence("pyvoronoi"):
             warnings.warn("Missing optional package for test 'test_voronoi_edges': pyvoronoi")
+            return
+        if sys.version_info.major >= 3 and sys.version_info.minor >= 8:
+            warnings.warn("'pyvoronoi' package is not compatible with python 3.8 or later.")
             return
         gmg = datasets.get_grenoble_streets_200()
         gnx.fill_edges_missing_geometry_attributes(gmg)
