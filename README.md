@@ -17,15 +17,15 @@ MultiGraph, DiGraph, MultiDiGraph).
 
 **Requirements**
 
-* Fiona==1.8.6
-* geopy==1.2.0
-* geopandas==0.4.0
-* networkx==2.3
-* numpy>=1.15.4
-* pyproj==1.9.6
-* rtree==0.8.3
-* scipy>=1.0.1
+* pyproj>=2.2
+* geopy>=1.12.0
+* geopandas>=0.7
+* networkx>=2.3
+* numpy>=1.12.0
+* pandas>=0.25.0
 * shapely>=1.2.18
+* scipy>=0.19.0rc2
+* nose>=1.3.7
 
 Optional packages:
 
