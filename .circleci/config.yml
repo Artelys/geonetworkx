@@ -60,6 +60,16 @@ jobs:
         steps:
             - test_steps_python
 
+    python38:
+        parallelism: 2
+        docker:
+            - image: circleci/python:3.8
+
+        working_directory: ~/repo
+
+        steps:
+            - test_steps_python
+
 
 workflows:
     version: 2
@@ -67,3 +77,4 @@ workflows:
         jobs:
             - python37
             - python36
+            - python38
