@@ -372,8 +372,8 @@ def get_closest_line_from_point(point_from: PointCoordinatesLike,
     """
     if lines_to is None and kd_tree is None:
         raise ValueError("Must provide at least argument 'points_to' or 'kd_tree'")
-    elif kd_tree is None and points_line_association is None:
-        raise ValueError("If a kd-tree is given, a point line association dictionary must provided")
+    elif kd_tree is not None and points_line_association is None:
+        raise ValueError("If a kd-tree is given, a point line association dictionary must be provided")
     if kd_tree is None:
         if discretization_tol is None:
             raise ValueError("If no kd-tree is given, a discretization tolerance must be provided.")
