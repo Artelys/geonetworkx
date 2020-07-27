@@ -312,8 +312,8 @@ def fill_elevation_attribute(graph: GeoGraph, attribute_name="elevation[m]", onl
     >>> import geonetworkx as gnx
     >>> g = gnx.GeoGraph(crs=gnx.WGS84_CRS)
     >>> g.add_edge(1, 2, geometry=gnx.LineString([(5.15, 45.504), (5.167, 45.506)]))
-    >>> gnx.fill_elevation_attribute(g)
-    >>> print(g.nodes[1]["elevation[m]"])
+    >>> gnx.fill_elevation_attribute(g)  # doctest: +SKIP
+    >>> print(g.nodes[1]["elevation[m]"])  # doctest: +SKIP
     393
 
     """
