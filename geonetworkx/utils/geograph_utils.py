@@ -49,6 +49,8 @@ def get_utm_crs(p: Point):
 
 def vincenty_distance_coordinates(p1, p2) -> float:
     """Returns the vincenty distance in meters with given coordinates."""
+    if not hasattr(geopy.distance, "vincenty"):
+        return geodesic_distance(p1, p2)
     return geopy.distance.vincenty((p1[1], p1[0]), (p2[1], p2[0])).meters
 
 
@@ -639,4 +641,4 @@ def get_default_distance_method_from_crs(crs) -> str:
 settings.DISTANCE_MEASUREMENT_METHODS["euclidian"] = euclidian_distance
 settings.DISTANCE_MEASUREMENT_METHODS["geodesic"] = geodesic_distance
 settings.DISTANCE_MEASUREMENT_METHODS["great_circle"] = great_circle_distance
-settings.DISTANCE_MEASUREMENT_METHODS["vincenty"] = euclidian_distance
+settings.DISTANCE_MEASUREMENT_METHODS["vincenty"] = vincenty_distance_coordinates
