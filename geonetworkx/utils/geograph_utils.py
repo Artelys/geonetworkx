@@ -47,40 +47,6 @@ def get_utm_crs(p: Point):
     return pyproj.CRS("+proj=utm +zone=%d +ellps=WGS84 +datum=WGS84 +units=m +no_defs" % utm_zone)
 
 
-def vincenty_distance_coordinates(p1, p2) -> float:
-    """Returns the vincenty distance in meters with given coordinates."""
-    if not hasattr(geopy.distance, "vincenty"):
-        return geodesic_distance(p1, p2)
-    return geopy.distance.vincenty((p1[1], p1[0]), (p2[1], p2[0])).meters
-
-
-def vincenty_distance(p1: Point, p2: Point) -> float:
-    """Return ``geopy`` great circle distance with two given point in the
-     long/lat format.
-
-    Parameters
-    ----------
-    p1
-        First 2D point
-    p2
-        Second 2D point
-
-    Returns
-    -------
-    The vincenty distance in meters.
-
-    Examples
-    --------
-
-    >>> import geonetworkx as gnx
-    >>> p1 = gnx.Point(-73.614, 45.504)  # long/lat format
-    >>> p2 = gnx.Point(-73.632, 45.506)
-    >>> "%.2f" % gnx.vincenty_distance(p1, p2)
-    '1424.17'
-    """
-    return vincenty_distance_coordinates([p1.x, p1.y], [p2.x, p2.y])
-
-
 def great_circle_distance(p1: Point, p2: Point) -> float:
     """Return ``geopy`` great circle distance with two given point in the
      long/lat format.
@@ -150,7 +116,7 @@ def approx_map_unit_factor(point: Point, tolerance=1e-7, method="geodesic") -> f
     tolerance
         Precision for the iterative method
     method
-        Distance method (geodesic, great_circle, vincenty)
+        Distance method (geodesic, great_circle)
 
     Returns
     -------
@@ -193,7 +159,7 @@ def approx_map_unit_factor(point: Point, tolerance=1e-7, method="geodesic") -> f
 
 
 def measure_line_distance(line: LineString, method: str) -> float:
-    """Measure the length of a shapely LineString object using the vincenty distance.
+    """Measure the length of a shapely LineString object using the given distance method.
 
     Parameters
     ----------
@@ -503,7 +469,7 @@ def geographical_distance(graph: GeoGraph, node1, node2, method="great_circle") 
     node2
         Second node label
     method : str
-        "vincenty", "euclidian", "great_circle" (Default value = "great_circle")
+        "geodesic", "euclidian", "great_circle" (Default value = "great_circle")
 
     Returns
     -------
@@ -641,4 +607,3 @@ def get_default_distance_method_from_crs(crs) -> str:
 settings.DISTANCE_MEASUREMENT_METHODS["euclidian"] = euclidian_distance
 settings.DISTANCE_MEASUREMENT_METHODS["geodesic"] = geodesic_distance
 settings.DISTANCE_MEASUREMENT_METHODS["great_circle"] = great_circle_distance
-settings.DISTANCE_MEASUREMENT_METHODS["vincenty"] = vincenty_distance_coordinates
