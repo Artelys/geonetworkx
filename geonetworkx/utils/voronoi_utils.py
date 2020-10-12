@@ -27,13 +27,24 @@ class PyVoronoiHelper:
         self.discretization_tolerance = 10000 / scaling_factor
         self.bounding_box_coords = bounding_box_coords
 
-    def get_cells_as_gdf(self) -> gpd.GeoDataFrame:
+    def get_cells_as_gdf(self, with_more_attributes: bool = False) -> gpd.GeoDataFrame:
         """Returns the voronoi cells in `geodataframe` with a column named `id` referencing the index of the associated
          input geometry."""
         gdf = gpd.GeoDataFrame(columns=["id", "geometry"])
         cells_geometries = self.get_cells_as_polygons()
         gdf["geometry"] = list(cells_geometries.values())
         gdf["id"] = list(cells_geometries.keys())
+        if with_more_attributes:
+            cell_ids = gdf["id"].values
+            gdf["site"] = [self.pv.GetCell(cell_id).site for cell_id in cell_ids]
+            gdf["contains_point"] = [
+                self.pv.GetCell(cell_id).contains_point for cell_id in cell_ids
+            ]
+            gdf["contains_segment"] = [
+                self.pv.GetCell(cell_id).contains_segment for cell_id in cell_ids
+            ]
+            gdf["is_open"] = [self.pv.GetCell(cell_id).is_open for cell_id in cell_ids]
+            gdf["is_degenerate"] = [self.pv.GetCell(cell_id).is_degenerate for cell_id in cell_ids]
         return gdf
 
     def get_cells_as_polygons(self) -> dict:
