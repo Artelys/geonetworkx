@@ -102,9 +102,9 @@ def isochrone_polygon(graph: GeoGraph, source, limit, weight="length", tolerance
     edge_voronoi_cells = get_edges_voronoi_cells(working_graph, tolerance)
     # Set ego-graph edges cells
     isochrone_polygons = []
-    for e, edge in enumerate(edge_voronoi_cells.index):
+    for edge in edge_voronoi_cells.index:
         if ego_graph.has_edge(*edge):
-            p = edge_voronoi_cells[e]
+            p = edge_voronoi_cells[edge]
             if not graph.has_edge(*edge):  # For boundary edges
                 boundary_line = working_graph.edges[edge][working_graph.edges_geometry_key]
                 if get_line_start(working_graph, edge, boundary_line) != edge[0]:
