@@ -2,7 +2,7 @@
 import math
 import numpy as np
 import networkx as nx
-from shapely.geometry import Point, LineString, MultiPoint
+from shapely.geometry import Point, LineString, MultiPoint, MultiLineString
 import geopy.distance
 import pyproj
 from geonetworkx.geometry_operations import coordinates_almost_equal, insert_point_in_line
@@ -173,6 +173,9 @@ def measure_line_distance(line: LineString, method: str) -> float:
     float
         distance in meters of the linestring.
 
+    See Also
+    --------
+    measure_multi_line_distance
     """
     coords = line.coords
     if len(coords) < 2:
@@ -184,6 +187,28 @@ def measure_line_distance(line: LineString, method: str) -> float:
         total_distance += get_distance(u, v, method)
         u = v
     return total_distance
+
+
+def measure_multi_line_distance(multiline: MultiLineString, method: str) -> float:
+    """Measure the length of shapely MultiLineString object using the given distance method.
+
+    Parameters
+    ----------
+    multiline
+        MultiLineString to measure.
+    method
+        Method to compute the distance
+
+    Returns
+    -------
+    float
+        Sum of distances of all linestrings composing the multilinestring in meters.
+
+    See Also
+    --------
+    measure_line_distance
+    """
+    return sum(measure_line_distance(l, method) for l in multiline)
 
 
 def get_new_node_unique_name(graph: nx.Graph, name: str):
