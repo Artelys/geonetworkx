@@ -35,7 +35,7 @@ def is_null_crs(crs) -> bool:
 
 def crs_equals(crs1, crs2) -> bool:
     """Compare CRS using ``pyproj.Proj`` objects."""
-    if is_null_crs(crs1) or is_null_crs(crs1):
+    if is_null_crs(crs1) or is_null_crs(crs2):
         return False
     return get_crs_as_str(crs1) == get_crs_as_str(crs2)
 
