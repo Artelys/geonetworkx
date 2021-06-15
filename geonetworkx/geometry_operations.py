@@ -433,11 +433,12 @@ def split_line(line, distance):
         return [LineString([coords[0]]*2), LineString(line)]
     if distance >= line.length:
         return [LineString(line), LineString([coords[-1]]*2)]
-    for i, p in enumerate(coords):
-        pd = line.project(Point(p))
-        if pd == distance:
-            return [LineString(coords[:i + 1]), LineString(coords[i:])]
-        if pd > distance:
+    current_distance = 0.0
+    for i in range(len(coords) - 1):
+        current_distance += gnx.euclidian_distance_coordinates(coords[i], coords[i + 1])
+        if current_distance == distance:
+            return [LineString(coords[:(i + 2)]), LineString(coords[(i + 1):])]
+        if current_distance > distance:
             cp = line.interpolate(distance)
             return [LineString(coords[:i] + [(cp.x, cp.y)]), LineString([(cp.x, cp.y)] + coords[i:])]
 

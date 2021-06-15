@@ -179,3 +179,20 @@ class TestTools(unittest.TestCase):
             else:
                 assert_less(limit, shortest_distance + tol, "The shortest path between a point not intersecting the "
                                                             "iso-polygon must be longer than the isochrone limit.")
+
+    def test_split_line_on_loop(self):
+        """Test to split a line that is a loop"""
+        line = gnx.LineString([(10.8332501, 43.6994487),
+                               (10.8333313, 43.6995065),
+                               (10.8331066, 43.6996864),
+                               (10.8327284, 43.6994203),
+                               (10.8332501, 43.6994487)])
+        for distance in [0.000925456010099422, 0.0, 5.0, 9.967085832788407e-05, 0.0008499479239845902]:
+            split_result = gnx.split_line(line, distance)
+            self.assertIsNot(split_result, None)
+            gnx_tu.assert_coordinates_almost_equals(split_result[0].coords[-1],
+                                                    split_result[1].coords[0])
+            if distance < line.length:
+                self.assertAlmostEquals(split_result[0].length, distance, delta=5e-4)
+            else:
+                self.assertAlmostEquals(split_result[0].length, line.length, delta=5e-4)
