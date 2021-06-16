@@ -244,7 +244,7 @@ def get_closest_point_from_line(line_from: LineString, discretization_tol: float
     return distances[smallest_distance_index], closest_points_indexes[smallest_distance_index]
 
 
-def get_closest_point_from_multi_shape(multi_shape, points_to=None, kd_tree=None):
+def get_closest_point_from_multi_shape(multi_shape, points_to=None, kd_tree=None, discretization_tol: float = None):
     """Computes the closest point to the multi shape (i.e. the point that has the smallest projection distance on the
     entire multi shape object.
 
@@ -257,6 +257,8 @@ def get_closest_point_from_multi_shape(multi_shape, points_to=None, kd_tree=None
     kd_tree : cKDTree
         A kdtree representing the points among which the closest to the multishape has to be found (optional
         if 'points_to' is given) (Default value = None)
+    discretization_tol : float
+        A discretization tolerance if the multishape is a MultiLineString
 
     Returns
     -------
@@ -265,13 +267,20 @@ def get_closest_point_from_multi_shape(multi_shape, points_to=None, kd_tree=None
     int
         index of the closest point
 
+    See Also
+    --------
+    get_closest_point_from_points
+    get_closest_point_from_line
+
     """
     if isinstance(multi_shape, MultiPoint):
         distances_and_points_indexes = get_closest_point_from_points(multi_shape, points_to, kd_tree)
     elif isinstance(multi_shape, MultiLineString):
+        if discretization_tol is None:
+            raise ValueError("A discretization tolerance must be provided if the multishape is a multiline")
         distances_and_points_indexes = []
         for line in multi_shape:
-            distances_and_points_indexes.append(get_closest_point_from_line(line, points_to, kd_tree))
+            distances_and_points_indexes.append(get_closest_point_from_line(line, discretization_tol, points_to, kd_tree))
     else:
         raise TypeError("Method not implemented for shape of type '%s', expected MultiPoint"
                         "or MultiLineString" % str(type(multi_shape)))
