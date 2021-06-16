@@ -182,6 +182,7 @@ class TestTools(unittest.TestCase):
 
     def test_split_line_on_loop(self):
         """Test to split a line that is a loop"""
+        tol = 5e-4
         line = gnx.LineString([(10.8332501, 43.6994487),
                                (10.8333313, 43.6995065),
                                (10.8331066, 43.6996864),
@@ -193,6 +194,23 @@ class TestTools(unittest.TestCase):
             gnx_tu.assert_coordinates_almost_equals(split_result[0].coords[-1],
                                                     split_result[1].coords[0])
             if distance < line.length:
-                self.assertAlmostEquals(split_result[0].length, distance, delta=5e-4)
+                self.assertAlmostEquals(split_result[0].length, distance, delta=tol)
+                self.assertAlmostEquals(split_result[1].length, line.length - distance, delta=tol)
             else:
-                self.assertAlmostEquals(split_result[0].length, line.length, delta=5e-4)
+                self.assertAlmostEquals(split_result[0].length, line.length, delta=tol)
+                self.assertAlmostEquals(split_result[1].length, 0.0, delta=tol)
+
+    def test_split_on_simple_line(self):
+        tol = 5e-4
+        line = gnx.LineString([(10.8332501, 43.6994487), (10.8331066, 43.6996864)])
+        for distance in [0.0, line.length/3.0, line.length, line.length + 5.0]:
+            split_result = gnx.split_line(line, distance)
+            self.assertIsNot(split_result, None)
+            gnx_tu.assert_coordinates_almost_equals(split_result[0].coords[-1],
+                                                    split_result[1].coords[0])
+            if distance < line.length:
+                self.assertAlmostEquals(split_result[0].length, distance, delta=tol)
+                self.assertAlmostEquals(split_result[1].length, line.length - distance, delta=tol)
+            else:
+                self.assertAlmostEquals(split_result[0].length, line.length, delta=tol)
+                self.assertAlmostEquals(split_result[1].length, 0.0, delta=tol)

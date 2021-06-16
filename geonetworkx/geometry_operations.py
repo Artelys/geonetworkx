@@ -440,7 +440,7 @@ def split_line(line, distance):
             return [LineString(coords[:(i + 2)]), LineString(coords[(i + 1):])]
         if current_distance > distance:
             cp = line.interpolate(distance)
-            return [LineString(coords[:i] + [(cp.x, cp.y)]), LineString([(cp.x, cp.y)] + coords[i:])]
+            return [LineString(coords[:(i + 1)] + [(cp.x, cp.y)]), LineString([(cp.x, cp.y)] + coords[(i + 1):])]
 
 
 def coordinates_almost_equal(c1: Iterable, c2: Iterable, tolerance=1e-8) -> bool:
