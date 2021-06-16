@@ -76,5 +76,4 @@ workflows:
     run_tests:
         jobs:
             - python37
-            - python36
             - python38
