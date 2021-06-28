@@ -9,7 +9,7 @@ with open("requirements.txt", "r") as fr:
 
 setuptools.setup(
     name="geonetworkx",
-    version="0.5.2",
+    version="0.5.3",
     author="Hugo Chareyre - Artelys",
     author_email="hugo.chareyre@artelys.com",
     description="Python tools for geographic graphs",
