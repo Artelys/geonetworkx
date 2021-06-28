@@ -50,6 +50,7 @@ Please download the binary corresponding to your system and your
 Python version (3.6 or 3.7). You have notably to download:
 
 - Binary for `Rtree`
+- Binary for `GDAL`
 - Binary for `Fiona`
 
 
