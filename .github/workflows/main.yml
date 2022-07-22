@@ -1,0 +1,32 @@
+name: Ubuntu-latest CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "master" branch
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      - name: setup venv
+        run: |
+             python3 -m venv --copies venv
+             . venv/bin/activate
+              python3 -m pip install -r requirements.txt
+              python3 -m pip install -r geonetworkx/tests/requirements_additional.txt
+
+      - name: install geonetworkx
+        run: |
+          . venv/bin/activate
+          python -m nose --with-xunit -v --with-doctest
