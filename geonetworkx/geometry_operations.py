@@ -387,7 +387,7 @@ def get_closest_line_from_point(point_from: PointCoordinatesLike,
         if discretization_tol is None:
             raise ValueError("If no kd-tree is given, a discretization tolerance must be provided.")
         points_to, points_line_association = discretize_lines(lines_to, discretization_tol)
-        kd_tree = cKDTree(points_to)
+        kd_tree = cKDTree(np.array([[p.x, p.y] for p in points_to.geoms]))
     distance, closest_point_index = get_closest_point_from_points([point_from], kd_tree=kd_tree)
     for line_index in points_line_association:
         if closest_point_index in points_line_association[line_index]:
@@ -414,7 +414,7 @@ def get_closest_line_from_points(points_from, lines_to, discretization_tol):
 
     """
     points_to, points_line_association = discretize_lines(lines_to, discretization_tol)
-    kd_tree = cKDTree(points_to)
+    kd_tree = cKDTree(np.array([[p.x, p.y] for p in points_to.geoms]))
     lines_indexes = []
     for point in points_from:
         result = get_closest_line_from_point(point, kd_tree=kd_tree, points_line_association=points_line_association)
