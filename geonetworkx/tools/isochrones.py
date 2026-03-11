@@ -4,7 +4,7 @@ from geonetworkx.geograph import GeoGraph
 from geonetworkx.utils import get_line_start
 import geonetworkx as gnx
 from shapely.geometry import Polygon, LineString, MultiPolygon
-from shapely.ops import cascaded_union
+from shapely.ops import unary_union
 import math
 from typing import Union
 from scipy.spatial import Delaunay
@@ -69,7 +69,7 @@ def boundary_edge_buffer(line: LineString) -> GenericPolygon:
         segment_direction = segment_coords[1] - segment_coords[0]
         boundary_polygons.append(get_point_boundary_buffer_polygon(segment_coords[0], radius, segment_direction))
         radius = residual_radius
-    return cascaded_union(boundary_polygons)
+    return unary_union(boundary_polygons)
 
 
 def isochrone_polygon(graph: GeoGraph, source, limit, weight="length", tolerance=1e-7) -> GenericPolygon:
@@ -114,7 +114,7 @@ def isochrone_polygon(graph: GeoGraph, source, limit, weight="length", tolerance
             else:
                 isochrone_polygons.append(p)
     # Merge as isochrone polygon
-    final_polygon = cascaded_union(isochrone_polygons)
+    final_polygon = unary_union(isochrone_polygons)
     final_polygon = final_polygon.buffer(tolerance)
     return final_polygon
 
@@ -166,7 +166,7 @@ def get_alpha_shape_polygon(points: list, quantile: float) -> GenericPolygon:
         polygons.append(Polygon([pa, pb, pc]))
     inv_alpha = np.percentile(circum_radius, quantile)
     filtered_polygons = [p for i, p in enumerate(polygons) if circum_radius[i] <= inv_alpha]
-    return cascaded_union(filtered_polygons)
+    return unary_union(filtered_polygons)
 
 
 def isochrone_polygon_with_alpha_shape(graph: GeoGraph, source, limit,
