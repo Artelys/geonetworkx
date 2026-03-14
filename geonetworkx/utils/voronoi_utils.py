@@ -1,6 +1,6 @@
 import numpy as np
 from shapely.geometry import MultiLineString, LineString, box, Polygon, MultiPolygon, GeometryCollection
-from shapely.ops import linemerge, polygonize, cascaded_union
+from shapely.ops import linemerge, polygonize, unary_union
 import geopandas as gpd
 from typing import Union
 from collections import defaultdict
@@ -256,7 +256,7 @@ def compute_voronoi_cells_from_lines(lines: list, tolerance=1e-7) -> list:
             for p in gdf[gdf["site"] == ct]["geometry"]:
                 line_polygons.append(p)
             ct += 1
-        merged_polygon = cascaded_union(line_polygons)
+        merged_polygon = unary_union(line_polygons)
         if isinstance(merged_polygon, GeometryCollection):
             if len(merged_polygon) == 0:
                 continue
